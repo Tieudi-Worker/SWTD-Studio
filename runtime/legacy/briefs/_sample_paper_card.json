@@ -1,0 +1,24 @@
+{
+  "sku": "_SAMPLE_CARD",
+  "product_name": "Handcrafted Plant Stake Card",
+  "category": "paper_card",
+  "materials": ["birch plywood", "UV print"],
+  "dimensions": "5x2 inches",
+  "features": [
+    "Doubles as a plant marker after the message is read",
+    "Waterproof UV print, weather-resistant",
+    "Made by hand in small batches"
+  ],
+  "usp": "A card that lives in the garden, not the trash",
+  "occasion": "teacher_gift",
+  "target_audience": {
+    "buyer": "parent appreciating teacher",
+    "recipient": "teacher with a plant on her desk"
+  },
+  "input_images": [
+    "input/product/stake_front.jpg",
+    "input/product/stake_back.jpg"
+  ],
+  "color_preference": "natural wood with green leaf accents",
+  "copy_style": "emotional"
+}

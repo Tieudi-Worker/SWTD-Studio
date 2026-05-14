@@ -1,0 +1,88 @@
+{
+  "_doc": "Shared constraints cho MỌI A+ banner, áp dụng Type 1 (single-ASIN) + Type 2 (multi-ASIN parent). Loaded by aplus-pipeline.js. Verified qua test SKU TNTD180326i750 (10 banner v3).",
+  "_version": "1.0.0",
+  "_updated": "2026-04-14",
+
+  "aspect": {
+    "ratio": "16:9",
+    "final_resolution": "1464x600",
+    "note": "AI gen tại 16:9 2K, post-production crop / extend sang 1464x600 Amazon A+ banner spec (2.44:1). Direct 2.44:1 chưa support ổn định bởi nano-banana-pro."
+  },
+
+  "rules": {
+    "R1_typography_lock": {
+      "description": "Strictly 2 font families throughout EVERY banner, consistent across 5 modules cùng banner + cùng SKU parent.",
+      "fonts": [
+        {
+          "role": "display_headline",
+          "family": "Baloo 2 Bold",
+          "alt_families": ["Baloo Bhai 2", "Baloo Paaji 2"],
+          "style_hint": "rounded, friendly, modern sans-serif display",
+          "used_for": ["headlines", "promise lines", "CTA button text", "callout numbers (01-05)", "stat bars"]
+        },
+        {
+          "role": "accent_script",
+          "family": "Kalam",
+          "alt_families": ["Caveat", "Homemade Apple", "Amatic SC"],
+          "style_hint": "handwritten calligraphy italic, flowing script",
+          "used_for": ["accent captions", "subheadlines", "emotional flourishes", "ribbon labels"]
+        }
+      ],
+      "forbidden": ["serif classic (Times, Georgia)", "Helvetica", "Arial", "third_font_family"],
+      "prompt_snippet": "TYPOGRAPHY LOCK: Strictly 2 font families — Font 1 = BALOO 2 BOLD style (rounded friendly sans-serif) for headlines, CTA, callout numbers, stat bars. Font 2 = HANDWRITTEN CALLIGRAPHY ITALIC (Kalam / Caveat) for accent captions, subheadlines, ribbon labels. NO third font. NO traditional serif. NO Helvetica."
+    },
+
+    "R2_product_fidelity": {
+      "description": "Doctrine Chapter 1.1 F1-F8 áp dụng cho MỌI shot có sản phẩm. Type 2 enforce song song N lần cho N child ASINs.",
+      "invariants": [
+        "F1 silhouette + proportions",
+        "F2 typography on product (fonts, kerning, letter order, colors)",
+        "F3 logo/badge/signature",
+        "F4 internal layout (token pattern, acrylic panel, etc.)",
+        "F5 materials + finish",
+        "F6 color palette của product",
+        "F7 texture + surface",
+        "F8 edge thickness + hardware"
+      ],
+      "process_shots_accuracy": {
+        "rule": "Khi shot là process (laser cutter, workshop, packaging) — KHÔNG phải sản phẩm — vẫn phải chính xác kỹ thuật. Laser cut = CNC machine với red beam + metal gantry, KHÔNG phải pyrography / woodburning / soldering iron.",
+        "common_mistakes": [
+          "AI default hand tool cho 'laser cut' → luôn specify 'industrial CNC laser cutter with RED laser beam, metal frame gantry, NOT handheld tool, NOT woodburning'",
+          "AI gen token design simplified → luôn include 'preserve intricate printed design from reference, do NOT simplify'"
+        ]
+      },
+      "prompt_snippet": "CRITICAL PRODUCT FIDELITY: Render EXACTLY as reference images — preserve F1 silhouette, F2 typography on product, F4 internal layout, F5-F8 materials+finish+texture+edge. DO NOT redesign, reimagine, simplify token/detail graphics."
+    },
+
+    "R3_scale_anchor": {
+      "description": "Sản phẩm phải render đúng size thực tế so với con người + object tham chiếu.",
+      "method": "Prompt phải include scale anchor relative phrase: so sánh với part cơ thể (chest, hand, wrist) + object chuẩn (hardcover book, laptop, letter paper).",
+      "examples": {
+        "reward_jar": "6x8 inches (15x20 cm), size of hardcover book. Khi bé 4-7 tuổi cầm 2 tay, jar phủ CHỈ chest area (NOT torso-wide). Trên bàn cạnh laptop 13-inch, jar ≈ 1/3 đến 1/2 laptop width.",
+        "ornament": "3-4 inches (7-10 cm), size of palm. Khi treo trên cây, ornament ≈ 1/3 size bàn tay người lớn.",
+        "card": "5-7 inches (12-17 cm), size of envelope. Khi đặt trên bàn, card flat không dày."
+      },
+      "prompt_snippet": "SCALE ANCHOR: The product is {size} — {relative_reference}. Realistic proportions: {specific_human_body_relation}. DO NOT render the product oversized. DO NOT let the product dominate the frame beyond its real-life footprint."
+    },
+
+    "R4_per_banner_ref_selection": {
+      "description": "Mỗi module chọn subset refs phù hợp shot, KHÔNG dùng blanket ref set chung cho mọi module.",
+      "rationale": "Test verified: blurry / off-function refs dilute AI attention. 1-ref tổng hợp đôi khi > 3-refs lệch function (case M3 Plan B test v3).",
+      "ref_catalog_roles": [
+        "hero_faceon — clean silhouette + primary features visible",
+        "hero_lifestyle — product in natural context (easel, loose parts scattered)",
+        "tokens_topview / detail_macro — high-res component detail",
+        "edge_thickness — 3/4 angle showing layered construction",
+        "process_shot (optional) — non-product for workshop/packaging contexts"
+      ],
+      "selection_rules": [
+        "Shot có product + human → 2-3 refs: hero_faceon + lifestyle/detail",
+        "Infographic callouts → 2-3 refs: hero_faceon + edge_thickness + lifestyle",
+        "Flat-lay gift set → 1-2 refs: hero_lifestyle (chứa scattered components) đủ",
+        "Process shots (laser cutter, workshop) → 0-1 ref: chỉ pass ref khi shot có product trong frame, không pass nếu 100% process",
+        "Grid multi-product → refs cho MỖI variant pass vào (Type 2)"
+      ],
+      "quality_gate": "Loại refs blurry / off-axis khỏi default pool. Chỉ include khi shot cần cụ thể edge-thickness hoặc 3D angle."
+    }
+  }
+}

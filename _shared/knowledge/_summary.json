@@ -1,0 +1,68 @@
+[
+  {
+    "topic": "amazon-listing",
+    "path": "amazon-listing/conversion-tactics.md",
+    "title": "Amazon Listing Conversion Tactics",
+    "summary": "- Top seller analysis + industry best practices"
+  },
+  {
+    "topic": "amazon-listing",
+    "path": "amazon-listing/image-requirements.md",
+    "title": "Amazon Listing Image Requirements",
+    "summary": "- Amazon Seller Central official guidelines"
+  },
+  {
+    "topic": "amazon-listing",
+    "path": "amazon-listing/text-heavy-engraved-product-fidelity.md",
+    "title": "Text-Heavy Engraved Product Fidelity — Lessons from TNTD030426i772",
+    "summary": "**Case study:** `_shared/xp/case-studies/TNTD030426i772-pregnancy-announcement-wooden-keepsake.md`"
+  },
+  {
+    "topic": "brand-style",
+    "path": "brand-style/README.md",
+    "title": "Brand Style",
+    "summary": "Per-brand persona + visual identity. Brief sets `brand_id: \"MY_BRAND\"` →"
+  },
+  {
+    "topic": "brand-style",
+    "path": "brand-style/hma-aplus-native-text-bright-minimal.md",
+    "title": "HMA A+ Native Text Bright Minimal Lifestyle Style",
+    "summary": "This style guideline documents the successful A+ content structure for the PARENT PREGNANCY SKU (multi-ASIN, Plan A) that uses:"
+  },
+  {
+    "topic": "niches",
+    "path": "niches/acrylic-ornaments.md",
+    "title": "Niche: Acrylic Ornaments",
+    "summary": "- Market research + competitor analysis"
+  },
+  {
+    "topic": "niches",
+    "path": "niches/reward-jars.md",
+    "title": "Niche: Reward Jars (Classroom/Kids)",
+    "summary": "- Market research + competitor analysis"
+  },
+  {
+    "topic": "obsidian-curated",
+    "path": "obsidian-curated/README.md",
+    "title": "📚 Obsidian → HMA Knowledge Bridge Convention",
+    "summary": "HMA can use Obsidian vault as a long-term brain (doctrine, photography rules, niche insights, listing tactics, SOPs, brand style, competition intel). However, Obsidian notes contain private/personal content that must **n"
+  },
+  {
+    "topic": "obsidian-curated",
+    "path": "obsidian-curated/tntd030426i772-text-heavy-fidelity.md",
+    "title": "TNTD030426i772 Text-Heavy Product Fidelity",
+    "summary": "- Obsidian source: internal only; do not include in prompts/customer outputs"
+  },
+  {
+    "topic": "photography",
+    "path": "photography/product-photography.md",
+    "title": "Product Photography for Handmade Items",
+    "summary": "- Photography best practices for small handmade products"
+  },
+  {
+    "topic": "photography",
+    "path": "photography/product-structure-analysis.md",
+    "title": "Product Structure Analysis — Reference Image Deep Reading",
+    "summary": "> Mandatory pre-generation step: read every reference image with the vocabulary below and produce a structural breakdown BEFORE writing any prompt. Most product-fidelity failures come from writing a prompt against an ass"
+  }
+]

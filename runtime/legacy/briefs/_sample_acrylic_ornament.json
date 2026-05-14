@@ -1,0 +1,25 @@
+{
+  "sku": "_SAMPLE_ACRYLIC",
+  "product_name": "Custom Acrylic Family Ornament",
+  "category": "acrylic_ornament",
+  "materials": ["clear acrylic", "UV print"],
+  "dimensions": "3.5x3.5 inches",
+  "features": [
+    "Crystal-clear acrylic with vivid UV-printed design",
+    "Personalized with family names and year",
+    "Durable, fade-resistant, dishwasher safe"
+  ],
+  "usp": "Capture your family's year in a piece of art",
+  "occasion": "christmas",
+  "seasonal_theme": "christmas",
+  "target_audience": {
+    "buyer": "parent celebrating family milestones",
+    "recipient": "family members and grandparents"
+  },
+  "input_images": [
+    "input/product/acrylic_front.jpg",
+    "input/product/acrylic_back.jpg"
+  ],
+  "color_preference": "vibrant jewel tones with light transparency",
+  "copy_style": "emotional"
+}

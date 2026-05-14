@@ -1,0 +1,23 @@
+{
+  "_doc": "Per-slot model routing. Default nano-banana-pro. Verify model names match KIE.ai endpoints before merge.",
+  "_version": "1.0.0",
+  "default": "nano-banana-pro",
+  "slots": {
+    "1": "nano-banana-pro",
+    "2": "seedream-4",
+    "3": "nano-banana-pro",
+    "4": "nano-banana-pro",
+    "5": "nano-banana-pro",
+    "6": "seedream-4",
+    "7": "seedream-4",
+    "8": "seedream-4"
+  },
+  "fallback_chain": ["nano-banana-pro", "flux-kontext-pro"],
+  "model_specs": {
+    "nano-banana-pro": { "best_for": "fidelity, white bg, infographic", "supports_image_input": true, "max_refs": 8 },
+    "seedream-4": { "best_for": "lifestyle wide, cinematic, top-down", "supports_image_input": true, "max_refs": 4 },
+    "imagen-4": { "best_for": "lifestyle wide alternative", "supports_image_input": true, "max_refs": 4 },
+    "flux-kontext-pro": { "best_for": "img-to-img edit fallback", "supports_image_input": true, "max_refs": 1 },
+    "gpt-image-2-image-to-image": { "best_for": "strong style match from listing-ref, multi-image composition", "supports_image_input": true, "max_refs": 4, "input_field": "input_urls" }
+  }
+}

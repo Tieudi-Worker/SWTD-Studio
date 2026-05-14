@@ -1,0 +1,15 @@
+{
+  "_doc": "Slot funnel for paper cards / plant stakes / message cards.",
+  "category": "paper_card",
+  "applicable_to": ["paper_card"],
+  "slots": [
+    { "n": 1, "role": "STOP", "intent": "Hero white showing both sides", "concept_template": "hero_white_dual" },
+    { "n": 2, "role": "IN_CONTEXT", "intent": "Card in destination — plant pot, desk, vase", "concept_template": "in_context_destination" },
+    { "n": 3, "role": "FEATURES_SIZE", "intent": "LOCKED (RULE-016): Combined features + size infographic — header banner with category icon + product with dimension arrows (width, height, thickness callout bubble) + N numbered callout cards (rounded squares, macro + 2-line label) for material, waterproofing, customization, longevity", "concept_template": "infographic_features_size_combined" },
+    { "n": 4, "role": "PERSONALIZATION", "intent": "3 personalization examples", "concept_template": "personalization_grid" },
+    { "n": 5, "role": "DISPLAY_LOCATIONS", "intent": "LOCKED (RULE-017): N-cell display-locations grid (default 2×2, adaptive 2-4 cells) — for cards the cells show envelope / desk / frame / pinboard or similar niche-appropriate display scenarios; safeguard: exactly N cells, no fifth floating product", "concept_template": "grid_display_locations" },
+    { "n": 6, "role": "GIFT", "intent": "Gift-ready packaging context", "concept_template": "gift_packaging" },
+    { "n": 7, "role": "EMOTIONAL", "intent": "Receiving the card", "concept_template": "emotional_receive" },
+    { "n": 8, "role": "CLOSE", "intent": "Longevity proof — weathered, still readable", "concept_template": "longevity_proof" }
+  ]
+}

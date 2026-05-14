@@ -1,0 +1,204 @@
+{
+  "_doc": "Per-slot prompt constraints enforced at runtime by utils/prompt-guard.js. Source of truth for what each slot should/shouldn't contain. Primary model: nano-banana-pro (Google). fallback_flux_kontext = option 2 retry model when nano-banana output fails QC. Update when xp/prompt-anti-patterns.md gains new rules.",
+  "_version": "1.0.0",
+  "_updated": "2026-04-11",
+
+  "global": {
+    "max_words": 250,
+    "hard_max_words": 350,
+    "forbidden_phrases": [
+      "NEVER render",
+      "DO NOT render",
+      "absolutely forbidden",
+      "crit critical",
+      "CRITICAL RENDERING RULES",
+      "4-LAYER DEPTH",
+      "Layer 1",
+      "Layer 2",
+      "Layer 3",
+      "Layer 4",
+      "text overlay",
+      "sticker",
+      "badge",
+      "stamp",
+      "watermark"
+    ],
+    "inject_see_through_rule": false,
+    "inject_lighting_harmony_rule": false,
+    "inject_product_structure": false,
+    "inject_critical_structure": true,
+    "hook_vocabulary": [
+      "glow", "glowing", "catch light", "catching light",
+      "rim light", "rim lit", "back lit", "backlit",
+      "golden hour", "golden light", "warm rim",
+      "dramatic", "dramatic light", "dramatic shadow",
+      "shallow depth", "shallow dof", "bokeh",
+      "reveal", "revealing", "macro", "close-up", "closeup",
+      "silhouette", "sparkle", "shimmer",
+      "soft light", "soft shadow", "soft window light",
+      "natural light", "window light"
+    ],
+    "hook_required_slots": [1, 2, 6, 7, 8]
+  },
+
+  "slot1": {
+    "role": "hero_white",
+    "max_words": 80,
+    "hard_max_words": 120,
+    "fallback_flux_kontext": false,
+    "inject_see_through_rule": false,
+    "inject_lighting_harmony_rule": false,
+    "inject_product_structure": false,
+    "inject_critical_structure": true,
+    "forbidden_phrases_extra": [
+      "scene lighting",
+      "warm window",
+      "match the scene",
+      "environment",
+      "ambient bounce"
+    ],
+    "reasoning": "Pure white hero. Reference image carries 100% of product identity. Text only needs: pure white bg, 3/4 angle, fidelity guard."
+  },
+
+  "slot2": {
+    "role": "lifestyle_wide",
+    "max_words": 120,
+    "hard_max_words": 180,
+    "fallback_flux_kontext": false,
+    "inject_see_through_rule": false,
+    "inject_lighting_harmony_rule": false,
+    "inject_product_structure": false,
+    "inject_critical_structure": true,
+    "forbidden_phrases_extra": [
+      "hollow stencil",
+      "cavity depth",
+      "cavity floor",
+      "wood grain behind",
+      "2-3mm recessed",
+      "no text overlay",
+      "no logo",
+      "no sticker"
+    ],
+    "reasoning": "Wide shot. Product ~10% of frame. AI cannot resolve fine structure. Over-describing structure → model reimagines. Use Flux Kontext if possible. Put overlay bans in negative_prompt."
+  },
+
+  "slot3": {
+    "role": "infographic_features_size_combined",
+    "max_words": 180,
+    "hard_max_words": 260,
+    "fallback_flux_kontext": false,
+    "inject_see_through_rule": false,
+    "inject_lighting_harmony_rule": false,
+    "inject_product_structure": true,
+    "inject_critical_structure": true,
+    "safeguard_phrases": [
+      "product must render sharply with accurate proportions",
+      "every dimension arrow, label, and callout card text fully readable with no overlap"
+    ],
+    "reasoning": "LOCKED STRUCTURE (RULE-016): Combined features + size infographic. Layout = header banner top + product large on left with dimension arrows (width/height) + thickness callout bubble + N numbered callout cards (rounded squares) on right. Product structure allowed because infographic role. Budget widened from 150→180 because gộp 2 slot cũ (features + size)."
+  },
+
+  "slot4": {
+    "role": "use_case_demo",
+    "max_words": 130,
+    "hard_max_words": 200,
+    "fallback_flux_kontext": true,
+    "inject_see_through_rule": true,
+    "inject_lighting_harmony_rule": false,
+    "inject_product_structure": false,
+    "inject_critical_structure": true,
+    "reasoning": "Demonstrates functional mechanism (card insertion). see_through_cutout_rule is essential here because the mechanism is the value. But still close-up, so no lifestyle lighting narrative."
+  },
+
+  "slot5": {
+    "role": "grid_display_locations",
+    "max_words": 120,
+    "hard_max_words": 180,
+    "fallback_flux_kontext": false,
+    "inject_see_through_rule": false,
+    "inject_lighting_harmony_rule": false,
+    "inject_product_structure": false,
+    "inject_critical_structure": true,
+    "safeguard_phrases": [
+      "EXACTLY N equal rounded-square cells arranged in a clean grid (default 2×2, adaptive 2-4 cells based on product niche), one product instance per cell",
+      "NO extra product anywhere outside the cells — absolutely NO floating hero product in the center of the grid or between cells",
+      "NO elements overlapping between cells — each cell self-contained with its own background context",
+      "every numbered cell label and caption fully readable, no product obstructing any label"
+    ],
+    "forbidden_phrases_extra": [
+      "fifth ornament",
+      "fifth product",
+      "center hero",
+      "floating in middle",
+      "between the cells",
+      "center medallion",
+      "hero product in center"
+    ],
+    "reasoning": "LOCKED STRUCTURE (RULE-017): N-cell display-locations grid (default 2×2, adaptive 2-4 cells). Each cell shows the product in a different real-use display/use scenario. Numbered labels top-left + location name bottom-left. Budget widened from 70→120 because grid + labels + safeguard phrases need space. Safeguard phrases prevent AI default tendency to add a center hero product overlapping labels (bug verified on TNHG231025i621 first attempt — 5th ornament appeared in center)."
+  },
+
+  "slot6": {
+    "role": "flat_lay_gift_set",
+    "max_words": 140,
+    "hard_max_words": 210,
+    "fallback_flux_kontext": false,
+    "inject_see_through_rule": true,
+    "inject_lighting_harmony_rule": true,
+    "inject_product_structure": false,
+    "inject_critical_structure": true,
+    "forbidden_phrases_extra": [
+      "hand holding",
+      "hand-held",
+      "held in hand",
+      "fingers"
+    ],
+    "reasoning": "Top-down flat lay. Cavity depth CAN be shown from top-down angle. Scene has warm lighting from above. But no hand — it's a flat lay."
+  },
+
+  "slot7": {
+    "role": "emotional_group",
+    "max_words": 130,
+    "hard_max_words": 200,
+    "fallback_flux_kontext": true,
+    "inject_see_through_rule": false,
+    "inject_lighting_harmony_rule": false,
+    "inject_product_structure": false,
+    "inject_critical_structure": true,
+    "forbidden_phrases_extra": [
+      "hollow stencil",
+      "cavity depth",
+      "2-3mm",
+      "multi-layer"
+    ],
+    "reasoning": "Wide group emotional scene. Product small in frame, same reasoning as slot 2."
+  },
+
+  "slot8": {
+    "role": "lifestyle_closeup",
+    "max_words": 140,
+    "hard_max_words": 210,
+    "fallback_flux_kontext": true,
+    "inject_see_through_rule": true,
+    "inject_lighting_harmony_rule": true,
+    "inject_product_structure": false,
+    "inject_critical_structure": true,
+    "reasoning": "Close-up lifestyle hero. Can show cavity + ambient lighting integration. Benchmark slot for the system."
+  },
+
+  "video_scene": {
+    "role": "video_start_frame",
+    "max_words": 110,
+    "hard_max_words": 160,
+    "fallback_flux_kontext": false,
+    "inject_see_through_rule": false,
+    "inject_lighting_harmony_rule": false,
+    "inject_product_structure": false,
+    "inject_critical_structure": true,
+    "forbidden_phrases_extra": [
+      "no text overlay",
+      "wide cinematic composition",
+      "16:9 composition"
+    ],
+    "reasoning": "Video start frame — same fidelity rules as listing slots, but slightly larger word budget because storyboard scenes need a tiny bit more environment context. Still bounded so RULE-015 holds."
+  }
+}

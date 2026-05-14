@@ -1,0 +1,6 @@
+{
+  "listing": { "width": 2000, "height": 2000, "format": "jpeg", "quality": 95 },
+  "aplus_premium": { "width": 1464, "height": 600, "format": "jpeg", "quality": 95, "modules_count": 5 },
+  "video": { "width": 1920, "height": 1080, "format": "mp4", "duration_range": [20, 25] },
+  "main_image_rules": { "background": "white", "product_frame_min_percent": 85, "no_text": true }
+}

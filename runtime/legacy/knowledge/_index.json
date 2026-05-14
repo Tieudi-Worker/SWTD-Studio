@@ -1,0 +1,64 @@
+{
+  "_doc": "Knowledge Base Index — auto-updated by knowledge-agent.js. Each entry tracks a research topic with source, date, and summary.",
+  "version": "1.0.0",
+  "last_updated": "2026-04-08T09:45:04.225Z",
+  "total_entries": 5,
+  "categories": {
+    "amazon-listing": "Amazon listing best practices, image requirements, A+ content rules, SEO tips",
+    "photography": "Product photography techniques, lighting, composition, styling for handmade products",
+    "competitors": "Competitor analysis summaries — what top sellers do well, gaps to exploit",
+    "niches": "Niche-specific knowledge — per category (ornaments, jars, frames, cards) insights"
+  },
+  "entries": [
+    {
+      "category": "amazon-listing",
+      "file": "conversion-tactics.md",
+      "title": "Amazon Listing Conversion Tactics",
+      "source": "Top seller analysis + industry best practices",
+      "status": "pending",
+      "sections": 5,
+      "filled_sections": 1,
+      "last_modified": "2026-04-08T09:41:51.596Z"
+    },
+    {
+      "category": "amazon-listing",
+      "file": "image-requirements.md",
+      "title": "Amazon Listing Image Requirements",
+      "source": "Amazon Seller Central official guidelines",
+      "status": "pending",
+      "sections": 6,
+      "filled_sections": 3,
+      "last_modified": "2026-04-08T09:41:45.831Z"
+    },
+    {
+      "category": "photography",
+      "file": "product-photography.md",
+      "title": "Product Photography for Handmade Items",
+      "source": "Photography best practices for small handmade products",
+      "status": "pending",
+      "sections": 6,
+      "filled_sections": 0,
+      "last_modified": "2026-04-08T09:41:54.479Z"
+    },
+    {
+      "category": "niches",
+      "file": "acrylic-ornaments.md",
+      "title": "Niche: Acrylic Ornaments",
+      "source": "Market research + competitor analysis",
+      "status": "pending",
+      "sections": 7,
+      "filled_sections": 1,
+      "last_modified": "2026-04-08T09:41:58.449Z"
+    },
+    {
+      "category": "niches",
+      "file": "reward-jars.md",
+      "title": "Niche: Reward Jars (Classroom/Kids)",
+      "source": "Market research + competitor analysis",
+      "status": "pending",
+      "sections": 6,
+      "filled_sections": 1,
+      "last_modified": "2026-04-08T09:42:01.792Z"
+    }
+  ]
+}

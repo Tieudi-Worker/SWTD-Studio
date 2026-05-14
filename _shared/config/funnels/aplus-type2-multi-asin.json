@@ -1,0 +1,184 @@
+{
+  "_doc": "A+ Type 2 — Multi-ASIN Parent. N child products dưới 1 parent ASIN. Default Plan A (Modular) vì niche này cần variant comparison + decision guide. Chưa verify end-to-end — schema form first, iterate khi có parent ASIN thật.",
+  "_version": "1.0.0-draft",
+  "_updated": "2026-04-14",
+  "_status": "form_defined_awaiting_real_parent_asin_test",
+  "type": "multi_asin",
+  "default_plan": "A",
+  "required_brief_fields": {
+    "parent_asin_id": "REQUIRED — parent ASIN string, e.g. 'WOODEN_REWARD_COLLECTION'",
+    "aplus_type": "'multi_asin'",
+    "aplus_plan_style": "'A' (default) or 'B'",
+    "child_asins": [
+      {
+        "sku": "TNTD180326i750",
+        "role": "jar",
+        "display_name": "Magnetic Reward Jar",
+        "ref_catalog": {
+          "hero_faceon": "input/product/jar/20260406_143301.jpg",
+          "hero_lifestyle": "input/product/jar/20260406_143529.jpg",
+          "tokens_topview": "input/product/jar/20260406_143209.jpg"
+        },
+        "primary_use_case": "daily behavior tracking",
+        "target_age": "4-7"
+      }
+    ]
+  },
+  "plan_A_modular": {
+    "_description": "Modular formula optimized cho multi-ASIN: collection hero → shared pain → PRODUCT MATRIX (comparison grid) → DECISION GUIDE (which for you) → COLLECTION CTA. Thay vì 1 product deep-dive, bán VARIETY + RIGHT-FIT + BUNDLE.",
+    "modules": [
+      {
+        "n": 1,
+        "name": "Collection Hero",
+        "role": "FAMILY_BRAND_HERO",
+        "intent": "Introduce cả collection cùng lúc — all N products in one warm family shot + parent brand headline. Buyer immediately sees range.",
+        "layout": {
+          "top_30pct": "Baloo BOLD parent brand headline + Calligraphy subhead tagline",
+          "middle_55pct": "Hero photo — all N products arranged lifestyle flat-lay OR standing together on shared surface (warm wood plank, soft pastel backdrop). Scale R3 per product, preserve F1-F8 mỗi product song song.",
+          "bottom_15pct": "Small Baloo product-family strip — N product names with tiny icons, aligned horizontally"
+        },
+        "typography_priority": "display_headline",
+        "ref_recipe_strategy": "Pass refs từ TẤT CẢ N child ASINs (1-2 refs per child, hero_faceon prioritized). Total refs = N×1 up to max 5.",
+        "fidelity_enforcement": "CRITICAL — parallel F1-F8 enforcement N lần. Prompt liệt kê explicit từng product name + preserve từng design.",
+        "seduction_gate": {
+          "WHO": "Buyer discovering the collection/brand for the first time",
+          "PAIN": "Single product feels limited, need range",
+          "HOOK": "All products visible at once — variety signal",
+          "PROOF": "Real family shot, consistent handcraft",
+          "FEEL": "Abundance, brand trust"
+        },
+        "ref_recipe": [
+          "parent_hero_faceon",
+          "parent_hero_lifestyle",
+          "hero_open_reveal",
+          "tokens_topview"
+        ]
+      },
+      {
+        "n": 2,
+        "name": "Shared Pain / Unified Promise",
+        "role": "UMBRELLA_STORY",
+        "intent": "Chạm pain CHUNG mà cả collection giải quyết (not product-specific). Unifying theme.",
+        "layout": {
+          "left_50pct": "Relatable pain scene (soft, not dark) + Baloo BOLD headline capturing umbrella pain",
+          "right_50pct": "Transformation scene showing ANY product từ collection in positive use + Baloo solution statement"
+        },
+        "typography_priority": "display_headline",
+        "ref_recipe_strategy": "Right panel: 1-2 refs từ primary child ASIN (thường là best-seller). Left panel: no product refs needed.",
+        "seduction_gate": {
+          "WHO": "Parent / gift-buyer với pain chung",
+          "PAIN": "Umbrella pain — e.g. 'raising confident kids in daily chaos'",
+          "HOOK": "Relatable daily scene + solution glimpse",
+          "PROOF": "Actual product in transformation half",
+          "FEEL": "Recognition + hope"
+        },
+        "ref_recipe": [
+          "hero_hands_reveal"
+        ]
+      },
+      {
+        "n": 3,
+        "name": "Product Matrix (Variant Comparison Grid)",
+        "role": "VARIANT_COMPARISON",
+        "intent": "Grid so sánh N products — dimensions, primary use-case, target age, material variation. Buyer picks right variant.",
+        "layout": {
+          "top_15pct": "Baloo BOLD headline 'Choose The One That Fits Your Family'",
+          "middle_70pct": "Grid N cells (2x2 if N=4, 1x3 if N=3, 1x4 if N=4 horizontal). Each cell: product photo (hero_faceon) + Baloo product name + 3-line Calligraphy spec list (size / use-case / age range)",
+          "bottom_15pct": "Baloo sub-strip: 'All handcrafted. All gift-ready.'"
+        },
+        "typography_priority": "display_headline + accent_script",
+        "ref_recipe_strategy": "REQUIRED — hero_faceon của TẤT CẢ N child ASINs. Mỗi cell refs riêng, ref catalog hierarchical.",
+        "fidelity_enforcement": "Mỗi cell MUST preserve F1-F8 của product tương ứng. Prompt viết section riêng cho mỗi cell.",
+        "seduction_gate": {
+          "WHO": "Comparison shopper",
+          "PAIN": "Which variant is right for my kid/gift recipient",
+          "HOOK": "Side-by-side grid, clear specs",
+          "PROOF": "Same quality std across variants",
+          "FEEL": "Empowered decision"
+        },
+        "ref_recipe": [
+          "variant_1_faceon",
+          "variant_2_faceon",
+          "variant_3_faceon"
+        ]
+      },
+      {
+        "n": 4,
+        "name": "Decision Guide (Which One For You?)",
+        "role": "FIT_MATCHMAKING",
+        "intent": "Guided matching: 'if your kid is X → pick variant Y'. Narrative flowchart hoặc 3-4 persona scenarios.",
+        "layout": {
+          "top_10pct": "Baloo BOLD headline 'Which Reward Tool Fits Your Stage?'",
+          "middle_80pct": "3-4 persona cards horizontal. Each card: Calligraphy italic persona quote ('My toddler is potty training...') + arrow → Baloo BOLD product recommendation + small product thumbnail",
+          "bottom_10pct": "Baloo CTA hint: 'Not sure? Start with {most_universal_variant}'"
+        },
+        "typography_priority": "display_headline + accent_script",
+        "ref_recipe_strategy": "Small thumbnail refs — hero_faceon của mỗi variant được recommend. Small size OK vì thumbnail context.",
+        "seduction_gate": {
+          "WHO": "Hesitant buyer wanting confidence",
+          "PAIN": "Buyer's remorse if pick wrong variant",
+          "HOOK": "Personal-sounding scenario match",
+          "PROOF": "Decision logic visible",
+          "FEEL": "Guided + trusted"
+        },
+        "ref_recipe": [
+          "hero_hands_reveal"
+        ]
+      },
+      {
+        "n": 5,
+        "name": "Collection CTA (Bundle + Brand Close)",
+        "role": "CLOSE_CONVERSION_COLLECTION",
+        "intent": "Bundle promotion + brand story reinforcement. Drive cross-sell — 'buy the set' or 'start with one, grow into the family'.",
+        "layout": {
+          "left_55pct": "Gift-ready flat lay showing multiple products together trong 1 gift arrangement. Calligraphy 'A growing keepsake family.' overlay",
+          "right_45pct": "Solid accent block — Baloo BOLD 'Start With One. Collect The Family.' + body copy về brand story + dual CTA: 'Shop The Collection →' + 'Start With Best-Seller →' + 3 trust badges"
+        },
+        "typography_priority": "display_headline + accent_script",
+        "ref_recipe_strategy": "Refs từ 2-3 child ASINs minimum (show collection), hero_lifestyle ưu tiên để có variety.",
+        "seduction_gate": {
+          "WHO": "Buyer ready + wanting to commit at collection level",
+          "PAIN": "Don't know where to start",
+          "HOOK": "Bundle option + single-start option dual-CTA",
+          "PROOF": "Gift-ready presentation cả bộ",
+          "FEEL": "Commit decision + brand loyalty seed"
+        },
+        "ref_recipe": [
+          "parent_hero_lifestyle",
+          "hero_open_reveal"
+        ]
+      }
+    ]
+  },
+  "plan_B_storyboard": {
+    "_description": "Backup for multi-ASIN. Storyboard narrative với variant appearances across 5 modules. Harder to execute (N products require parallel fidelity + visual cohesion). Use only nếu brand ưu tiên emotional story hơn rational comparison.",
+    "_when_to_use": "Niche heavily emotional (memorial, wedding, anniversary collection) — comparison feels cold.",
+    "modules": [
+      {
+        "n": 1,
+        "name": "Collection Open Scene",
+        "role": "FAMILY_OPENING"
+      },
+      {
+        "n": 2,
+        "name": "Ritual Across The Family",
+        "role": "CROSS_VARIANT_DAILY_USE"
+      },
+      {
+        "n": 3,
+        "name": "Shared Handcraft Proof",
+        "role": "UMBRELLA_CRAFTSMANSHIP"
+      },
+      {
+        "n": 4,
+        "name": "Milestones By Variant",
+        "role": "VARIANT_SPECIFIC_EMOTIONAL"
+      },
+      {
+        "n": 5,
+        "name": "Growing Keepsake Family CTA",
+        "role": "COLLECTION_LEGACY_CTA"
+      }
+    ]
+  }
+}

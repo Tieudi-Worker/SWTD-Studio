@@ -1,0 +1,26 @@
+{
+  "theme_id": "graduation",
+  "colors": {
+    "primary": "#1B1B1B",
+    "secondary": "#1A3A6B",
+    "accent": "#D4AF37",
+    "neutral": "#F5F0E8"
+  },
+  "visual_elements": [
+    "graduation cap", "diploma scroll", "tassel",
+    "confetti", "honor cords", "class year numbers",
+    "laurel wreath", "mortarboard", "rolled certificate"
+  ],
+  "mood": ["proud", "celebratory", "milestone", "accomplished"],
+  "lighting": "bright warm golden hour light, uplifting and celebratory",
+  "surfaces": [
+    "wooden desk with books", "marble shelf",
+    "graduation stage podium", "home mantelpiece"
+  ],
+  "lifestyle_contexts": [
+    "displayed at graduation party table",
+    "on desk next to diploma and cap",
+    "on shelf with graduation photo and honors",
+    "being given as a congratulations gift"
+  ]
+}

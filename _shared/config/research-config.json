@@ -1,0 +1,162 @@
+{
+  "image_types": [
+    "main-image",
+    "lifestyle",
+    "infographic",
+    "size-chart",
+    "packaging",
+    "emotional"
+  ],
+
+  "filename_patterns": {
+    "main-image": ["main", "hero", "white", "product-only", "front"],
+    "lifestyle": ["lifestyle", "scene", "context", "in-use", "demo"],
+    "infographic": ["infographic", "features", "callout", "info", "benefit"],
+    "size-chart": ["size", "dimension", "scale", "measurement", "spec"],
+    "packaging": ["packaging", "gift", "flat-lay", "flatlay", "bundle", "set", "unbox"],
+    "emotional": ["emotional", "giving", "moment", "happy", "smile", "heartfelt"]
+  },
+
+  "analysis_checklist": [
+    "Image type (main-image / lifestyle / infographic / size-chart / packaging / emotional)",
+    "Dominant colors (3-5 hex codes)",
+    "Layout description (product position, text position, background)",
+    "Text content if any (headlines, bullets, badges)",
+    "Mood (emotional / functional / premium / playful / clean)",
+    "Unique or notable elements"
+  ],
+
+  "category_defaults": {
+    "acrylic_ornament": {
+      "features_template": [
+        "Premium shatterproof acrylic — safe and durable for years",
+        "Vibrant double-sided UV print that won't fade or peel",
+        "Pre-drilled hole with included ribbon — ready to hang instantly",
+        "Lightweight design perfect for any tree or display stand",
+        "Keepsake-quality gift with personalized touch"
+      ],
+      "default_audience": { "buyer": "Family members, friends, coworkers", "recipient": "Loved ones, teachers, colleagues" },
+      "default_copy_style": "emotional",
+      "default_color_preference": "vibrant jewel tones, rich colors with light transparency"
+    },
+    "wood_ornament": {
+      "features_template": [
+        "Natural solid wood construction — warm and authentic feel",
+        "Precision laser-cut with smooth sanded edges",
+        "Vibrant UV print design that lasts for years",
+        "Includes twine or ribbon for easy hanging",
+        "Eco-friendly keepsake gift with rustic charm"
+      ],
+      "default_audience": { "buyer": "Family members, nature lovers", "recipient": "Parents, grandparents, teachers" },
+      "default_copy_style": "emotional",
+      "default_color_preference": "warm earth tones, natural wood browns, soft gold"
+    },
+    "paper_card": {
+      "features_template": [
+        "Premium thick cardstock with a smooth matte finish",
+        "Vibrant full-color print — sharp details front and back",
+        "Perfectly sized to fit standard envelopes",
+        "Blank interior for your personal heartfelt message",
+        "Arrives flat and crisp — ready to give or mail"
+      ],
+      "default_audience": { "buyer": "Gift givers, event planners", "recipient": "Friends, family, teachers" },
+      "default_copy_style": "minimal",
+      "default_color_preference": "clean whites, soft pastels, elegant gold accents"
+    },
+    "jar": {
+      "features_template": [
+        "Airtight seal keeps contents fresh and secure",
+        "Clear glass or premium material shows off beautiful design",
+        "Generous capacity — perfect for small gifts or storage",
+        "Reusable decorative jar for home or office",
+        "Gift-ready packaging — no extra wrapping needed"
+      ],
+      "default_audience": { "buyer": "Gift shoppers, home decor enthusiasts", "recipient": "Teachers, friends, coworkers" },
+      "default_copy_style": "playful",
+      "default_color_preference": "warm neutrals, cheerful accent colors, cozy tones"
+    },
+    "frame": {
+      "features_template": [
+        "Premium wood or acrylic frame built to last",
+        "Easel back for tabletop display — no wall mounting needed",
+        "Personalized design printed in vivid, fade-resistant color",
+        "Fits standard photo sizes for easy customization",
+        "Meaningful keepsake gift for any occasion"
+      ],
+      "default_audience": { "buyer": "Gift givers, sentimental shoppers", "recipient": "Parents, grandparents, partners" },
+      "default_copy_style": "premium",
+      "default_color_preference": "classic wood tones, warm white, subtle gold"
+    },
+    "mixed": {
+      "features_template": [
+        "Premium materials — built with care and attention to detail",
+        "Vibrant UV print design that won't fade or peel",
+        "Multi-functional — doubles as decor and gift",
+        "Compact and lightweight — easy to package and give",
+        "Unique handcrafted design you won't find anywhere else"
+      ],
+      "default_audience": { "buyer": "Gift shoppers, parents, students", "recipient": "Teachers, family, friends" },
+      "default_copy_style": "emotional",
+      "default_color_preference": "harmonious warm palette with accent colors"
+    }
+  },
+
+  "occasion_headlines": {
+    "christmas": { "headline": "A Gift They'll Treasure Forever", "subheadline": "Handcrafted with love this holiday season" },
+    "mothers_day": { "headline": "Because She Deserves Something Special", "subheadline": "A keepsake gift from the heart" },
+    "valentines": { "headline": "With All My Love", "subheadline": "A gift as unique as your love" },
+    "easter": { "headline": "Happy Easter", "subheadline": "A springtime keepsake they'll adore" },
+    "teacher_gift": { "headline": "Thank You For Helping Me Grow", "subheadline": "A heartfelt gift for an amazing teacher" },
+    "birthday": { "headline": "Happy Birthday", "subheadline": "A one-of-a-kind gift for a one-of-a-kind person" },
+    "general_gift": { "headline": "Made With Love, Given With Heart", "subheadline": "A thoughtful handcrafted gift" }
+  },
+
+  "enrichment_priority": [
+    "brief_value",
+    "competitor_analysis",
+    "category_defaults",
+    "generic_fallback"
+  ],
+
+  "product_keywords": {
+    "category_map": {
+      "jar": ["reward jar", "mason jar", "jar"],
+      "acrylic_ornament": ["acrylic ornament", "acrylic keepsake", "acrylic"],
+      "wood_ornament": ["wood ornament", "wooden ornament"],
+      "paper_card": ["greeting card", "gift card holder", "paper card", "card holder"],
+      "frame": ["photo frame", "picture frame", "frame"]
+    },
+    "occasion_map": {
+      "classroom_reward": ["reward", "classroom", "potty training", "incentive", "behavior", "chore", "training"],
+      "teacher_gift": ["teacher appreciation", "end of year teacher", "teacher gift", "teacher"],
+      "christmas": ["christmas", "xmas", "holiday season"],
+      "mothers_day": ["mothers day", "mother", "mom", "mama"],
+      "birthday": ["birthday", "bday"],
+      "valentines": ["valentine", "love"],
+      "easter": ["easter", "spring"],
+      "general_gift": ["gift", "present", "keepsake"],
+      "graduation": ["graduation", "grad", "class of", "commencement", "diploma"]
+    },
+    "materials_map": {
+      "natural wood": ["wood", "wooden", "bamboo", "plywood"],
+      "acrylic": ["acrylic", "plexiglass", "clear"],
+      "magnetic": ["magnetic", "magnet"],
+      "UV print": ["uv print", "print uv", "uv printed"],
+      "paper": ["paper", "cardstock", "card stock"],
+      "metal": ["metal", "iron", "steel", "tin"],
+      "rope": ["rope", "jute", "hemp", "twine"]
+    },
+    "niche_map": {
+      "kids_reward": ["reward", "incentive", "behavior chart", "chore chart", "potty training"],
+      "teacher_appreciation": ["teacher", "educator", "classroom"],
+      "home_decor": ["decor", "decoration", "display", "shelf"],
+      "gift_giving": ["gift", "present", "keepsake", "souvenir"]
+    }
+  },
+
+  "subfolder_patterns": {
+    "reference": ["reference", "reference-product", "ref", "product-photos", "photos"],
+    "listing": ["Listing-temp", "Listing-template", "listing", "listing-samples"],
+    "aplus": ["Content A+-temp", "Content A+-template", "aplus", "a-plus", "aplus-samples"]
+  }
+}

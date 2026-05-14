@@ -1,0 +1,26 @@
+{
+  "sku": "_SAMPLE_WOOD",
+  "product_name": "Personalized Wooden Memorial Ornament",
+  "category": "wood_ornament",
+  "materials": ["birch plywood", "wood stain"],
+  "dimensions": "4x4 inches",
+  "features": [
+    "Laser engraved with personalized name and date",
+    "Made from FSC-certified birch plywood",
+    "Includes natural twine for hanging"
+  ],
+  "usp": "A heartfelt keepsake to remember loved ones",
+  "occasion": "christmas",
+  "seasonal_theme": "christmas",
+  "target_audience": {
+    "buyer": "family member preserving memory",
+    "recipient": "themselves and family"
+  },
+  "input_images": [
+    "input/product/wood_front.jpg",
+    "input/product/wood_back.jpg",
+    "input/product/wood_angle.jpg"
+  ],
+  "color_preference": "warm wood tones with subtle gold accents",
+  "copy_style": "emotional"
+}

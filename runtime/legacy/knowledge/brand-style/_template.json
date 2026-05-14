@@ -1,0 +1,37 @@
+{
+  "_doc": "Template — copy to {brand_id}.json and fill in.",
+  "_schema_version": 1,
+  "brand_id": "EXAMPLE",
+  "brand_name": "Example Handmade Co.",
+  "persona": {
+    "voice": "warm, sincere, slightly poetic — never corporate",
+    "tone_words": ["heartfelt", "thoughtful", "quiet", "enduring"],
+    "avoid_words": ["luxury", "premium", "exclusive", "elite"]
+  },
+  "visual_identity": {
+    "color_anchors": {
+      "primary": "#8B6F47",
+      "secondary": "#F5E6D3",
+      "accent": "#C9A961"
+    },
+    "lighting_default": "Warm golden hour from camera-left, soft fill, hard rim from behind",
+    "prop_palette": ["natural twine", "kraft paper", "dried eucalyptus", "vintage book", "small fairy lights"],
+    "art_direction_style_reference": "Kinfolk warm minimal with subtle Wes Anderson symmetry, 85mm shallow DoF, golden hour rim"
+  },
+  "typography": {
+    "heading": "Playfair Display",
+    "body": "Inter",
+    "weight_heading": "bold",
+    "weight_body": "500"
+  },
+  "copy_style": {
+    "headline_pattern": "{emotional_verb} {product_essence}",
+    "headline_examples": ["Made to remember", "Held with care", "Crafted for keeping"],
+    "tagline": "Handmade, not mass-produced"
+  },
+  "ethics": {
+    "no_acute_grief_targeting": true,
+    "no_late_night_urgency": true,
+    "no_artificial_scarcity": true
+  }
+}

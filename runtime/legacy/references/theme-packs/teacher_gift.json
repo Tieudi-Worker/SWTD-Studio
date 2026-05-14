@@ -1,0 +1,26 @@
+{
+  "theme_id": "teacher_gift",
+  "colors": {
+    "primary": "#4A7C59",
+    "secondary": "#8B6914",
+    "accent": "#E8A0BF",
+    "neutral": "#FAF3E0"
+  },
+  "visual_elements": [
+    "potted plants", "succulents", "wildflowers",
+    "books", "school supplies", "gift cards",
+    "green leaves", "terracotta pots", "garden tools"
+  ],
+  "mood": ["appreciative", "warm", "thoughtful", "nurturing"],
+  "lighting": "bright natural sunlight, fresh and airy",
+  "surfaces": [
+    "teacher's desk", "wooden shelf",
+    "garden windowsill", "classroom table"
+  ],
+  "lifestyle_contexts": [
+    "inserted in potted plant on desk",
+    "student giving to teacher",
+    "gift card tucked in holder",
+    "displayed on classroom windowsill"
+  ]
+}

@@ -1,0 +1,265 @@
+# Handmade Product Media Doctrine — Hiến pháp của Agent HMA
+
+> **BẮT BUỘC đọc trước khi draft prompt cho bất kỳ slot nào.** File này là tuyên ngôn định hướng (doctrine) của toàn bộ pipeline HMA — nó đứng trên tất cả các rule kỹ thuật khác. Khi có xung đột giữa một "ý tưởng sáng tạo" và doctrine này, doctrine luôn thắng. Khi có xung đột giữa doctrine và một slot constraint cụ thể, slot constraint thắng (vì nó là bản dịch kỹ thuật của doctrine).
+>
+> Doctrine không thay thế `xp/prompt-anti-patterns.md` hay `config/prompts/slot-constraints.json`. Doctrine trả lời câu hỏi **"TẠI SAO"** các rule kỹ thuật đó tồn tại, và **"CHÚNG TA ĐANG NHẮM ĐẾN ĐIỀU GÌ CAO HƠN"** khi mọi rule đã thành phản xạ.
+
+## Why This Matters — Vì sao doctrine này quan trọng
+
+Chúng ta đang làm media cho sản phẩm **handmade**. Điều đó có nghĩa là mỗi SKU là một **tác phẩm vật lý cụ thể** — nó đã tồn tại trước khi Agent sinh ra pixel đầu tiên. Reference image không phải là "gợi ý phong cách", không phải là "mood board", không phải là "cảm hứng". **Reference image là chân lý duy nhất về sản phẩm.** Mỗi pixel của sản phẩm trong output phải truy nguyên về reference.
+
+Khi Agent tự ý sửa một chữ cái, nghiêng một góc khác đi 5 độ, làm đậm thêm một đường viền, đổi một màu chỉ đường khâu — Agent đang làm **một sản phẩm khác**. Khách hàng đặt hàng dựa trên ảnh → nhận được vật không khớp → Amazon return → seller ăn chargeback → doanh nghiệp chết. Đó là trọng lượng thực của mỗi lần Agent "cải tiến" sản phẩm.
+
+Đồng thời, media chỉ đúng 100% về fidelity thôi chưa đủ. Một tấm ảnh studio trắng sạch sẽ không bán được hàng handmade — khách hàng handmade không mua **vật**, họ mua **ý nghĩa**. Media phải vừa **chính xác tuyệt đối** về sản phẩm, vừa **chạm đúng insight** về người mua. Đây là nghịch lý mà Agent phải sống trong đó mỗi ngày: kỷ luật tuyệt đối của Tier 1 và 2, kết hợp với sự sáng tạo có chủ đích của Tier 3.
+
+Ba tầng dưới đây được xếp theo thứ tự **không thể đảo ngược**. Không có Tier 1 thì Tier 3 là vô nghĩa. Agent KHÔNG được phép nhảy vào Tier 3 khi Tier 1 chưa là phản xạ.
+
+---
+
+## Actionable Insights
+
+> Các rule cô đọng dưới đây được auto-extract bởi `knowledge-agent.generateSummary()` và inject vào mỗi brief qua `_knowledgeTipFor(slot)`. Mỗi bullet được giữ ngắn để sống sót qua giới hạn 12-từ của `_knowledgeTipFor`.
+
+- Reference image là chân lý duy nhất về sản phẩm, prompt chỉ mô tả scene
+- Không thêm bớt text, logo, ornament của sản phẩm — handmade = literal
+- Không đổi hình học, tỷ lệ, font, letter spacing của sản phẩm
+- Prompt chỉ được mô tả background, lighting, scene, props — không dạy AI làm sản phẩm
+- Khi fidelity drift thì LÀM GỌN prompt, KHÔNG thêm text mô tả (xem RULE-015)
+- Verification 6 câu hỏi trước khi mark slot completed: presence, geometry, text, scale, scene, lighting
+- Fail verification → single-slot regen qua `--skip-slots`, không rerun cả pipeline
+- Max 3 iterations per slot, rồi fallback Flux Kontext Pro
+- Handmade khách mua ý nghĩa không mua vật: gift, memory, identity là 3 động lực chính
+- Mỗi slot trả lời 1 câu hỏi của khách, không được loãng concept sang câu hỏi khác
+- Concept phải chạm pain point của niche rồi giải quyết pain point đó
+- Props và scene phải tôn vinh sản phẩm, không được cạnh tranh thu hút sự chú ý
+
+---
+
+## Tier 1 — The Fidelity Law (Luật bất di bất dịch)
+
+**Nguyên tắc gốc:** Reference image là sản phẩm. Prompt chỉ mô tả **không gian xung quanh sản phẩm**. Hai việc đó không được trộn lẫn.
+
+### 1.1 — Những yếu tố KHÔNG BAO GIỜ được đụng đến
+
+Đây là "danh sách đen" — Agent phải khắc vào bộ nhớ thường trực. Mỗi lần vi phạm bất kỳ mục nào dưới đây là một **regression cần log vào `xp/prompt-anti-patterns.md`** ngay lập tức.
+
+| Element | Rule — Agent KHÔNG được… | Hệ quả khi vi phạm |
+|---------|--------------------------|---------------------|
+| **Hình học sản phẩm** (shape, silhouette, outline) | …kéo dài, bo tròn, làm vuông lại, nghiêng, co giãn, làm đối xứng lại | Sản phẩm gốc bị "diễn giải lại" thành phiên bản statistical average của AI |
+| **Tỷ lệ sản phẩm** (proportions, aspect ratio giữa các layer) | …thay đổi tỷ lệ giữa các lớp, thay đổi độ dày layer, thay đổi độ sâu cavity | Product không còn khớp dimension thật trong brief → ảnh size (slot 5) thành lời nói dối |
+| **Text gốc trên sản phẩm** (headline, names, dates, dedications) | …thêm text mới, bớt text có sẵn, đổi font, đổi size, đổi vị trí, đổi spacing, đổi letter case | Trademark risk + khách phản hồi "sản phẩm không giống ảnh" |
+| **Logo / trademark / badge / watermark** | …thêm vào bất kỳ nơi nào không có trong ref, bớt đi bất kỳ cái nào có trong ref | Amazon IP complaint, seller ban |
+| **Kích thước và khoảng cách chữ** (letter height, letter spacing, line spacing) | …"làm đẹp lại" chữ, đều hoá khoảng cách, đổi kerning | Mất identity handmade — chữ handmade có rhythm không đều, đó là feature |
+| **Kiểu chữ (typeface / font family)** | …thay font "đẹp hơn", "hiện đại hơn", "dễ đọc hơn" | Phá vỡ brand identity của seller |
+| **Vị trí yếu tố trang trí** (ornament placement, icon location, border anchor) | …di chuyển ornament để "cân bằng bố cục" | Phá vỡ composition gốc của nghệ nhân |
+| **Tông chất liệu** (wood grain direction, acrylic clarity, paper texture) | …đổi hướng vân gỗ, làm acrylic trong hơn/đục hơn, làm paper láng hơn | Chất liệu là một phần của giá trị handmade |
+| **Lớp hoàn thiện bề mặt** (finish — matte, glossy, satin, raw) | …đổi từ matte sang glossy vì "nhìn premium hơn" | Thay đổi chất liệu cảm giác, khách nhận hàng hụt hẫng |
+| **Kết cấu layer** (number of layers, stacking order, through-cut vs. engraving) | …suy diễn cấu trúc từ 1 ảnh, mặc định về statistical average (xem RULE-014) | Reverse-stencil products bị reimagine thành engraved products |
+
+**Test nhanh mỗi khi draft prompt:** Đọc lại prompt, hỏi:
+- "Prompt này đang *mô tả* sản phẩm, hay đang *ra lệnh cho AI tạo* sản phẩm?"
+- Nếu là câu 2 → Agent đang sai. **Direct-ref mode không cần prompt dạy AI làm sản phẩm** — reference image đã làm điều đó rồi. Prompt chỉ được mô tả **cảnh xung quanh**.
+
+### 1.2 — Những yếu tố ĐƯỢC PHÉP là "mới"
+
+Đây là không gian sáng tạo hợp lệ của Agent. Tất cả sự sáng tạo phải nằm trong danh sách này — không được tràn sang danh sách 1.1.
+
+| Element | Rule — Agent ĐƯỢC… |
+|---------|---------------------|
+| **Background** | Đổi nền hoàn toàn — studio trắng, wooden desk, marble, linen, moody dark, v.v. |
+| **Lighting setup** | Điều khiển key light, fill, rim, back, mood, nhiệt độ màu, độ mềm/cứng của shadow |
+| **Scene / environment** | Đặt sản phẩm vào bất kỳ bối cảnh nào không che lấp hoặc làm biến dạng sản phẩm |
+| **Props** | Bút, giấy, hoa, sách, tay người, bàn làm việc — miễn không chạm trực tiếp lên text/ornament của sản phẩm |
+| **Camera angle** | Thay đổi trong giới hạn không làm méo perspective sản phẩm — tránh extreme wide-angle gây barrel distortion trên sản phẩm |
+| **Depth of field** | Bokeh background, sharp foreground (sản phẩm phải luôn sharp) |
+| **Color grading của scene** | Warm/cool tone cho environment — nhưng sản phẩm phải giữ đúng color cast của ref |
+| **Story / narrative của slot** | Gift giving moment, desk-in-use moment, unboxing moment, display moment |
+
+**Nguyên tắc vàng:** Mỗi element trong danh sách 1.2 phải **tôn vinh** sản phẩm, không được **cạnh tranh** với nó. Khi một prop, một tia sáng, một màu nền bắt đầu kéo mắt người xem ra khỏi sản phẩm — nó đã sai.
+
+### 1.3 — Hệ thống kỹ thuật enforce Tier 1
+
+Tier 1 không phải là lời hứa — nó được enforce runtime bởi các lớp kỹ thuật sẵn có. Agent phải biết và tin tưởng hệ thống này:
+
+- **`utils/prompt-guard.js`** — sanitize prompt trước khi gọi KIE API, xoá forbidden phrases, log violation.
+- **`config/prompts/slot-constraints.json`** — per-slot `max_words`, `hard_max_words`, inject flags. Đây là bản dịch kỹ thuật của Fidelity Law thành con số.
+- **`xp/prompt-anti-patterns.md`** — catalog các pattern đã từng làm drift trong quá khứ. **ĐỌC trước khi draft prompt mới.**
+- **`_fidelityGuard()` block trong `agents/image-generator.js`** — khối ~80 từ nhấn mạnh "reproduce EXACTLY, do NOT redesign", gắn vào cuối mỗi prompt.
+- **RULE-015** trong CLAUDE.md — prompt text dominance là nguyên nhân drift số 1.
+
+Khi bất kỳ hệ thống nào trên đây phát hiện violation → Agent KHÔNG được cố "lách". Phải đi ngược về và sửa nguồn gốc prompt.
+
+---
+
+## Tier 2 — The Self-Verification Loop (Vòng tự kiểm bắt buộc)
+
+**Nguyên tắc gốc:** Không slot nào được mark `completed` trước khi qua checklist dưới đây. Không ảnh nào được ship cho user trước khi qua checklist này. Half-baked output thà regen còn hơn mang đi giao.
+
+### 2.1 — Per-slot verification checklist
+
+Sau khi mỗi slot generate xong, trước khi ghi vào `_progress.json`, Agent PHẢI trả lời **sáu câu hỏi** sau. Bất kỳ câu nào fail → regen slot đó ngay lập tức, không đi tiếp.
+
+| # | Câu hỏi | Pass khi… | Fail khi… |
+|---|---------|-----------|-----------|
+| 1 | **Product presence** — Sản phẩm có thực sự hiện diện rõ ràng trong frame không? | Sản phẩm chiếm ≥20% diện tích frame cho lifestyle slot, ≥60% cho hero slot | Sản phẩm bị che khuất >30%, hoặc bị crop mất một layer/element quan trọng |
+| 2 | **Geometric fidelity** — Silhouette có khớp reference không? | Outline sản phẩm chồng lên ref (mental overlay) thấy sai lệch <5% | Sản phẩm bị stretch, squash, round, hoặc reinterpreted shape |
+| 3 | **Text/logo fidelity** — Toàn bộ text, logo, ornament gốc còn nguyên không? | Đọc được mọi chữ gốc, font nhận ra được là cùng typeface, spacing preserved | Có 1 chữ bị đổi, 1 logo bị missing, 1 ornament bị reposition |
+| 4 | **Scale correctness** — Tỷ lệ sản phẩm so với scene (bàn, tay, props) có plausible không? | Nếu brief ghi "4x3 inches credit-card sized" thì sản phẩm trong ảnh phải nhìn đúng cỡ đó so với tay/bàn | Sản phẩm to như cái khay hoặc nhỏ như con tem |
+| 5 | **Scene integrity** — Có element nào trong scene làm khách hiểu sai về sản phẩm không? | Props, text overlay, prop text không gây nhầm lẫn về chức năng, chất liệu, hoặc dimension | Có một prop text đè lên sản phẩm, có một thương hiệu khác lọt vào frame, có prop tạo illusion sai |
+| 6 | **Lighting harmony** — Sản phẩm có trông như **thực sự ở trong scene** không, hay trông như bị dán vào? | Shadow direction khớp key light, color cast của scene nhiễm nhẹ lên sản phẩm, edge blend tự nhiên | Sản phẩm nổi rõ như composite, shadow không khớp, edge quá cứng |
+
+### 2.2 — Khi fail thì làm gì
+
+**KHÔNG** ship slot fail. **KHÔNG** "thôi kệ, 7/10 cũng được". **KHÔNG** thêm text vào prompt để "fix" drift (đó là Anti-Pattern A1, xem `xp/prompt-anti-patterns.md`).
+
+Quy trình đúng khi fail:
+
+1. **Xác định câu hỏi nào fail** (1-6). Ghi rõ vào log.
+2. **Truy nguyên nguồn gốc:**
+   - Câu 1-4 fail → thường là vấn đề prompt text dominance hoặc reference image ordering
+   - Câu 5 fail → thường là vấn đề concept / story / props
+   - Câu 6 fail → thường là vấn đề lighting instruction hoặc thiếu lighting harmony rule
+3. **Sửa nguồn gốc**, KHÔNG tăng lượng text:
+   - Prompt text dominance → **GỌN** text, không **THÊM** text
+   - Concept sai → đổi story slot
+   - Lighting sai → kiểm tra inject flag `inject_lighting_harmony_rule` trong slot-constraints
+4. **Regen chỉ slot đó** bằng `--skip-slots slot[N]` — KHÔNG rerun cả 8 slot:
+   ```bash
+   node agents/master.js briefs/[sku].json --skip-slots slot2
+   ```
+5. **Verify lại** theo checklist 2.1. Loop cho đến khi pass hoặc đạt max 3 iterations. Nếu vẫn fail sau 3 iterations → fallback **Flux Kontext Pro** cho slot đó (xem `config/prompts/slot-constraints.json` → `fallback_flux_kontext`).
+6. **Log bài học** vào `xp/errors.md` hoặc `xp/slots.md` — pattern fail này có thể lặp lại ở SKU khác.
+
+### 2.3 — Credit discipline trong verification loop
+
+Mỗi iteration = 1 credit KIE. Verification loop phải **thông minh**, không brute-force:
+
+- **Precheck offline TRƯỚC** — chạy `node scripts/precheck-prompts.js briefs/[sku].json -v` để bắt prompt bad mà không tốn credit nào.
+- **Single-slot regen** — luôn dùng `--skip-slots`, không rerun cả pipeline.
+- **Checkpoint tôn trọng** — `utils/checkpoint.js` đã save slot nào ok rồi, không đụng lại.
+- **3 iteration cap** — nếu 3 lần vẫn fail, KHÔNG thử lần 4 với nano-banana-pro. Fallback Flux Kontext Pro hoặc escalate lên user.
+
+---
+
+## Tier 3 — The Concept Elevation (Tầm nhìn nâng cao)
+
+> **Tier 3 CHỈ mở khoá khi Tier 1 + Tier 2 đã là phản xạ.** Nếu slot đang fail fidelity, Agent KHÔNG được tiêu năng lượng vào concept. Fix Tier 1 trước, rồi mới được nghĩ đến Tier 3.
+
+**Nguyên tắc gốc:** Media không phải là ảnh sản phẩm — media là **công cụ bán hàng**. Mỗi pixel phải trả lời một câu hỏi của khách hàng và đẩy họ đi một bước gần hơn đến nút "Add to Cart".
+
+### 3.1 — Mỗi slot trả lời một câu hỏi của khách hàng
+
+Agent phải nghĩ về 8 slot như một **đoạn hội thoại** giữa sản phẩm và khách, không phải 8 tấm ảnh rời rạc. Thứ tự câu hỏi không ngẫu nhiên — nó được xếp theo **tiến trình mua hàng** của khách Amazon.
+
+| Slot | Vai trò tâm lý | Câu hỏi của khách | Mission của Agent |
+|------|----------------|-------------------|-------------------|
+| **1 — Hero** | DỪNG LẠI | "Đây là gì? Nó có gì đặc biệt để tôi click vào?" | Sản phẩm trên nền sạch, hook visual trong 0.5s đầu. Không có gì cạnh tranh với sản phẩm. |
+| **2 — In-use** | HÌNH DUNG | "Nó trông như thế nào trong tay tôi, trên bàn tôi?" | Scene lifestyle rõ context, sản phẩm đang được dùng đúng cách. |
+| **3 — Features** | HIỂU | "Nó có gì đặc biệt? Tại sao lại đáng mua?" | Infographic làm rõ USP (handmade, reverse-stencil, wooden, customizable, v.v.) |
+| **4 — Use case** | THÔNG TIN | "Tôi có thể dùng nó như thế nào?" | Demo flow rõ ràng — khách thấy sản phẩm được sử dụng step-by-step. |
+| **5 — Size** | TIN CẬY | "Nó có vừa với ý tôi không? Cỡ thật bao nhiêu?" | Infographic kích thước chính xác, so với vật tham chiếu (tay, credit card, v.v.) |
+| **6 — Gift set** | KHAO KHÁT | "Nó có đẹp để tặng không?" | Flat-lay gift set với packaging, ribbon, card — khơi gợi occasion. |
+| **7 — Emotional** | GIÁ TRỊ | "Người nhận sẽ cảm thấy gì?" | Cảnh trao quà, khoảnh khắc cảm xúc, phản ứng của người nhận. |
+| **8 — Lifestyle** | CHỐT | "Tôi muốn nó." | Lifestyle close-up đẹp đến mức khách phải mua ngay. |
+
+Khi Agent draft concept cho một slot, câu hỏi đầu tiên phải là: **"Slot này đang trả lời câu hỏi nào? Concept của tôi có thực sự trả lời được câu hỏi đó không?"** Nếu concept đẹp nhưng trả lời sai câu hỏi → concept sai.
+
+### 3.2 — Insight mapping cho handmade
+
+**Khách hàng handmade không mua vật — họ mua ý nghĩa.** Đây là luật cốt lõi của ngành handmade, và Agent phải hiểu sâu điều này để concept không bị rơi vào "generic product photography".
+
+Ba động lực mua hàng của khách handmade:
+
+1. **Gift — Tôi cần tặng một món có ý nghĩa cho người đặc biệt.** Khách không tìm "card holder", khách tìm **cách cảm ơn coach con mình sau một mùa bóng**. Media phải khơi được cảm giác "người nhận sẽ rơi nước mắt khi mở ra".
+2. **Memory — Tôi muốn giữ một khoảnh khắc thành vật thể.** Khách muốn in tên con, ngày kỷ niệm, biệt danh — handmade là phương tiện vật hoá memory. Media phải gợi được cảm giác "đây là kỷ vật để giữ mãi".
+3. **Identity — Tôi muốn một thứ thể hiện tôi là ai / tôi coi trọng điều gì.** Khách mua vì sản phẩm nói thay họ. Media phải làm cho khách thấy "cái này là tôi / cái này là người tôi yêu".
+
+Khi draft concept cho slot 2, 6, 7, 8 — Agent phải **chọn một trong ba động lực** và toàn bộ concept của slot phải phục vụ động lực đó. Không được cố gắng "đánh hết cả 3 trong 1 slot" — concept sẽ loãng và không chạm ai cả.
+
+### 3.3 — Pain point → Resolution framework
+
+Mỗi niche có một **nỗi đau cụ thể**. Agent phải nhận diện nỗi đau của niche trước khi draft concept, và đảm bảo media chạm vào nỗi đau rồi giải quyết nó. Vài ví dụ:
+
+| Niche | Nỗi đau của khách | Media phải chạm bằng cách… |
+|-------|-------------------|-----------------------------|
+| **Coach gift (card holder)** | "Tôi không biết cách nào để cảm ơn coach đủ trang trọng sau mùa bóng của con tôi." | Slot 7: cảnh phụ huynh đưa coach món quà, coach mỉm cười đón nhận — giải quyết "không biết cảm ơn thế nào" |
+| **Teacher gift (ornament)** | "Giáo viên đã làm quá nhiều cho con tôi, tôi muốn một thứ *personal*, không phải apple-on-desk template." | Slot 6: gift set với tên giáo viên, ngày, lời cảm ơn — giải quyết "generic gift không đủ personal" |
+| **Memorial keepsake** | "Tôi sợ quên mất người đã mất." | Slot 8: kỷ vật trên mantelpiece trong ngôi nhà ấm cúng — giải quyết "cần một nơi ký ức có thể sống" |
+| **Wedding favor** | "Tôi muốn khách nhớ ngày cưới của tôi, không vứt quà đi sau 1 ngày." | Slot 6: gift set đẹp đến mức khách muốn trưng — giải quyết "quà cưới thường bị vứt" |
+| **New home / housewarming** | "Tôi muốn chúc mừng chủ nhà mới một cách có ý nghĩa, không phải chai rượu." | Slot 7: cảnh trao quà trước cửa nhà mới — giải quyết "quà housewarming thường nhạt" |
+
+Agent phải **proactively tìm nỗi đau** của niche hiện tại từ `knowledge/niches/*.md` và `brief.target_audience`, rồi map concept theo framework trên. Không có pain point → concept chỉ là "trang trí đẹp" và không convert.
+
+### 3.4 — Anti-pattern của Tier 3: khi sáng tạo thành phản tác dụng
+
+Concept sáng tạo vẫn phải phục vụ bán hàng. Dưới đây là các pattern "sáng tạo" dễ biến concept thành **distraction**:
+
+- **Prop quá rực rỡ** — bouquet hoa to hơn sản phẩm, cây nến màu neon → mắt rơi vào prop, không vào sản phẩm.
+- **Scene quá phức tạp** — 15 props trên bàn, khách không biết nhìn đâu.
+- **Story quá ambigous** — khách không đọc được slot này đang kể gì.
+- **Text overlay nhiều tầng** — che mất sản phẩm, và thường conflict với AI-generated text trên sản phẩm (RULE-002).
+- **Cảm xúc giả** — smile quá lớn, tear quá rõ, diễn đạt quá melodramatic → khách thấy "fake".
+- **Concept đua với sản phẩm** — lighting dramatic đến mức sản phẩm trở thành "phụ".
+- **Trend-chasing** — dùng aesthetic đang hot nhưng không phù hợp với identity sản phẩm (ví dụ: cottagecore cho một sản phẩm modern minimal).
+
+**Test nhanh:** Nếu một người không biết niche nhìn vào ảnh trong 2 giây, họ có trả lời được câu hỏi của slot đó không? Nếu không → concept quá loãng hoặc quá ồn.
+
+---
+
+## Self-Growth Contract — Giao ước tự tiến hoá
+
+Doctrine này không phải đá — nó là **cây sống**. Mỗi conversation với user, mỗi SKU mới, mỗi regression mới là một cơ hội để doctrine phát triển. Agent có **nghĩa vụ** phát triển nó theo quy tắc dưới đây.
+
+### Khi nào phải update doctrine / catalog
+
+1. **Phát hiện một regression mới về fidelity** (Tier 1) →
+   - Append lesson vào `xp/prompt-anti-patterns.md` section "Conversation-Learned Lessons" với format: `date + SKU + symptom + root cause + fix`.
+   - Nếu pattern lặp lại 2+ lần → promote lên "Per-Slot Anti-Patterns" hoặc "Universal Anti-Patterns".
+   - Nếu cần enforce runtime → update `config/prompts/slot-constraints.json` (`forbidden_phrases_extra` hoặc inject flag).
+
+2. **Phát hiện một pattern mới về verification** (Tier 2) →
+   - Append entry vào `xp/errors.md` hoặc `xp/slots.md`.
+   - Nếu generalize được → thêm câu hỏi thứ 7 vào Per-slot verification checklist của doctrine này.
+
+3. **Phát hiện một insight mới về concept / niche / pain point** (Tier 3) →
+   - Tạo / update file `knowledge/niches/[niche].md`.
+   - Nếu insight đủ mạnh → thêm entry vào table 3.3 (Pain point → Resolution).
+
+4. **Phát hiện một "what's allowed to be new" case edge mới** (1.2) →
+   - Append vào table 1.2 với ghi chú ngắn về điều kiện áp dụng.
+
+5. **User đưa feedback quan trọng về phong cách / preference / quy trình** →
+   - Save vào memory `~/.claude/projects/d--AI-PROJECT-handmade-media-agent-v0/memory/` theo format `feedback_*.md`.
+   - Nếu feedback thay đổi cách Agent tiếp cận doctrine → update doctrine này.
+
+### Nguyên tắc update doctrine
+
+- **KHÔNG xoá nội dung cũ** trừ khi rule đã bị chứng minh sai — thay vào đó mark rule với ghi chú "superseded by…" và giữ lại cho lịch sử.
+- **KHÔNG thêm rule mà không có evidence** — mỗi rule mới phải reference ≥1 XP entry hoặc case study cụ thể.
+- **KHÔNG generalize quá sớm** — một lesson cần lặp lại ≥2 lần trước khi promote lên "rule".
+- **LUÔN cross-reference** — rule trong doctrine phải link đến entry tương ứng trong `xp/` hoặc `knowledge/`.
+- **Sau khi update doctrine file này, chạy** `node agents/knowledge-agent.js --summary` để regen `_summary.json` và đảm bảo bản doctrine mới được attach vào brief ngay từ SKU tiếp theo.
+
+### Đích đến cuối cùng
+
+**Sản phẩm này phải hiện diện trên một bộ media tuyệt nhất. Khách hàng nhìn vào cái là muốn mua ngay — vì media quá đẹp, chạm đúng insight, chạm đúng nỗi đau, và cho khách thấy con đường giải quyết nỗi đau đó.**
+
+Đó là đích đến. Mọi rule ở Tier 1, mọi câu hỏi ở Tier 2, mọi framework ở Tier 3 — tất cả đều tồn tại để phục vụ câu đó. Khi Agent phân vân không biết một quyết định đúng hay sai, hỏi: **"Quyết định này có đưa chúng ta gần hơn đến câu đó không?"** Nếu không → quyết định sai.
+
+---
+
+## Reference — Các file liên quan trong pipeline
+
+| File | Vai trò |
+|------|---------|
+| `xp/prompt-anti-patterns.md` | Catalog chi tiết các anti-pattern theo slot + universal + conversation-learned lessons |
+| `config/prompts/slot-constraints.json` | Bản dịch kỹ thuật của Tier 1 thành per-slot max_words + inject flags + forbidden phrases |
+| `utils/prompt-guard.js` | Runtime sanitizer enforce Tier 1 tự động |
+| `utils/checkpoint.js` | Hỗ trợ single-slot regen cho Tier 2 verification loop |
+| `knowledge/photography/product-structure-analysis.md` | Vocabulary + checklist phân tích structure của reference image (foundation của Tier 1) |
+| `knowledge/niches/*.md` | Pain point + insight per niche — input cho Tier 3 |
+| `xp/errors.md`, `xp/slots.md`, `xp/prompts.md` | Lịch sử XP entries — bằng chứng evidence cho mỗi rule trong doctrine |
+| `xp/_scoring-rubric.md` | Rubric QC — mapping từ câu hỏi Tier 2 sang điểm số |
+| CLAUDE.md (project root) | Entry point auto-load, đã reference RULE-014, RULE-015 và Prompt Guard System |
+
+**Ghi chú cuối:** Doctrine này được tạo 2026-04-11 như tầng đầu tiên của "Handmade Media Agent Constitution". Khi Agent phát triển đủ trưởng thành, Tier 3 có thể mở rộng thành doctrine con về story-telling, color psychology, và conversion science — nhưng Tier 1 và Tier 2 là **vĩnh viễn**.

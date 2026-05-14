@@ -1,0 +1,21 @@
+{
+  "name": "openclaw-hma-runtime",
+  "version": "0.1.0",
+  "description": "Runtime executor for openclaw-hma skill pack. v0.1 delegates to legacy production code; v0.2 will be a full ESM port.",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "precheck": "node bin/precheck.mjs",
+    "master": "node bin/master.mjs",
+    "listing": "node bin/listing.mjs",
+    "aplus": "node bin/aplus.mjs",
+    "video": "node bin/video.mjs",
+    "lint": "node -c bin/master.mjs && node -c bin/listing.mjs && node -c bin/aplus.mjs && node -c bin/video.mjs && node -c bin/precheck.mjs && node -c bin/single-skill.mjs && node -c lib/legacy-bridge.mjs && echo Lint OK"
+  },
+  "dependencies": {
+    "dotenv": "^16.6.1"
+  }
+}

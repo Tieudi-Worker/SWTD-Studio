@@ -1,0 +1,15 @@
+{
+  "_doc": "Slot funnel for gift_ornament category. STOP→IMAGINE→FEATURES→USE-CASE→SIZE→GIFT→EMOTIONAL→CLOSE",
+  "category": "gift_ornament",
+  "applicable_to": ["wood_ornament", "acrylic_ornament", "frame"],
+  "slots": [
+    { "n": 1, "role": "STOP", "intent": "Pure white hero", "concept_template": "hero_white" },
+    { "n": 2, "role": "IMAGINE", "intent": "Lifestyle wide in user context", "concept_template": "lifestyle_wide" },
+    { "n": 3, "role": "FEATURES_SIZE", "intent": "LOCKED (RULE-016): Combined features + size infographic — header banner with category icon + product with dimension arrows (width, height, thickness bubble) + N numbered callout cards (rounded squares, macro + 2-line label each)", "concept_template": "infographic_features_size_combined" },
+    { "n": 4, "role": "USE_CASE", "intent": "Demonstrate functional mechanism", "concept_template": "use_case_demo" },
+    { "n": 5, "role": "DISPLAY_LOCATIONS", "intent": "LOCKED (RULE-017): N-cell display-locations grid (default 2×2, adaptive 2-4 cells based on niche) — each cell shows product in a different real-use display/use scenario with numbered label + location name; safeguard: exactly N cells, no fifth floating product", "concept_template": "grid_display_locations" },
+    { "n": 6, "role": "GIFT", "intent": "Flat lay gift set with packaging", "concept_template": "flat_lay_gift_set" },
+    { "n": 7, "role": "EMOTIONAL", "intent": "Gift-giving moment with reaction", "concept_template": "emotional_group" },
+    { "n": 8, "role": "CLOSE", "intent": "Lifestyle close-up converts intent", "concept_template": "lifestyle_closeup" }
+  ]
+}

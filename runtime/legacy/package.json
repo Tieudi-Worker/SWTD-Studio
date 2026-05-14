@@ -1,0 +1,21 @@
+{
+  "name": "handmade-media-agent",
+  "version": "2.4.0",
+  "description": "AI agent for automated Amazon listing media creation",
+  "main": "agents/master.js",
+  "scripts": {
+    "generate": "node agents/master.js",
+    "test": "node --test tests/unit/*.test.js",
+    "test:dry-run": "node agents/master.js briefs/_sample.json --dry-run",
+    "batch": "node run-batch.js",
+    "lint": "node -c agents/master.js && node -c agents/directref-pipeline.js && node -c agents/aplus-pipeline.js && node -c agents/design-director.js && node -c agents/image-generator.js && node -c agents/video-producer.js && node -c agents/research-agent.js && node -c agents/auto-research.js && node -c agents/knowledge-agent.js && node -c agents/xp-agent.js && node -c utils/kie-client.js && node -c utils/image-utils.js && node -c utils/logger.js && node -c utils/brief-validator.js && node -c utils/checkpoint.js && node -c utils/pipeline-helpers.js && node -c utils/style-analyzer.js && node -c utils/prompt-guard.js && node -c utils/knowledge-loader.js && node -c utils/paths.js && node -c run-batch.js && echo Lint OK"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "dotenv": "^16.6.1",
+    "pino": "^10.3.1",
+    "sharp": "^0.33.5"
+  }
+}

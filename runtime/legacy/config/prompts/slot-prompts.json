@@ -1,0 +1,117 @@
+{
+  "_doc": "Prompt templates for listing slot image generation. Variables: {{productName}}, {{mood}}, {{lighting}}, {{surface}}, {{context}}, {{materials}}, {{dimW}}, {{dimH}}, {{quantity}}, {{headline}}, {{subheadline}}, {{recipient}}, {{buyer}}, {{usp}}. Override with brief.slot_concepts.",
+
+  "slot2_fallback": {
+    "scene": "{{context}}, placed on a {{surface}}",
+    "style": "shallow depth of field, cozy home interior background slightly blurred",
+    "template": "The exact product from the reference images displayed in {{scene}}, {{mood}} atmosphere, {{lighting}}, {{style}}, product photography, photorealistic, high quality, no text, no watermark"
+  },
+
+  "slot3_fallback": {
+    "_doc": "LOCKED STRUCTURE (RULE-016): Features + Size combined infographic. Used as fallback when Vision concept-brainstorm not available. Content per SKU filled via Vision pause step.",
+    "role": "infographic_features_size_combined",
+    "bg": "warm neutral cream background",
+    "header": "top full-width header banner in {{accentColor}} with a small product-category icon on the left and an uppercase title '{{bannerHeadline}}' centered in white, thin accent underline",
+    "body_left": "product rendered large on the left half below the banner with a horizontal double-headed arrow below showing the width dimension ({{dimW}}), a vertical arrow on the right showing the height dimension ({{dimH}}), and a small circular callout bubble pointing to the thickness/depth",
+    "body_right": "right half below the banner contains a column of 4 rounded-square white callout cards with {{accentColor}} numbered headers (01, 02, 03, 04), each card containing a macro crop of a distinct product feature plus a 2-line label describing that feature",
+    "suffix": "Clean editorial infographic, {{accentColor}} + warm neutral palette, serif display + sans-serif labels, every dimension arrow and card label fully readable, no overlap, photorealistic macro crops, 4K resolution"
+  },
+
+  "slot4_fallback": {
+    "setting": "clean bright indoor setting with simple plain props",
+    "guard": "IMPORTANT: The product in this image MUST be the EXACT product from the reference images — same shape, same design, same colors, same text printed on it. Do not invent a different product.",
+    "style_suffix": "casual realistic smartphone photo style, NOT cinematic, natural imperfect lighting like a real parent took the photo, slightly overhead camera angle, authentic real-life product demonstration, photorealistic, high quality but natural looking, no text, no watermark, no brand logos, no trademark symbols, no store names, no recognizable brand names on any visible items"
+  },
+
+  "slot5_fallback": {
+    "_doc": "LOCKED STRUCTURE (RULE-017): N-cell display-locations grid. Used as fallback when Vision concept-brainstorm not available. Locations per SKU filled via Vision pause step (must match product niche).",
+    "role": "grid_display_locations",
+    "bg": "warm neutral cream background",
+    "header": "top header with uppercase title '{{gridTitle}}' in {{accentColor}} centered ('DISPLAY ANYWHERE' / 'STYLE ANYWHERE' / category-appropriate synonym) and an italic subtitle beneath reading '{{gridSubtitle}}'",
+    "body": "EXACTLY {{cellCount}} equal rounded-square cells arranged in a clean 2×2 grid (or 1×{{cellCount}} strip if {{cellCount}}=2 or 3), each cell showing {{productName}} in a different real-use display/use scenario chosen to fit the product niche ({{displayScenariosList}})",
+    "labels": "each cell has a small {{accentColor}} circular numbered label (01, 02, ..., 0{{cellCount}}) in the top-left corner and a bold {{accentColor}} label bar in the bottom-left showing the location name with a tiny matching icon",
+    "safeguard": "NO fifth floating product anywhere, NO hero product in the center of the grid or between cells, NO elements overlapping between cells, every numbered label fully readable with no product obstructing it",
+    "suffix": "Grid display infographic, {{accentColor}} + warm neutral + accent palette, clean editorial typography, labels unobstructed, photorealistic cell scenes, 4K resolution"
+  },
+
+  "slot6_fallback": {
+    "surface": "a rustic wooden table surface",
+    "props": [
+      "Two empty terracotta pots of different sizes",
+      "A pair of vintage scissors",
+      "A kraft paper greeting card with dried pressed flowers",
+      "Several loose dried wildflowers and green leaves scattered as decoration",
+      "A small stack of vintage books",
+      "Another unit of the product laid flat showing front detail"
+    ],
+    "center_display": "standing upright in a small terracotta pot filled with decorative straw",
+    "lighting": "Warm golden natural lighting from the left",
+    "suffix": "professional styled product photography, photorealistic, high quality, no text, no watermark."
+  },
+
+  "slot7_fallback": {
+    "text_style": "Bold impactful text — added via post-production SVG overlay, NOT rendered by AI",
+    "extras": "Show only ONE instance of the product as the hero focal point. Do NOT add duplicate products.",
+    "suffix": "professional Amazon listing photography, high quality, 4K resolution."
+  },
+
+  "slot8_fallback": {
+    "suffix": "lifestyle product photography, photorealistic, high quality, no text, no watermark"
+  },
+
+  "emotional_scenes": {
+    "teacher_gift": "A warm gift-giving moment in a bright room with bookshelves and plants, one person presenting the product (inserted in a small potted plant) to another, both smiling with genuine appreciation, soft natural light",
+    "christmas": "Hands carefully opening a gift box under a Christmas tree revealing the product, warm festive lighting, red and green decorations, family Christmas morning atmosphere",
+    "mothers_day": "A person presenting the product to a woman in a bright sunny kitchen, both smiling with genuine emotion, flowers on the table, warm morning light",
+    "valentines": "A couple sharing a romantic moment, one person presenting the product as a surprise gift, candlelight, intimate warm setting",
+    "birthday": "A person excitedly unwrapping the product at a birthday celebration, balloons and cake in background, bright happy atmosphere",
+    "easter": "A person discovering the product in an Easter basket among colorful eggs, bright spring morning, garden setting",
+    "classroom_reward": "A warm moment of encouragement in a bright cheerful room, one person presenting the product to another with a smile, colorful decor in background, playful and positive atmosphere",
+    "general_gift": "A heartfelt gift-giving moment between two people, one presenting the product with a warm smile, bright indoor setting",
+    "graduation": "A proud moment as a person presents the product as a graduation gift, bright celebratory setting with subtle gold and navy accents, warm natural light, genuine smiles of accomplishment and pride"
+  },
+
+  "recipient_environments": {
+    "teacher_gift": "a bright organized desk with a laptop, books, a desk lamp, and green plants, the product visible in potted plants on the desk and shelf, warm natural light from a window",
+    "christmas": "a cozy living room with Christmas tree and fireplace, the product displayed on the mantelpiece among holiday decorations",
+    "mothers_day": "a bright kitchen windowsill and breakfast nook, the product displayed among houseplants and family photos",
+    "valentines": "a romantic bedside table setting, the product displayed alongside candles and flowers",
+    "birthday": "a home office desk, the product displayed as meaningful decor alongside personal items",
+    "classroom_reward": "a bright colorful playroom, the product displayed on a bookshelf alongside books and art supplies, with a study desk nearby, rainbow rug on the floor",
+    "general_gift": "a warm home environment, the product displayed on a shelf or desk as meaningful decor",
+    "graduation": "a bright home shelf or desk displaying the product next to a diploma, graduation cap, and honor cords, warm natural light from a window, proud celebratory atmosphere"
+  },
+
+  "use_case_defaults": {
+    "mixed": "being demonstrated in use: a person's hand is gently sliding a plain, solid-colored gift card (no logos, no brand markings, no text on the card) into the product's built-in card slot from the back, the gift card fits neatly into the slot without bending or overlapping, the product is inserted into a small green potted plant on a clean bright desk",
+    "wood_ornament": "hanging on a tree branch, a person's hand gently positioning the ornament, showing its weight and texture, natural outdoor bokeh background",
+    "acrylic_ornament": "being held up to natural window light, a person's hand displaying the translucent material with light creating subtle colorful reflections",
+    "paper_card": "being written in with a pen, a person's hand holding the card open on a desk beside a plain envelope, showing the writing surface and interior",
+    "jar": "being opened by a person's hands on a kitchen counter, revealing contents inside, warm natural lighting",
+    "frame": "being placed on a wooden shelf by a person's hands, adjusting its position among simple home decor items"
+  },
+
+  "headlines": {
+    "teacher_gift": "Thank you for helping me grow",
+    "christmas": "Merry Christmas",
+    "mothers_day": "Best Mom Ever",
+    "valentines": "With All My Love",
+    "birthday": "Happy Birthday",
+    "easter": "Happy Easter",
+    "classroom_reward": "Make Good Behavior Fun!",
+    "general_gift": "Made with love, given with heart",
+    "graduation": "Congratulations, Graduate!"
+  },
+
+  "subheadlines": {
+    "teacher_gift": "— my teacher",
+    "christmas": "A gift to treasure forever",
+    "mothers_day": "Thank you for everything",
+    "valentines": "You mean the world to me",
+    "birthday": "Wishing you the best",
+    "easter": "Spring blessings",
+    "classroom_reward": "Reward great habits with a smile",
+    "general_gift": "A thoughtful gift for someone special",
+    "graduation": "A milestone worth remembering forever"
+  }
+}

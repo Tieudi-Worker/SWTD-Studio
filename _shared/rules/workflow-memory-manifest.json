@@ -1,0 +1,53 @@
+{
+  "version": "1.0.0",
+  "purpose": "Token-light memory graph for doctrine/rules/xp continuity",
+  "global_must_read": [
+    {
+      "id": "DOCTRINE_CORE",
+      "path": "_shared/doctrine/handmade-product-doctrine.md",
+      "load": "summary-first",
+      "priority": "P0"
+    },
+    {
+      "id": "ANTI_PATTERNS",
+      "path": "_shared/rules/prompt-anti-patterns.md",
+      "load": "managed-blocks-first",
+      "priority": "P0"
+    },
+    {
+      "id": "SLOT_CONSTRAINTS",
+      "path": "_shared/rules/slot-constraints.json",
+      "load": "exact-slot-only",
+      "priority": "P0"
+    },
+    {
+      "id": "SECURITY",
+      "path": "_shared/rules/security-and-obsidian-rules.md",
+      "load": "summary-first",
+      "priority": "P0"
+    }
+  ],
+  "managed_blocks": [
+    {
+      "id": "XP_AUTO_RULES",
+      "path": "_shared/rules/prompt-anti-patterns.md",
+      "start": "<!-- XP_AUTO_RULES_START -->",
+      "end": "<!-- XP_AUTO_RULES_END -->",
+      "refresh_source": "runtime/legacy/xp/_compiled-candidates.json"
+    }
+  ],
+  "sku_memory": {
+    "brief": "data/{SKU}/brief.json",
+    "dna": "data/{SKU}/research/_design-dna.json",
+    "xp_case_study_dir": "_shared/xp/case-studies/",
+    "qc_scorecard": "data/{SKU}/research/scorecard.json",
+    "focus_file": "data/{SKU}/research/_focus.json"
+  },
+  "load_strategy": {
+    "step_1": "Read this manifest first (always)",
+    "step_2": "Load only relevant slot constraints by slot id",
+    "step_3": "Load XP managed block only when generating/iterating prompts",
+    "step_4": "Load SKU focus file before any regen",
+    "step_5": "Never load full doctrine unless conflict/edge case"
+  }
+}

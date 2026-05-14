@@ -1,0 +1,209 @@
+[
+  {
+    "rule": "Lighting harmony instruction giúp product blend tự nhiên hơn vào environment",
+    "verified": 3,
+    "sourceEntries": [
+      "XP-001",
+      "XP-180",
+      "XP-156"
+    ],
+    "categories": [
+      "materials",
+      "slots"
+    ],
+    "avgScore": 8.3
+  },
+  {
+    "rule": "Khi AI gen text trong ảnh, callout-graphics SVG overlay bị conflict — cần logic skip overlay khi concept đã có text",
+    "verified": 5,
+    "sourceEntries": [
+      "XP-004",
+      "XP-187",
+      "XP-162",
+      "XP-151",
+      "XP-133"
+    ],
+    "categories": [
+      "layouts",
+      "slots"
+    ],
+    "avgScore": 8.6
+  },
+  {
+    "rule": "For any product where an insert is **visible through** a cutout in the front panel (reverse-stencil / window cutout products), the see-through relationship MUST be stated explicitly in every slot prompt that shows the product with an insert — not just in the brief root. Use standardized vocabulary from `knowledge/photography/product-structure-analysis.md`: \"through-cut stencil letters,\" \"hollow cutout,\" \"side-loading slot,\" \"the inserted card sits in the cavity behind the front panel and its color is visible through the cutout letter shapes.\" Reference images must be analyzed BEFORE writing prompts using the structural analysis checklist.",
+    "verified": 3,
+    "sourceEntries": [
+      "XP-003",
+      "XP-184",
+      "XP-141"
+    ],
+    "categories": [
+      "errors",
+      "slots"
+    ],
+    "avgScore": 6.8
+  },
+  {
+    "rule": "For use-case shots with hand + insertion action, the model is MUCH more likely to reimagine product geometry. Must lock geometry explicitly: 'the gift card slides DOWN into the top seam between two wood layers; the Best Teacher Ever banner is glued to the upper BACK panel, NEVER to the card itself'. Also: always add 'no visible handwritten text, no legible writing' to negative prompt to avoid text hallucination.",
+    "verified": 3,
+    "sourceEntries": [
+      "XP-001",
+      "XP-178",
+      "XP-142"
+    ],
+    "categories": [
+      "errors",
+      "slots"
+    ],
+    "avgScore": 6
+  },
+  {
+    "rule": "Persona quote → arrow → thumbnail → product name flow works for decision-guide cards. Quotes should be 2 lines max for readability at A+ banner scale",
+    "verified": 3,
+    "sourceEntries": [
+      "XP-228",
+      "XP-188",
+      "XP-121"
+    ],
+    "categories": [
+      "slots"
+    ],
+    "avgScore": 8.4
+  },
+  {
+    "rule": "Infographic with 3 detail circles but NO text labels — AI cannot gen accurate text. Recommend post-process text annotations for conversion.",
+    "verified": 3,
+    "sourceEntries": [
+      "XP-203",
+      "XP-154",
+      "XP-123"
+    ],
+    "categories": [
+      "slots"
+    ],
+    "avgScore": 8.6
+  },
+  {
+    "rule": "For slot1 hero, using a pure-white studio prompt with explicit 3/4 angle and 'soft top-down lighting with subtle natural shadow' gives nano-banana-pro high product fidelity when combined with real phone reference photos",
+    "verified": 3,
+    "sourceEntries": [
+      "XP-192",
+      "XP-176",
+      "XP-167"
+    ],
+    "categories": [
+      "slots"
+    ],
+    "avgScore": 5.6
+  },
+  {
+    "rule": "Hand holding product on desk — hero shot",
+    "verified": 4,
+    "sourceEntries": [
+      "XP-189",
+      "XP-119",
+      "XP-091",
+      "XP-054"
+    ],
+    "categories": [
+      "slots"
+    ],
+    "avgScore": 9
+  },
+  {
+    "rule": "Natural shadows, no composite artifacts",
+    "verified": 3,
+    "sourceEntries": [
+      "XP-185",
+      "XP-148",
+      "XP-138"
+    ],
+    "categories": [
+      "slots"
+    ],
+    "avgScore": 9.3
+  },
+  {
+    "rule": "Desk scene good overall",
+    "verified": 6,
+    "sourceEntries": [
+      "XP-170",
+      "XP-152",
+      "XP-134",
+      "XP-131",
+      "XP-058",
+      "XP-049"
+    ],
+    "categories": [
+      "slots"
+    ],
+    "avgScore": 8.3
+  },
+  {
+    "rule": "Dual view effective",
+    "verified": 4,
+    "sourceEntries": [
+      "XP-163",
+      "XP-127",
+      "XP-103",
+      "XP-064"
+    ],
+    "categories": [
+      "slots"
+    ],
+    "avgScore": 8.7
+  },
+  {
+    "rule": "No misleading PCS badge",
+    "verified": 3,
+    "sourceEntries": [
+      "XP-145",
+      "XP-104",
+      "XP-065"
+    ],
+    "categories": [
+      "slots"
+    ],
+    "avgScore": 8.6
+  },
+  {
+    "rule": "Clean white bg, no artifacts",
+    "verified": 3,
+    "sourceEntries": [
+      "XP-118",
+      "XP-085",
+      "XP-044"
+    ],
+    "categories": [
+      "slots"
+    ],
+    "avgScore": 9.2
+  },
+  {
+    "rule": "Product text 'Thank You FOR HELPING ME GROW' readable on both stakes",
+    "verified": 4,
+    "sourceEntries": [
+      "XP-116",
+      "XP-111",
+      "XP-088",
+      "XP-075"
+    ],
+    "categories": [
+      "slots"
+    ],
+    "avgScore": 9
+  },
+  {
+    "rule": "Product well centered, UV-printed floral design crisp and accurate",
+    "verified": 3,
+    "sourceEntries": [
+      "XP-086",
+      "XP-050",
+      "XP-046"
+    ],
+    "categories": [
+      "slots"
+    ],
+    "avgScore": 9.2
+  }
+]

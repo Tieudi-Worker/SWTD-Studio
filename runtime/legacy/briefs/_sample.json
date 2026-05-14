@@ -1,0 +1,24 @@
+{
+  "sku": "_SAMPLE",
+  "product_name": "Sample Handmade Wood Card Holder",
+  "category": "wood_ornament",
+  "materials": ["birch plywood", "acrylic"],
+  "dimensions": "4x3 inches",
+  "features": [
+    "Handmade laser cut from solid birch",
+    "Reverse-stencil cutout reveals card behind",
+    "Personalized name engraving available"
+  ],
+  "usp": "A keepsake card holder that doubles as a desk display",
+  "occasion": "general_gift",
+  "target_audience": {
+    "buyer": "thoughtful gift giver",
+    "recipient": "friend or family member"
+  },
+  "input_images": [
+    "input/product/sample_front.jpg",
+    "input/product/sample_back.jpg"
+  ],
+  "color_preference": "",
+  "copy_style": "emotional"
+}

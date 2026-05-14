@@ -1,0 +1,9 @@
+{
+  "theme_id": "christmas_2026",
+  "colors": { "primary": "#C41E3A", "secondary": "#1B5E20", "accent": "#FFD700", "neutral": "#FFFFFF" },
+  "visual_elements": ["Christmas tree", "pine branches", "snow", "warm lights", "gift boxes", "red berries"],
+  "mood": ["warm", "festive", "cozy", "magical"],
+  "lighting": "warm golden light, soft bokeh",
+  "surfaces": ["wooden mantel", "tree branch", "snow windowsill", "cozy blanket"],
+  "lifestyle_contexts": ["hanging on Christmas tree", "mantel display", "window suncatcher", "gift opening"]
+}

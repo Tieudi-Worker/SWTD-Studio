@@ -1,0 +1,121 @@
+{
+  "generated_at": "2026-05-03T18:22:30.234Z",
+  "knowledge_rules": [
+    {
+      "source": "doctrine/handmade-product-doctrine.md",
+      "rule": "Reference image là chân lý duy nhất về sản phẩm, prompt chỉ mô tả scene"
+    },
+    {
+      "source": "doctrine/handmade-product-doctrine.md",
+      "rule": "Không thêm bớt text, logo, ornament của sản phẩm — handmade = literal"
+    },
+    {
+      "source": "doctrine/handmade-product-doctrine.md",
+      "rule": "Không đổi hình học, tỷ lệ, font, letter spacing của sản phẩm"
+    },
+    {
+      "source": "doctrine/handmade-product-doctrine.md",
+      "rule": "Prompt chỉ được mô tả background, lighting, scene, props — không dạy AI làm sản phẩm"
+    },
+    {
+      "source": "doctrine/handmade-product-doctrine.md",
+      "rule": "Khi fidelity drift thì LÀM GỌN prompt, KHÔNG thêm text mô tả (xem RULE-015)"
+    },
+    {
+      "source": "doctrine/handmade-product-doctrine.md",
+      "rule": "Verification 6 câu hỏi trước khi mark slot completed: presence, geometry, text, scale, scene, lighting"
+    },
+    {
+      "source": "doctrine/handmade-product-doctrine.md",
+      "rule": "Fail verification → single-slot regen qua `--skip-slots`, không rerun cả pipeline"
+    },
+    {
+      "source": "doctrine/handmade-product-doctrine.md",
+      "rule": "Max 3 iterations per slot, rồi fallback Flux Kontext Pro"
+    },
+    {
+      "source": "doctrine/handmade-product-doctrine.md",
+      "rule": "Handmade khách mua ý nghĩa không mua vật: gift, memory, identity là 3 động lực chính"
+    },
+    {
+      "source": "doctrine/handmade-product-doctrine.md",
+      "rule": "Mỗi slot trả lời 1 câu hỏi của khách, không được loãng concept sang câu hỏi khác"
+    },
+    {
+      "source": "doctrine/handmade-product-doctrine.md",
+      "rule": "Concept phải chạm pain point của niche rồi giải quyết pain point đó"
+    },
+    {
+      "source": "doctrine/handmade-product-doctrine.md",
+      "rule": "Props và scene phải tôn vinh sản phẩm, không được cạnh tranh thu hút sự chú ý"
+    },
+    {
+      "source": "doctrine/handmade-product-doctrine.md",
+      "rule": "Studio Director mindset: sản phẩm bất khả xâm phạm, scene là sân chơi"
+    },
+    {
+      "source": "doctrine/handmade-product-doctrine.md",
+      "rule": "Brief-time check 5 câu WHO PAIN HOOK PROOF FEEL trước khi gen concept"
+    },
+    {
+      "source": "obsidian-curated/tntd030426i772-text-heavy-fidelity.md",
+      "rule": "Text-heavy engraved products only pass when key text remains readable and product mechanism is preserved."
+    },
+    {
+      "source": "obsidian-curated/tntd030426i772-text-heavy-fidelity.md",
+      "rule": "Beautiful lifestyle composition is still a fail if product text or structure drifts."
+    },
+    {
+      "source": "obsidian-curated/tntd030426i772-text-heavy-fidelity.md",
+      "rule": "One submit per paid generation task: submit once, wait to completion, save, report, then stop. Do not self-regenerate without Boss approval."
+    },
+    {
+      "source": "obsidian-curated/tntd030426i772-text-heavy-fidelity.md",
+      "rule": "Immediate version preservation: copy every successful paid output to a versioned folder before starting another backend/run."
+    },
+    {
+      "source": "obsidian-curated/tntd030426i772-text-heavy-fidelity.md",
+      "rule": "OpenAI first priority: use openai/gpt-image-2 first; if quota is exhausted, use KIE nano-banana-pro as fallback."
+    },
+    {
+      "source": "obsidian-curated/tntd030426i772-text-heavy-fidelity.md",
+      "rule": "FAL/Flux removed from HMA workflow unless Boss explicitly changes policy."
+    },
+    {
+      "source": "obsidian-curated/tntd030426i772-text-heavy-fidelity.md",
+      "rule": "No self-regenerate without Boss approval; every extra task burns real credits."
+    },
+    {
+      "source": "obsidian-curated/tntd030426i772-text-heavy-fidelity.md",
+      "rule": "KIE nano-banana-pro is the stable fallback for text-heavy wooden keepsakes."
+    },
+    {
+      "source": "obsidian-curated/tntd030426i772-text-heavy-fidelity.md",
+      "rule": "KIE gpt-image-2-image-to-image is experimental/comparison-only unless Boss asks."
+    },
+    {
+      "source": "obsidian-curated/tntd030426i772-text-heavy-fidelity.md",
+      "rule": "Close-up/detail lifestyle shots are safer than complex people scenes for small engraved text."
+    },
+    {
+      "source": "obsidian-curated/tntd030426i772-text-heavy-fidelity.md",
+      "rule": "4-panel use-case grids need fidelity checks in every cell, not just nice layout."
+    }
+  ],
+  "slot_tips": {
+    "slot1": [],
+    "slot2": [],
+    "slot3": [],
+    "slot4": [],
+    "slot5": [],
+    "slot6": [],
+    "slot7": [],
+    "slot8": []
+  },
+  "category_insights": {
+    "acrylic-ornaments": [],
+    "reward-jars": []
+  },
+  "photography_tips": [],
+  "conversion_tactics": []
+}

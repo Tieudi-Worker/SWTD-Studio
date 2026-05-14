@@ -1,0 +1,37 @@
+{
+  "_doc": "Sample for TiOne / SweetTD shop. EDIT with real values before using.",
+  "_schema_version": 1,
+  "brand_id": "sweetdtd",
+  "brand_name": "TiOne Handmade",
+  "persona": {
+    "voice": "warm, sincere, deeply considered — emphasizes meaning over luxury",
+    "tone_words": ["heartfelt", "thoughtful", "considered", "lasting"],
+    "avoid_words": ["cheap", "luxury", "premium", "exclusive"]
+  },
+  "visual_identity": {
+    "color_anchors": {
+      "primary": "#8B6F47",
+      "secondary": "#F5E6D3",
+      "accent": "#C9A961"
+    },
+    "lighting_default": "Warm window light from camera-left, soft fill, gentle rim from behind",
+    "prop_palette": ["natural twine", "kraft paper", "dried wildflowers", "small fairy lights", "vintage notebook"],
+    "art_direction_style_reference": "Warm minimal with handmade authenticity, 85mm shallow DoF, soft natural light"
+  },
+  "typography": {
+    "heading": "Playfair Display",
+    "body": "Inter",
+    "weight_heading": "bold",
+    "weight_body": "500"
+  },
+  "copy_style": {
+    "headline_pattern": "{emotional_verb} {product_essence}",
+    "headline_examples": ["Made to remember", "Crafted with care", "Held in hands, given from the heart"],
+    "tagline": "Handmade. Made to mean something."
+  },
+  "ethics": {
+    "no_acute_grief_targeting": true,
+    "no_late_night_urgency": true,
+    "no_artificial_scarcity": true
+  }
+}

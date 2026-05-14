@@ -1,0 +1,23 @@
+{
+  "amazon-listing": [
+    "amazon-listing/conversion-tactics.md",
+    "amazon-listing/image-requirements.md",
+    "amazon-listing/text-heavy-engraved-product-fidelity.md"
+  ],
+  "brand-style": [
+    "brand-style/README.md",
+    "brand-style/hma-aplus-native-text-bright-minimal.md"
+  ],
+  "niches": [
+    "niches/acrylic-ornaments.md",
+    "niches/reward-jars.md"
+  ],
+  "obsidian-curated": [
+    "obsidian-curated/README.md",
+    "obsidian-curated/tntd030426i772-text-heavy-fidelity.md"
+  ],
+  "photography": [
+    "photography/product-photography.md",
+    "photography/product-structure-analysis.md"
+  ]
+}

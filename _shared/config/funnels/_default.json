@@ -1,0 +1,6 @@
+{
+  "_doc": "Default fallback — alias to gift_ornament",
+  "category": "_default",
+  "applicable_to": ["mixed", "*"],
+  "extends": "gift_ornament.json"
+}

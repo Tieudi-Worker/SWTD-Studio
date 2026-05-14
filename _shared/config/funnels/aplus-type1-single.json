@@ -1,0 +1,130 @@
+{
+  "_doc": "A+ Type 1 — Single ASIN. 1 product, 1 listing. Default Plan B (Storyboard Seamless). Verified qua TNTD180326i750 Reward Jar (test v3).",
+  "_version": "1.0.0",
+  "_updated": "2026-04-14",
+  "type": "single",
+  "default_plan": "B",
+
+  "plan_B_storyboard": {
+    "_description": "Storyboard seamless narrative — 5 module liền mạch dọc với visual motif thread (token trail, coral lines, rainbow arcs) nối liền mạch. Priority: brand moat qua distinctive style. Bán meaning/identity/memory theo doctrine.",
+    "_when_to_use": "Default cho mọi single-ASIN. Niche handmade gift, storytelling product (kid gift, keepsake, anniversary).",
+
+    "modules": [
+      {
+        "n": 1,
+        "name": "Open Scene",
+        "role": "BRAND_OPENING",
+        "intent": "Brand tag + hero promise + thiết lập universe của niche",
+        "layout": {
+          "top_25pct": "Decorative illustrated band — rainbow arc, star confetti, category tag (uppercase Baloo in accent color)",
+          "middle_50pct": "Centered Baloo BOLD 3-line promise headline + italic Calligraphy subhead",
+          "bottom_25pct": "Warm lifestyle hero — child + product + ambient bokeh. Scale-anchored per R3."
+        },
+        "visual_thread_bridge": "token dot trail + star confetti flows diagonally top-right → bottom-left, bridges into hero photo",
+        "typography_priority": "display_headline",
+        "ref_recipe": ["hero_faceon", "tokens_topview"],
+        "seduction_gate": {
+          "WHO": "Conscientious buyer (parent/grandparent/teacher) discovering the niche",
+          "PAIN": "Small wins go unseen in daily parenting",
+          "HOOK": "Emotional hero + rainbow decoration + brand tag instant recognition",
+          "PROOF": "Real child real product moment",
+          "FEEL": "Hope, warmth, promise"
+        }
+      },
+      {
+        "n": 2,
+        "name": "Daily Ritual",
+        "role": "TRANSFORMATION_ARC",
+        "intent": "Positive 3-second transformation showing how the product works. NO pain/negative imagery.",
+        "layout": {
+          "left_40pct": "italic Calligraphy script headline + Calligraphy subhead + Baloo body caption",
+          "right_60pct": "3 vertically stacked circular macro moments in soft rounded frames: (1) hand + component, (2) action moment, (3) result + emotion"
+        },
+        "visual_thread_bridge": "token dot trail + star confetti + mini rainbow arcs connect 3 circles, loops to left text",
+        "typography_priority": "accent_script",
+        "ref_recipe": ["hero_lifestyle", "hero_faceon"],
+        "seduction_gate": {
+          "WHO": "Buyer imagining daily use",
+          "PAIN": "Complex systems don't survive daily routines",
+          "HOOK": "3-second ritual = achievable",
+          "PROOF": "Literal step-by-step macro",
+          "FEEL": "Confidence, simplicity"
+        }
+      },
+      {
+        "n": 3,
+        "name": "Handcrafted Proof",
+        "role": "CRAFTSMANSHIP_AUTHORITY",
+        "intent": "Chạm pain 'Amazon full of cheap mass-produced' → proof by tactile craftsmanship detail. KHÔNG duplicate listing 'what's in box'.",
+        "layout": {
+          "top_10pct": "Baloo BOLD headline on warm birch/workshop background",
+          "middle_80pct": "3 horizontal macro close-ups with thin accent dividers: (1) process shot (laser cutter / hand-work), (2) detail under magnifier, (3) functional detail (magnet / mechanism)",
+          "bottom_10pct": "Baloo stat bar with 3 trust cues"
+        },
+        "typography_priority": "display_headline",
+        "ref_recipe": ["hero_lifestyle"],
+        "ref_strategy_note": "1-ref tổng hợp thường tốt hơn 3-refs lệch function. `hero_lifestyle` chứa product + loose components đủ cho 2/3 panel. Panel process (laser cutter) KHÔNG cần product ref.",
+        "seduction_gate": {
+          "WHO": "Buyer worried about quality / authenticity",
+          "PAIN": "Amazon full of mass-produced knockoffs",
+          "HOOK": "Real process + real detail visible",
+          "PROOF": "Close-up macro tactile quality",
+          "FEEL": "Trust, premium tier positioning"
+        }
+      },
+      {
+        "n": 4,
+        "name": "Milestones of Pride",
+        "role": "EMOTIONAL_CLIMAX",
+        "intent": "Show identity/memory outcomes — niche-specific milestones. Focus ON MOMENTS not rooms (slot 8 listing đã lo where-to-use).",
+        "layout": {
+          "top_10pct": "Baloo BOLD emotional headline — ưu tiên REUSE từ FINAL listing cho brand consistency",
+          "middle_80pct": "3 horizontal family vignettes separated by soft ribbon dividers. Jar/product identical silhouette across 3 panels (R2 enforce parallel). Scale R3 per panel.",
+          "ribbon_overlays": "Calligraphy italic ribbon labels — mỗi milestone specific (e.g. 'First Dry Night', 'Shared Without Asked', 'Homework Done Proud'). Mỗi ribbon appears ONCE ONLY."
+        },
+        "visual_thread_bridge": "token dot trail weaves between 3 vignettes",
+        "typography_priority": "display_headline + accent_script",
+        "ref_recipe": ["hero_faceon", "hero_lifestyle", "tokens_topview"],
+        "seduction_gate": {
+          "WHO": "Buyer seeking emotional ROI",
+          "PAIN": "Parenting milestones feel invisible",
+          "HOOK": "3 specific milestones with product present",
+          "PROOF": "Family scenes with product identical",
+          "FEEL": "Pride, belonging, memory"
+        }
+      },
+      {
+        "n": 5,
+        "name": "Gift + Keepsake + CTA",
+        "role": "CLOSE_CONVERSION",
+        "intent": "Close theo doctrine: gift + memory + identity. Handmade authenticity + gift-ready packaging + CTA button.",
+        "layout": {
+          "left_55pct": "Gift-ready flat lay top-down on warm wood plank — product + gift box + packaging components + loose scattered items + Calligraphy 'A gift today.' overlay",
+          "right_45pct": "Solid accent color block — Baloo BOLD 'A Keepsake Tomorrow.' + body memory-anchor copy + rounded CTA button in Baloo + 3 trust badges row"
+        },
+        "visual_thread_bridge": "Rainbow arc / motif echoing M1 opening — closes storybook loop",
+        "typography_priority": "display_headline + accent_script",
+        "ref_recipe": ["hero_lifestyle", "hero_faceon"],
+        "seduction_gate": {
+          "WHO": "Gift-buyer ready to convert",
+          "PAIN": "Gift must feel personal + lasting",
+          "HOOK": "Handmade flat-lay + memory promise + action button",
+          "PROOF": "Box-ready presentation, no extra wrapping",
+          "FEEL": "Giving confidence + click intent"
+        }
+      }
+    ]
+  },
+
+  "plan_A_modular": {
+    "_description": "Backup option. Modular formula (hero → pain/solution → what's-in-box → use-cases → CTA). Verified tracked test nhưng có issues: M2 pain imagery clash brand tone, M3 tends duplicate listing slot 5. Use only nếu niche ưu tiên classic funnel logic.",
+    "_when_to_use": "Fallback nếu storyboard không fit niche (e.g. tech-heavy product cần comparison-first).",
+    "modules": [
+      { "n": 1, "name": "Hero Promise", "role": "BRAND_PROMISE" },
+      { "n": 2, "name": "Pain/Solution Split", "role": "PROBLEM_SOLUTION", "caveat": "Risk brand-tone clash if listing 100% positive" },
+      { "n": 3, "name": "What's In The Box", "role": "COMPONENT_CALLOUTS", "caveat": "Risk duplicate listing slot 5 FEATURES_SIZE" },
+      { "n": 4, "name": "Use-case Narrative", "role": "MULTI_CONTEXT", "caveat": "Risk duplicate listing slot 8 DISPLAY_LOCATIONS" },
+      { "n": 5, "name": "Handmade + CTA", "role": "CLOSE_CONVERSION" }
+    ]
+  }
+}

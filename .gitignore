@@ -1,0 +1,33 @@
+# openclaw-hma .gitignore
+# Apply to whole skill pack root.
+
+# User data + outputs
+data/
+runtime/legacy/output/
+
+# Secrets
+runtime/.env
+runtime/legacy/config/api-keys.env
+*.env.local
+
+# Node
+node_modules/
+runtime/legacy/node_modules/
+
+# Logs / temp
+*.log
+*.tmp
+_logs/
+tmp/
+
+# Pack artifacts
+openclaw-hma-v*.zip
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Claude Code
+.claude/

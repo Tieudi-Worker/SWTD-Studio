@@ -1,0 +1,15 @@
+{
+  "_doc": "Slot funnel for daily-use products (jar, daily decor). Emphasizes IN-USE early, BEFORE/AFTER, GIFT later.",
+  "category": "daily_use",
+  "applicable_to": ["jar"],
+  "slots": [
+    { "n": 1, "role": "STOP", "intent": "Hero white", "concept_template": "hero_white" },
+    { "n": 2, "role": "IN_USE", "intent": "Active daily use, hand interaction", "concept_template": "in_use_active" },
+    { "n": 3, "role": "FEATURES_SIZE", "intent": "LOCKED (RULE-016): Combined features + size infographic — header banner with category icon + product with dimension arrows (width, height, capacity/thickness callout bubble) + N numbered callout cards (rounded squares, macro + 2-line label) for material, capacity, durability, care", "concept_template": "infographic_features_size_combined" },
+    { "n": 4, "role": "BEFORE_AFTER", "intent": "Empty vs full / messy vs organized", "concept_template": "before_after_split" },
+    { "n": 5, "role": "DISPLAY_LOCATIONS", "intent": "LOCKED (RULE-017): N-cell display-locations grid (default 2×2, adaptive 2-4 cells) — for jars/daily-use products the cells show kitchen counter / bathroom / bedside / office desk or similar niche-appropriate scenarios; safeguard: exactly N cells, no fifth floating product", "concept_template": "grid_display_locations" },
+    { "n": 6, "role": "COLLECTION", "intent": "Multi-product set or color variants", "concept_template": "collection_flat_lay" },
+    { "n": 7, "role": "LIFESTYLE", "intent": "Long-term integration into routine", "concept_template": "lifestyle_routine" },
+    { "n": 8, "role": "CLOSE", "intent": "Macro detail material quality", "concept_template": "macro_detail" }
+  ]
+}

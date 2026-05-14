@@ -1,0 +1,20 @@
+{
+  "_doc": "Per-slot model routing. OpenAI gpt-image-2 is always preferred at the orchestration layer; KIE fallback is nano-banana-pro only.",
+  "_version": "1.1.0",
+  "default": "nano-banana-pro",
+  "slots": {
+    "1": "nano-banana-pro",
+    "2": "nano-banana-pro",
+    "3": "nano-banana-pro",
+    "4": "nano-banana-pro",
+    "5": "nano-banana-pro",
+    "6": "nano-banana-pro",
+    "7": "nano-banana-pro",
+    "8": "nano-banana-pro"
+  },
+  "fallback_chain": ["nano-banana-pro"],
+  "model_specs": {
+    "nano-banana-pro": { "best_for": "fidelity, white bg, infographic, lifestyle fallback", "supports_image_input": true, "max_refs": 8 },
+    "gpt-image-2-image-to-image": { "best_for": "preferred upstream provider when quota available", "supports_image_input": true, "max_refs": 4, "input_field": "input_urls" }
+  }
+}
