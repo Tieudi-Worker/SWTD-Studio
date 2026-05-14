@@ -31,3 +31,8 @@ Thumbs.db
 
 # Claude Code
 .claude/
+
+# Desktop app build
+apps/desktop/node_modules/
+apps/desktop/dist/
+apps/desktop/release/
