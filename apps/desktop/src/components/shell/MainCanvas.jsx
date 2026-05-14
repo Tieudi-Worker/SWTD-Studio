@@ -291,7 +291,7 @@ function ListingView({
                 disabledReason={runDisabledReason}
               >Run all 8</Button>
               <Button
-                variant="primary"
+                variant="secondary"
                 size="sm"
                 onClick={onRunListingRegen}
                 disabled={!!regenDisabledReason}

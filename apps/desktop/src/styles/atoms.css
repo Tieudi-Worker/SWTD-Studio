@@ -32,7 +32,6 @@
 
 .atom-btn--sm { height: 24px; padding: 0 var(--space-2); font-size: 11px; gap: var(--space-1); }
 .atom-btn--md { height: 32px; padding: 0 var(--space-3); font-size: 13px; }
-.atom-btn--lg { height: 40px; padding: 0 var(--space-4); font-size: 14px; }
 .atom-btn--full { width: 100%; }
 
 .atom-btn--primary {
@@ -92,7 +91,6 @@
 }
 .atom-btn--sm .atom-btn__icon { font-size: 11px; }
 .atom-btn--md .atom-btn__icon { font-size: 13px; }
-.atom-btn--lg .atom-btn__icon { font-size: 15px; }
 
 .atom-btn__label { display: inline-block; }
 
@@ -155,7 +153,6 @@
 
 .atom-iconbtn--sm { width: 24px; height: 24px; font-size: 12px; }
 .atom-iconbtn--md { width: 32px; height: 32px; font-size: 14px; }
-.atom-iconbtn--lg { width: 40px; height: 40px; font-size: 16px; }
 
 .atom-iconbtn--primary {
   background: var(--accent);
