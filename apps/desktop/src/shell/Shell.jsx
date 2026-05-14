@@ -1,4 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import TopBar from '../components/shell/TopBar.jsx'
+import LeftRail from '../components/shell/LeftRail.jsx'
+import Stepper from '../components/shell/Stepper.jsx'
+import MainCanvas from '../components/shell/MainCanvas.jsx'
+import RightInspector from '../components/shell/RightInspector.jsx'
+import StatusBar from '../components/shell/StatusBar.jsx'
+import ActivityDrawer from '../components/shell/ActivityDrawer.jsx'
 
 const LAYOUT_KEY = 'swtd_ui_layout'
 
@@ -31,11 +38,18 @@ function saveLayout(layout) {
 
 const api = typeof window !== 'undefined' ? window.swtd : undefined
 
+const STEP_DEFS = [
+  { id: 'intake',  label: 'Intake',  detail: 'brief.json' },
+  { id: 'listing', label: 'Listing', detail: '8 slots' },
+  { id: 'aplus',   label: 'A+',      detail: '5 modules' },
+  { id: 'video',   label: 'Video',   detail: '12–15s' },
+  { id: 'qc',      label: 'QC',      detail: 'bundle' }
+]
+
 export default function Shell() {
   const [layout, setLayout] = useState(loadLayout)
 
-  // Preserved Phase 1 state — wired in Step 5 to real slots.
-  const [tab, setTab] = useState('project')
+  const [step, setStep] = useState('intake')
   const [workspace, setWorkspace] = useState('')
   const [skuPath, setSkuPath] = useState('')
   const [validation, setValidation] = useState(null)
@@ -47,6 +61,7 @@ export default function Shell() {
     status: 'idle',
     lines: []
   })
+  const [commandQuery, setCommandQuery] = useState('')
 
   useEffect(() => { saveLayout(layout) }, [layout])
 
@@ -103,6 +118,10 @@ export default function Shell() {
     setLayout(prev => ({ ...prev, activityDrawerExpanded: !prev.activityDrawerExpanded }))
   }, [])
 
+  const clearActivity = useCallback(() => {
+    setListingState(prev => ({ ...prev, lines: [] }))
+  }, [])
+
   useEffect(() => {
     function onKey(e) {
       const meta = e.metaKey || e.ctrlKey
@@ -114,11 +133,14 @@ export default function Shell() {
       } else if (e.key === '\\') {
         e.preventDefault()
         toggleRightInspector()
+      } else if (k === 'j') {
+        e.preventDefault()
+        toggleActivityDrawer()
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [toggleLeftRail, toggleRightInspector])
+  }, [toggleLeftRail, toggleRightInspector, toggleActivityDrawer])
 
   const pickWorkspace = useCallback(async () => {
     if (!api) return
@@ -139,6 +161,7 @@ export default function Shell() {
   const chooseSku = useCallback(async (target) => {
     if (!target) return
     setSkuPath(target)
+    setStep('intake')
     if (!api) return
     setValidating(true)
     try {
@@ -163,7 +186,8 @@ export default function Shell() {
   const runListing = useCallback(async () => {
     if (!api || !skuPath || !validation?.ok || listingState.status === 'running') return
     setListingState({ runId: null, status: 'running', lines: [] })
-    setTab('listing')
+    setStep('listing')
+    setLayout(prev => ({ ...prev, activityDrawerExpanded: true }))
     const res = await api.runListing({ skuPath })
     if (!res?.ok) {
       setListingState({
@@ -179,21 +203,65 @@ export default function Shell() {
     await api.cancelPipeline(listingState.runId)
   }, [listingState.runId])
 
-  // Available to Step 5; intentionally unused here.
-  const ctx = useMemo(() => ({
-    tab, setTab,
-    workspace, skuPath, skus, filter, setFilter,
-    validation, validating,
-    listingState,
-    layout,
-    toggleLeftRail, toggleRightInspector, toggleActivityDrawer,
-    pickWorkspace, refreshSkus, chooseSku, revalidate, runListing, cancelListing
-  }), [
-    tab, workspace, skuPath, skus, filter,
-    validation, validating, listingState, layout,
-    toggleLeftRail, toggleRightInspector, toggleActivityDrawer,
-    pickWorkspace, refreshSkus, chooseSku, revalidate, runListing, cancelListing
-  ])
+  const lastLine = useMemo(() => {
+    const lines = listingState.lines
+    return lines.length ? lines[lines.length - 1] : null
+  }, [listingState.lines])
+
+  const ready = !!(skuPath && validation?.ok)
+  const running = listingState.status === 'running'
+
+  const runDisabledReason = !skuPath
+    ? 'Select a SKU first'
+    : !validation?.ok
+      ? (validation?.error || 'Brief is invalid — re-validate first')
+      : running
+        ? 'A run is already in progress'
+        : undefined
+
+  const cancelDisabledReason = !running ? 'No run in progress' : undefined
+  const revalidateDisabledReason = !skuPath
+    ? 'Select a SKU first'
+    : validating
+      ? 'Validation in progress'
+      : undefined
+
+  const lockedReason = ready
+    ? 'This step ships in a later phase.'
+    : 'Complete Intake (valid brief) and run Listing before unlocking later steps.'
+
+  const stepEntries = useMemo(() => {
+    const intake = validating
+      ? 'running'
+      : (validation?.ok ? 'done' : (skuPath ? 'error' : 'idle'))
+    const listing = (() => {
+      if (listingState.status === 'running')   return 'running'
+      if (listingState.status === 'ok')        return 'done'
+      if (listingState.status === 'err')       return 'error'
+      if (listingState.status === 'cancelled') return 'error'
+      return ready ? 'idle' : 'locked'
+    })()
+    const states = { intake, listing, aplus: 'locked', video: 'locked', qc: 'locked' }
+    const reasons = {
+      intake:  skuPath ? (validation?.error || undefined) : 'Pick a SKU to load its brief',
+      listing: ready ? undefined : 'Validate the brief before running listing',
+      aplus:   'A+ ships in a later phase',
+      video:   'Video ships in a later phase',
+      qc:      'QC ships in a later phase'
+    }
+    return STEP_DEFS.map(s => {
+      const base = states[s.id]
+      const isCurrent = step === s.id
+      const showActive = isCurrent && (base === 'idle' || base === 'locked')
+      return {
+        step: { id: s.id, label: s.label, detail: s.detail },
+        state: showActive ? 'active' : base,
+        reason: reasons[s.id]
+      }
+    })
+  }, [step, validation, validating, skuPath, listingState.status, ready])
+
+  const handleStepChange = useCallback((id) => setStep(id), [])
 
   const shellClass = [
     'shell',
@@ -203,60 +271,82 @@ export default function Shell() {
   ].filter(Boolean).join(' ')
 
   return (
-    <div className={shellClass} data-shell-ctx={ctx ? '1' : '0'}>
-      <header className="shell__topbar" data-slot="topbar">
-        <Placeholder label="TopBar" sub="44px · global controls" />
+    <div className={shellClass}>
+      <header className="shell__topbar">
+        <TopBar
+          workspace={workspace}
+          onPickWorkspace={pickWorkspace}
+          runStatus={listingState.status}
+          commandQuery={commandQuery}
+          onCommandQueryChange={setCommandQuery}
+        />
       </header>
 
-      <aside className="shell__leftrail" data-slot="leftrail">
-        <Placeholder
-          label="LeftRail"
-          sub={layout.leftRailCollapsed ? '48px · collapsed' : '240px · SKU navigator'}
-          shortcut="⌘B / Ctrl+B"
+      <aside className="shell__leftrail">
+        <LeftRail
+          collapsed={layout.leftRailCollapsed}
+          onToggleCollapsed={toggleLeftRail}
+          workspace={workspace}
+          onPickWorkspace={pickWorkspace}
+          onRefreshSkus={refreshSkus}
+          skus={skus}
+          filter={filter}
+          onFilterChange={setFilter}
+          skuPath={skuPath}
+          onChooseSku={chooseSku}
         />
       </aside>
 
-      <section className="shell__main" data-slot="main">
-        <div className="shell__stepper" data-slot="stepper">
-          <Placeholder label="Stepper" sub="40px · pipeline progress" />
+      <section className="shell__main">
+        <div className="shell__stepper">
+          <Stepper steps={stepEntries} activeId={step} onChange={handleStepChange} />
         </div>
-        <div className="shell__canvas" data-slot="canvas">
-          <Placeholder label="MainCanvas" sub="active tab workspace" big />
+        <div className="shell__canvas">
+          <MainCanvas
+            step={step}
+            workspace={workspace}
+            skuPath={skuPath}
+            validation={validation}
+            validating={validating}
+            skuCount={skus.length}
+            onPickWorkspace={pickWorkspace}
+            listingState={listingState}
+          />
         </div>
-        <div className="shell__drawer" data-slot="drawer">
-          <Placeholder
-            label="ActivityDrawer"
-            sub={layout.activityDrawerExpanded ? '280px · expanded' : '32px · collapsed'}
+        <div className="shell__drawer">
+          <ActivityDrawer
+            expanded={layout.activityDrawerExpanded}
+            onToggle={toggleActivityDrawer}
+            onClear={clearActivity}
+            lines={listingState.lines}
+            runStatus={listingState.status}
           />
         </div>
       </section>
 
-      <aside className="shell__inspector" data-slot="inspector">
-        <Placeholder
-          label="RightInspector"
-          sub={layout.rightInspectorCollapsed ? 'hidden' : '320px · contextual details'}
-          shortcut="⌘\ / Ctrl+\\"
+      <aside className="shell__inspector">
+        <RightInspector
+          step={step}
+          skuPath={skuPath}
+          validation={validation}
+          validating={validating}
+          listingState={listingState}
+          lockedReason={lockedReason}
+          onRevalidate={revalidate}
+          onRunListing={runListing}
+          onCancelListing={cancelListing}
+          runDisabledReason={runDisabledReason}
+          cancelDisabledReason={cancelDisabledReason}
+          revalidateDisabledReason={revalidateDisabledReason}
         />
       </aside>
 
-      <footer className="shell__statusbar" data-slot="statusbar">
-        <Placeholder label="StatusBar" sub="28px · system signals" inline />
+      <footer className="shell__statusbar">
+        <StatusBar
+          runStatus={listingState.status}
+          lastLine={lastLine}
+        />
       </footer>
-    </div>
-  )
-}
-
-function Placeholder({ label, sub, shortcut, big, inline }) {
-  const className = [
-    'shell-placeholder',
-    big && 'shell-placeholder--big',
-    inline && 'shell-placeholder--inline'
-  ].filter(Boolean).join(' ')
-  return (
-    <div className={className}>
-      <span className="shell-placeholder__label">{label}</span>
-      {sub && <span className="shell-placeholder__sub">{sub}</span>}
-      {shortcut && <kbd className="shell-placeholder__kbd">{shortcut}</kbd>}
     </div>
   )
 }
