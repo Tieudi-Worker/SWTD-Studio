@@ -230,8 +230,9 @@
 .atom-statusdot--warning { background: var(--warning); box-shadow: 0 0 0 2px var(--warning-muted); }
 .atom-statusdot--locked {
   background: transparent;
-  border: 1px dashed var(--text-tertiary);
+  border: 1px solid var(--text-tertiary);
   box-sizing: border-box;
+  opacity: 0.6;
 }
 .atom-statusdot--running {
   background: var(--accent);
@@ -275,7 +276,7 @@
 .atom-chip--idle { color: var(--text-tertiary); }
 .atom-chip--locked {
   color: var(--text-tertiary);
-  border-style: dashed;
+  opacity: 0.7;
 }
 .atom-chip--running {
   color: var(--accent);
@@ -379,7 +380,7 @@
   align-items: center;
   text-align: center;
   background: var(--bg-surface);
-  border: 1px dashed var(--border-default);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   color: var(--text-secondary);
 }

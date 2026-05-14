@@ -23,7 +23,7 @@ function createWindow() {
     minWidth: 1024,
     minHeight: 700,
     title: 'SWTD Studio',
-    backgroundColor: '#0b0d10',
+    backgroundColor: '#0A0A0B',
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
