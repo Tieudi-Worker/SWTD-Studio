@@ -391,11 +391,11 @@
     background var(--transition-base),
     border-color var(--transition-base);
 }
-.stepper__button:hover:not(:disabled) {
+.stepper__button:hover:not([aria-disabled="true"]) {
   background: var(--bg-hover);
   color: var(--text-primary);
 }
-.stepper__button:disabled { cursor: not-allowed; color: var(--text-tertiary); }
+.stepper__button[aria-disabled="true"] { cursor: not-allowed; color: var(--text-tertiary); }
 .stepper__button:focus-visible {
   outline: none;
   box-shadow: var(--focus-ring-inset);
@@ -442,8 +442,9 @@
 .stepper__step--error .stepper__state { color: var(--danger); }
 .stepper__step--paused .stepper__button { color: var(--text-primary); }
 .stepper__step--paused .stepper__state { color: var(--warning); }
-.stepper__step--locked .stepper__button { opacity: 0.6; }
+.stepper__step--locked .stepper__button { opacity: 0.4; }
 .stepper__step--locked .stepper__state { color: var(--text-disabled); }
+.stepper__step--locked .stepper__button:hover { opacity: 0.55; }
 
 .stepper__line {
   align-self: center;

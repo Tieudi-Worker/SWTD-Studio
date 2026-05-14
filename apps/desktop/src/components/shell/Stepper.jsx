@@ -65,7 +65,6 @@ export default function Stepper({ steps, activeId, onChange }) {
                 type="button"
                 className="stepper__button"
                 onClick={() => interactive && onChange(step.id)}
-                disabled={!interactive}
                 aria-disabled={!interactive}
                 aria-current={isActive ? 'step' : undefined}
                 title={title}

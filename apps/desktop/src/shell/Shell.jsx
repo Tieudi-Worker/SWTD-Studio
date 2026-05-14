@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import TopBar from '../components/shell/TopBar.jsx'
 import LeftRail from '../components/shell/LeftRail.jsx'
 import Stepper from '../components/shell/Stepper.jsx'
@@ -74,6 +74,19 @@ export default function Shell() {
   const [validatingOutput, setValidatingOutput] = useState(false)
 
   useEffect(() => { saveLayout(layout) }, [layout])
+
+  // B1 — auto-toggle inspector on SKU-presence transition.
+  // Opens when a SKU is loaded, closes when returning to an empty
+  // dashboard. We only react to *transitions* so manual toggles
+  // inside the same SKU session are respected.
+  const prevHasSkuRef = useRef(!!skuPath)
+  useEffect(() => {
+    const hasSku = !!skuPath
+    if (hasSku !== prevHasSkuRef.current) {
+      setLayout(prev => ({ ...prev, rightInspectorCollapsed: !hasSku }))
+      prevHasSkuRef.current = hasSku
+    }
+  }, [skuPath])
 
   useEffect(() => {
     if (!api?.onPipelineEvent) return
