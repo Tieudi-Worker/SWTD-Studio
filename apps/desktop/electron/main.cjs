@@ -2,6 +2,7 @@ const { app, BrowserWindow, Menu, ipcMain, dialog } = require('electron')
 const path = require('node:path')
 const fs = require('node:fs')
 const { pathToFileURL } = require('node:url')
+const { discoverSkus } = require('./sku-discovery.cjs')
 
 const isDev = !app.isPackaged
 
@@ -110,50 +111,11 @@ app.whenReady().then(() => {
   })
 
   // --- Workspace listing -----------------------------------------------------
-  // A workspace can be either:
-  //   1) a parent folder containing many SKU subfolders, or
-  //   2) a single SKU folder itself.
-  // We detect that and filter out non-SKU helper folders (e.g. `research`,
-  // `tmp`) when listing siblings, so the LeftRail does not show them as bad
-  // SKUs.
+  // See sku-discovery.cjs for the discovery logic and modes ('single',
+  // 'parent', 'empty'). Errors surface as { ok:false, error, items:[] } so the
+  // renderer can render an empty-state instead of crashing.
   ipcMain.handle('swtd:list-skus', async (_evt, workspacePath) => {
-    if (!workspacePath || !fs.existsSync(workspacePath)) {
-      return { ok: false, error: 'Workspace path missing.', items: [] }
-    }
-
-    function looksLikeSkuDir(dir) {
-      try {
-        if (fs.existsSync(path.join(dir, 'brief.json'))) return true
-        if (fs.existsSync(path.join(dir, 'input', 'product'))) return true
-      } catch { /* ignore */ }
-      return false
-    }
-
-    // Case 2: workspace IS a SKU folder.
-    if (looksLikeSkuDir(workspacePath)) {
-      return {
-        ok: true,
-        mode: 'single',
-        items: [{
-          name: path.basename(workspacePath),
-          path: workspacePath,
-          hasBrief: fs.existsSync(path.join(workspacePath, 'brief.json'))
-        }]
-      }
-    }
-
-    const entries = await fs.promises.readdir(workspacePath, { withFileTypes: true })
-    const items = []
-    for (const e of entries) {
-      if (!e.isDirectory()) continue
-      if (e.name.startsWith('.')) continue
-      const skuDir = path.join(workspacePath, e.name)
-      if (!looksLikeSkuDir(skuDir)) continue
-      const hasBrief = fs.existsSync(path.join(skuDir, 'brief.json'))
-      items.push({ name: e.name, path: skuDir, hasBrief })
-    }
-    items.sort((a, b) => a.name.localeCompare(b.name))
-    return { ok: true, mode: 'parent', items }
+    return discoverSkus(workspacePath)
   })
 
   // --- Run listing pipeline --------------------------------------------------

@@ -137,6 +137,11 @@ export default function Shell() {
       setWorkspace(res.path)
       const list = await api.listSkus(res.path)
       setSkus(list?.items || [])
+      // When the picked folder IS a single SKU, jump straight to it — there
+      // is exactly one option and forcing the user to click it adds friction.
+      if (list?.mode === 'single' && list.items?.length === 1) {
+        chooseSku(list.items[0].path)
+      }
     }
   }, [])
 
