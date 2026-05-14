@@ -34,17 +34,19 @@
   --info: #60A5FA;
   --info-muted: rgba(96, 165, 250, 0.12);
 
-  /* Shadows — subtle for dark theme */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+  /* Elevation — one canonical shadow + one focus ring.
+     --shadow-lg retained because CommandPalette modal still references it. */
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.6);
+  --focus-ring: 0 0 0 2px var(--accent-glow);
 
-  /* Radii */
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
+  /* Radii — calm-enterprise scale (was 4/6/8) */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
 
-  /* Spacing scale — use ONLY these */
+  /* Spacing scale — 4/8/12/16/20/24/32/48.
+     --space-5 (20) kept: canvas__header rhythm depends on it. */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -53,7 +55,26 @@
   --space-6: 24px;
   --space-8: 32px;
   --space-12: 48px;
-  --space-16: 64px;
+
+  /* Typography — 3 roles, two sizes each.
+     Title 16/20, Body 13/14, Meta 11/12. */
+  --text-title-lg: 20px;  --line-title-lg: 28px;
+  --text-title-md: 16px;  --line-title-md: 24px;
+  --text-body-md:  14px;  --line-body-md:  22px;
+  --text-body-sm:  13px;  --line-body-sm:  20px;
+  --text-meta-md:  12px;  --line-meta-md:  18px;
+  --text-meta-sm:  11px;  --line-meta-sm:  16px;
+
+  /* Semantic aliases — brief vocabulary (bg / surface / text-1 / ...).
+     Additive only: existing token names still resolve. New code should
+     prefer these; old call sites stay untouched. */
+  --bg:         var(--bg-base);
+  --surface:    var(--bg-surface);
+  --surface-2:  var(--bg-elevated);
+  --border:     var(--border-subtle);
+  --text-1:     var(--text-primary);
+  --text-2:     var(--text-secondary);
+  --text-muted: var(--text-tertiary);
 
   /* Layout dimensions */
   --topbar-height: 44px;
