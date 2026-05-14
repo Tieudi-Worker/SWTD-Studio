@@ -1,0 +1,138 @@
+/* ── Shell layout grid ───────────────────────────────────────── */
+
+.shell {
+  --shell-leftrail: var(--leftrail-width);
+  --shell-inspector: var(--inspector-width);
+  --shell-drawer: var(--drawer-min-height);
+
+  height: 100vh;
+  width: 100vw;
+  display: grid;
+  grid-template-columns: var(--shell-leftrail) 1fr var(--shell-inspector);
+  grid-template-rows: var(--topbar-height) 1fr var(--statusbar-height);
+  grid-template-areas:
+    "topbar   topbar     topbar"
+    "leftrail main       inspector"
+    "statbar  statbar    statbar";
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  overflow: hidden;
+  transition:
+    grid-template-columns var(--transition-base),
+    grid-template-rows var(--transition-base);
+}
+
+.shell--leftrail-collapsed   { --shell-leftrail: 48px; }
+.shell--inspector-collapsed  { --shell-inspector: 0px; }
+.shell--drawer-expanded      { --shell-drawer: var(--drawer-max-height); }
+
+.shell__topbar     { grid-area: topbar;    border-bottom: 1px solid var(--border-subtle); }
+.shell__leftrail   { grid-area: leftrail;  border-right:  1px solid var(--border-subtle); overflow: hidden; }
+.shell__inspector  { grid-area: inspector; border-left:   1px solid var(--border-subtle); overflow: hidden; }
+.shell__statusbar  { grid-area: statbar;   border-top:    1px solid var(--border-subtle); }
+
+.shell--inspector-collapsed .shell__inspector { display: none; }
+
+.shell__main {
+  grid-area: main;
+  display: grid;
+  grid-template-rows: var(--stepper-height) 1fr var(--shell-drawer);
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  transition: grid-template-rows var(--transition-base);
+}
+
+.shell__stepper {
+  border-bottom: 1px solid var(--border-subtle);
+  overflow: hidden;
+  min-height: 0;
+}
+
+.shell__canvas {
+  overflow: auto;
+  min-height: 0;
+  background: var(--bg-base);
+}
+
+.shell__drawer {
+  border-top: 1px solid var(--border-subtle);
+  overflow: hidden;
+  background: var(--bg-surface);
+  min-height: 0;
+}
+
+/* ── Debug slot placeholders (Step 3 only) ───────────────────── */
+
+.shell-placeholder {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  border: 1px dashed var(--border-default);
+  border-radius: var(--radius-sm);
+  margin: 0;
+  color: var(--text-tertiary);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.012),
+    transparent
+  );
+}
+
+.shell-placeholder--big {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.shell-placeholder--inline {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.shell-placeholder__label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.shell-placeholder__sub {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.10em;
+  color: var(--text-tertiary);
+}
+
+.shell-placeholder__kbd {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  letter-spacing: 0.04em;
+}
+
+.shell-placeholder--big .shell-placeholder__label { font-size: 14px; }
+
+/* Subtle inset so placeholders read as 7 distinct slots */
+.shell__topbar    > .shell-placeholder,
+.shell__leftrail  > .shell-placeholder,
+.shell__inspector > .shell-placeholder,
+.shell__statusbar > .shell-placeholder,
+.shell__stepper   > .shell-placeholder,
+.shell__canvas    > .shell-placeholder,
+.shell__drawer    > .shell-placeholder {
+  margin: var(--space-2);
+  height: calc(100% - var(--space-4));
+}
