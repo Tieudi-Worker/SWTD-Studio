@@ -95,3 +95,26 @@
   --transition-base: 150ms ease-out;
   --transition-slow: 200ms ease-out;
 }
+
+/* B7 — Density modes (foundation only; no UI toggle wired yet).
+   Default is comfortable (matches the :root values above). Future
+   Phase C settings UI will set data-density on <html>. */
+:root[data-density="compact"] {
+  --topbar-height: 40px;
+  --statusbar-height: 24px;
+  --stepper-height: 36px;
+  --drawer-min-height: 28px;
+  --drawer-summary-height: 80px;
+  --leftrail-width: 220px;
+  --inspector-width: 300px;
+}
+
+:root[data-density="comfortable"] {
+  --topbar-height: 48px;
+  --statusbar-height: 32px;
+  --stepper-height: 44px;
+  --drawer-min-height: 36px;
+  --drawer-summary-height: 104px;
+  --leftrail-width: 256px;
+  --inspector-width: 340px;
+}
