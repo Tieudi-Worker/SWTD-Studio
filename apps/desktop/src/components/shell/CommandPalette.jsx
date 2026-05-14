@@ -203,14 +203,20 @@ export default function CommandPalette({
 
         <div className="cmdk__list" ref={listRef} role="listbox">
           {filtered.length === 0 && (
-            <div className="cmdk__empty">No matches.</div>
+            <div className="cmdk__empty">
+              <span className="cmdk__empty-title">No matches for &ldquo;{query.trim()}&rdquo;</span>
+              <span className="cmdk__empty-hint">Try a SKU name, step name, or action verb</span>
+            </div>
           )}
           {GROUPS.map(g => {
             const list = grouped[g]
             if (!list || list.length === 0) return null
             return (
               <div className="cmdk__group" key={g}>
-                <div className="cmdk__group-head">{g}</div>
+                <div className="cmdk__group-head">
+                  <span>{g}</span>
+                  <span className="cmdk__group-count">{list.length}</span>
+                </div>
                 {list.map(it => {
                   const idx = filtered.indexOf(it)
                   const isSelected = idx === selected

@@ -1532,12 +1532,20 @@
 
 .cmdk__group { padding: var(--space-1) 0; }
 .cmdk__group-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
   font-family: var(--font-mono);
   font-size: var(--text-caps-sm);
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--text-tertiary);
   padding: var(--space-2) var(--space-4);
+}
+.cmdk__group-count {
+  font-size: var(--text-caps-sm);
+  color: var(--text-disabled);
+  letter-spacing: 0.08em;
 }
 
 .cmdk__item {
@@ -1556,10 +1564,17 @@
   font-size: var(--text-body-sm);
   transition: background var(--transition-base), color var(--transition-base);
 }
-.cmdk__item:hover,
-.cmdk__item--selected {
+.cmdk__item:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+/* Keyboard-selected row reads stronger than mouse-hover: accent
+   bg tint + left edge accent stripe. Scan-friendly at a glance. */
+.cmdk__item--selected,
+.cmdk__item--selected:hover {
   background: var(--accent-muted);
   color: var(--text-primary);
+  box-shadow: inset 3px 0 0 var(--accent);
 }
 .cmdk__item:disabled,
 .cmdk__item[aria-disabled="true"] {
@@ -1586,10 +1601,24 @@
 }
 
 .cmdk__empty {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
   padding: var(--space-6);
   text-align: center;
   color: var(--text-tertiary);
   font-size: var(--text-meta-md);
+}
+.cmdk__empty-title {
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--text-body-sm);
+}
+.cmdk__empty-hint {
+  font-family: var(--font-mono);
+  font-size: var(--text-caps-sm);
+  letter-spacing: 0.08em;
+  color: var(--text-disabled);
 }
 
 .cmdk__footer {
