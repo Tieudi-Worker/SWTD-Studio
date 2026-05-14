@@ -514,8 +514,8 @@
 }
 .canvas__title {
   font-family: var(--font-ui);
-  font-size: 22px;
-  line-height: 28px;
+  font-size: var(--text-title-lg);
+  line-height: var(--line-title-lg);
   letter-spacing: -0.01em;
   font-weight: 500;
   color: var(--text-primary);
@@ -523,7 +523,7 @@
 }
 .canvas__meta {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--text-meta-sm);
   color: var(--text-tertiary);
   white-space: nowrap;
 }
@@ -564,8 +564,8 @@
 }
 .panel__body { padding: var(--space-4); }
 .panel__paragraph {
-  font-size: 13px;
-  line-height: 20px;
+  font-size: var(--text-body-sm);
+  line-height: var(--line-body-sm);
   color: var(--text-secondary);
   margin: 0 0 var(--space-4);
 }
@@ -595,7 +595,7 @@
 }
 .brief-grid__v {
   font-family: var(--font-ui);
-  font-size: 13px;
+  font-size: var(--text-body-sm);
   color: var(--text-primary);
   margin: 0;
 }
@@ -736,7 +736,7 @@
   color: var(--bg-base);
 }
 .slot__label {
-  font-size: 13px;
+  font-size: var(--text-body-sm);
   color: var(--text-primary);
   line-height: 1.3;
 }
@@ -1095,7 +1095,7 @@
 }
 .inspector__sku-name {
   font-family: var(--font-ui);
-  font-size: 13px;
+  font-size: var(--text-body-sm);
   color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1104,7 +1104,7 @@
 }
 .inspector__sku-path {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--text-meta-sm);
   color: var(--text-tertiary);
   margin-top: var(--space-1);
   overflow: hidden;
@@ -1501,7 +1501,7 @@
   outline: none;
   color: var(--text-primary);
   font-family: var(--font-ui);
-  font-size: 14px;
+  font-size: var(--text-body-md);
 }
 .cmdk__input::placeholder { color: var(--text-tertiary); }
 
@@ -1535,7 +1535,7 @@
   cursor: pointer;
   color: var(--text-secondary);
   font-family: var(--font-ui);
-  font-size: 13px;
+  font-size: var(--text-body-sm);
   transition: background var(--transition-fast), color var(--transition-fast);
 }
 .cmdk__item:hover,
