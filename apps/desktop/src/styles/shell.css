@@ -1725,3 +1725,48 @@
   background: var(--bg-elevated);
   flex-shrink: 0;
 }
+
+/* ── Density: compact overrides ──────────────────────────────────
+   Phase C · C5 — scan-friendly tightening for the SKU list, slot
+   grid, panel bodies, canvas, and inspector. Comfortable (default)
+   keeps the original Phase A/B values; only specific gap/padding
+   pairs shrink in compact. Spacing scale + typography unchanged.
+*/
+
+[data-density="compact"] .leftrail__sku {
+  padding: var(--space-1) var(--space-3);
+}
+[data-density="compact"] .leftrail__list { gap: 1px; }
+[data-density="compact"] .leftrail__collection {
+  padding: var(--space-1) var(--space-3);
+}
+
+[data-density="compact"] .canvas__header {
+  padding: var(--space-4) var(--space-6) var(--space-3);
+}
+[data-density="compact"] .canvas__body {
+  padding: var(--space-4) var(--space-6);
+}
+
+[data-density="compact"] .panel__head {
+  padding: var(--space-2) var(--space-3);
+}
+[data-density="compact"] .panel__body {
+  padding: var(--space-3);
+}
+[data-density="compact"] .panel-stack { gap: var(--space-3); }
+
+[data-density="compact"] .slot-grid {
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: var(--space-2);
+}
+[data-density="compact"] .slot { padding: var(--space-3); gap: var(--space-1); }
+
+[data-density="compact"] .inspector__scroll { padding: var(--space-4); }
+[data-density="compact"] .inspector__section + .inspector__section {
+  margin-top: var(--space-4);
+}
+[data-density="compact"] .deflist { gap: 2px; }
+[data-density="compact"] .history { gap: 2px; }
+[data-density="compact"] .qc-checklist { gap: 2px; }
+[data-density="compact"] .qc-row { padding: var(--space-1) var(--space-2); }
