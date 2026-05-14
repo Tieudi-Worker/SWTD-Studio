@@ -39,6 +39,7 @@
   --shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.6);
   --focus-ring: 0 0 0 2px var(--accent-glow);
+  --focus-ring-inset: inset 0 0 0 2px var(--accent-glow);
 
   /* Radii — calm-enterprise scale (was 4/6/8) */
   --radius-sm: 6px;
