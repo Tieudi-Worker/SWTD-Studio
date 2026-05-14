@@ -1013,6 +1013,20 @@
   100% { background-position: -200% 0; }
 }
 
+/* ── Reduced motion ──────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .shell,
+  .shell__main,
+  .skeleton,
+  .health__bar-fill,
+  .drawer__pulse,
+  .drawer__cursor {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
 /* ── Command Palette ─────────────────────────────────────────── */
 
 .cmdk-backdrop {

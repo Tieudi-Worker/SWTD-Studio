@@ -6,6 +6,8 @@ import MainCanvas from '../components/shell/MainCanvas.jsx'
 import RightInspector from '../components/shell/RightInspector.jsx'
 import StatusBar from '../components/shell/StatusBar.jsx'
 import ActivityDrawer from '../components/shell/ActivityDrawer.jsx'
+import CommandPalette from '../components/shell/CommandPalette.jsx'
+import useKeyboardShortcuts from '../hooks/useKeyboardShortcuts.js'
 
 const LAYOUT_KEY = 'swtd_ui_layout'
 
@@ -62,6 +64,7 @@ export default function Shell() {
     lines: []
   })
   const [commandQuery, setCommandQuery] = useState('')
+  const [paletteOpen, setPaletteOpen] = useState(false)
 
   useEffect(() => { saveLayout(layout) }, [layout])
 
@@ -121,26 +124,6 @@ export default function Shell() {
   const clearActivity = useCallback(() => {
     setListingState(prev => ({ ...prev, lines: [] }))
   }, [])
-
-  useEffect(() => {
-    function onKey(e) {
-      const meta = e.metaKey || e.ctrlKey
-      if (!meta) return
-      const k = (e.key || '').toLowerCase()
-      if (k === 'b') {
-        e.preventDefault()
-        toggleLeftRail()
-      } else if (e.key === '\\') {
-        e.preventDefault()
-        toggleRightInspector()
-      } else if (k === 'j') {
-        e.preventDefault()
-        toggleActivityDrawer()
-      }
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [toggleLeftRail, toggleRightInspector, toggleActivityDrawer])
 
   const pickWorkspace = useCallback(async () => {
     if (!api) return
@@ -263,6 +246,29 @@ export default function Shell() {
 
   const handleStepChange = useCallback((id) => setStep(id), [])
 
+  const openPalette = useCallback(() => setPaletteOpen(true), [])
+  const closePalette = useCallback(() => setPaletteOpen(false), [])
+
+  useKeyboardShortcuts({
+    'mod+k':  () => setPaletteOpen(prev => !prev),
+    'mod+r':  () => { if (!runDisabledReason) runListing() },
+    'mod+.':  () => { if (!cancelDisabledReason) cancelListing() },
+    'mod+b':  toggleLeftRail,
+    'mod+\\': toggleRightInspector,
+    'mod+j':  toggleActivityDrawer,
+    'mod+o':  pickWorkspace,
+    'mod+i':  () => { if (!revalidateDisabledReason) revalidate() },
+    'mod+/':  openPalette,
+    'shift+?': openPalette,
+    'escape': () => { if (paletteOpen) closePalette() }
+  })
+
+  const stepStatesMap = useMemo(() => {
+    const out = {}
+    for (const e of stepEntries) out[e.step.id] = e.state
+    return out
+  }, [stepEntries])
+
   const shellClass = [
     'shell',
     layout.leftRailCollapsed && 'shell--leftrail-collapsed',
@@ -279,6 +285,7 @@ export default function Shell() {
           runStatus={listingState.status}
           commandQuery={commandQuery}
           onCommandQueryChange={setCommandQuery}
+          onOpenCommandPalette={openPalette}
         />
       </header>
 
@@ -345,8 +352,30 @@ export default function Shell() {
         <StatusBar
           runStatus={listingState.status}
           lastLine={lastLine}
+          onOpenShortcuts={openPalette}
         />
       </footer>
+
+      {paletteOpen && (
+        <CommandPalette
+          onClose={closePalette}
+          skus={skus}
+          steps={STEP_DEFS}
+          onNavigateStep={handleStepChange}
+          onChooseSku={chooseSku}
+          onPickWorkspace={pickWorkspace}
+          onRunListing={runListing}
+          onCancelListing={cancelListing}
+          onRevalidate={revalidate}
+          onToggleLeftRail={toggleLeftRail}
+          onToggleInspector={toggleRightInspector}
+          onToggleDrawer={toggleActivityDrawer}
+          runDisabledReason={runDisabledReason}
+          cancelDisabledReason={cancelDisabledReason}
+          revalidateDisabledReason={revalidateDisabledReason}
+          stepStates={stepStatesMap}
+        />
+      )}
     </div>
   )
 }
