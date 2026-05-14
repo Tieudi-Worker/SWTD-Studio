@@ -1,0 +1,71 @@
+:root {
+  /* Backgrounds — 4 levels for depth */
+  --bg-base: #0A0A0B;
+  --bg-surface: #141416;
+  --bg-elevated: #1C1C20;
+  --bg-hover: #22222A;
+
+  /* Borders */
+  --border-subtle: #26262B;
+  --border-default: #2E2E35;
+  --border-strong: #3A3A42;
+  --border-focus: #D4A857;
+
+  /* Text */
+  --text-primary: #E8E8EC;
+  --text-secondary: #8B8B94;
+  --text-tertiary: #5A5A62;
+  --text-disabled: #3A3A42;
+
+  /* Accent (primary CTA, active state) */
+  --accent: #D4A857;
+  --accent-hover: #E2B868;
+  --accent-active: #C49847;
+  --accent-muted: rgba(212, 168, 87, 0.12);
+  --accent-glow: rgba(212, 168, 87, 0.20);
+
+  /* Semantic states */
+  --success: #4ADE80;
+  --success-muted: rgba(74, 222, 128, 0.12);
+  --warning: #FBBF24;
+  --warning-muted: rgba(251, 191, 36, 0.12);
+  --danger: #EF4444;
+  --danger-muted: rgba(239, 68, 68, 0.12);
+  --info: #60A5FA;
+  --info-muted: rgba(96, 165, 250, 0.12);
+
+  /* Shadows — subtle for dark theme */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.6);
+
+  /* Radii */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  /* Spacing scale — use ONLY these */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* Layout dimensions */
+  --topbar-height: 44px;
+  --statusbar-height: 28px;
+  --stepper-height: 40px;
+  --leftrail-width: 240px;
+  --inspector-width: 320px;
+  --drawer-min-height: 32px;
+  --drawer-max-height: 280px;
+
+  /* Transitions */
+  --transition-fast: 100ms ease-out;
+  --transition-base: 150ms ease-out;
+  --transition-slow: 200ms ease-out;
+}

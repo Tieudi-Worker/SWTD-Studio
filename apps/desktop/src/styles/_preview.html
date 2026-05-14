@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Design Tokens · SWTD Studio v2</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="typography.css">
+<style>
+  body { background: var(--bg-base); color: var(--text-primary); font-family: var(--font-ui); padding: 32px; }
+  h2 { font-size: 14px; text-transform: uppercase; letter-spacing: .08em; color: var(--text-secondary); margin: 32px 0 12px; border-top: 1px solid var(--border-subtle); padding-top: 20px; }
+  .row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
+  .chip { width: 56px; height: 56px; border-radius: var(--radius-md); display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px; font-size: 10px; font-family: var(--font-mono); color: var(--text-secondary); }
+  .txt-sample { font-size: 16px; line-height: 24px; margin-bottom: 6px; font-family: var(--font-ui); }
+  .type-row { display: flex; gap: 32px; flex-wrap: wrap; }
+  .type-sample { display: flex; flex-direction: column; gap: 2px; min-width: 160px; }
+  .type-sample .label { font-size: 10px; text-transform: uppercase; color: var(--text-tertiary); letter-spacing: .06em; }
+  .cs { width: 48px; height: 48px; border-radius: var(--radius-md); display: grid; place-items: center; font-size: 10px; font-family: var(--font-mono); }
+</style>
+</head>
+<body>
+<h2>Backgrounds</h2><div class="row">
+  <div class="chip" style="background:var(--bg-base)">base</div>
+  <div class="chip" style="background:var(--bg-surface)">surface</div>
+  <div class="chip" style="background:var(--bg-elevated)">elevated</div>
+  <div class="chip" style="background:var(--bg-hover)">hover</div>
+</div>
+
+<h2>Borders</h2><div class="row">
+  <div class="chip" style="border:2px solid var(--border-subtle);background:var(--bg-surface)">subtle</div>
+  <div class="chip" style="border:2px solid var(--border-default);background:var(--bg-surface)">default</div>
+  <div class="chip" style="border:2px solid var(--border-strong);background:var(--bg-surface)">strong</div>
+  <div class="chip" style="border:2px solid var(--border-focus);background:var(--bg-surface)">focus</div>
+</div>
+
+<h2>Text</h2><div class="row">
+  <div class="cs" style="background:var(--text-primary)">primary</div>
+  <div class="cs" style="background:var(--text-secondary)">second</div>
+  <div class="cs" style="background:var(--text-tertiary)">tertiary</div>
+  <div class="cs" style="background:var(--text-disabled)">disabled</div>
+</div>
+
+<h2>Accent</h2><div class="row">
+  <div class="cs" style="background:var(--accent)">accent</div>
+  <div class="cs" style="background:var(--accent-hover)">hover</div>
+  <div class="cs" style="background:var(--accent-active)">active</div>
+</div>
+
+<h2>Semantic</h2><div class="row">
+  <div class="cs" style="background:var(--success)">ok</div>
+  <div class="cs" style="background:var(--warning)">warn</div>
+  <div class="cs" style="background:var(--danger)">err</div>
+  <div class="cs" style="background:var(--info)">info</div>
+</div>
+
+<h2>Typography</h2><div class="type-row">
+  <div class="type-sample"><span class="label">text-xs</span><span class="text-xs">11px body label</span></div>
+  <div class="type-sample"><span class="label">text-sm</span><span class="text-sm">13px body text</span></div>
+  <div class="type-sample"><span class="label">text-base</span><span class="text-base">14px main content</span></div>
+  <div class="type-sample"><span class="label">text-lg</span><span class="text-lg">16px section head</span></div>
+  <div class="type-sample"><span class="label">text-xl</span><span class="text-xl">20px page title</span></div>
+  <div class="type-sample"><span class="label">text-2xl</span><span class="text-2xl">24px display</span></div>
+</div>
+
+<h2>Mono</h2><div class="type-row">
+  <div class="type-sample"><span class="label">mono sm</span><span class="text-sm" style="font-family:var(--font-mono)">RUN_a8f2k</span></div>
+  <div class="type-sample"><span class="label">mono base</span><span class="text-base" style="font-family:var(--font-mono)">12:09:01</span></div>
+  <div class="type-sample"><span class="label">label-caps</span><span class="label-caps">SKUS 12</span></div>
+</div>
+</body>
+</html>
