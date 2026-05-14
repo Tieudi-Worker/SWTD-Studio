@@ -28,6 +28,7 @@
 
 .shell--leftrail-collapsed   { --shell-leftrail: 48px; }
 .shell--inspector-collapsed  { --shell-inspector: 0px; }
+.shell--drawer-summary       { --shell-drawer: var(--drawer-summary-height); }
 .shell--drawer-expanded      { --shell-drawer: var(--drawer-max-height); }
 
 .shell__topbar     { grid-area: topbar;    border-bottom: 1px solid var(--border-subtle); background: var(--bg-surface); }
@@ -1064,9 +1065,11 @@
   text-transform: uppercase;
   transition: color var(--transition-base), border-color var(--transition-base);
 }
-.inspector__tab:hover { color: var(--text-secondary); }
-.inspector__tab--active {
+.inspector__tab:hover { color: var(--text-secondary); background: var(--bg-hover); }
+.inspector__tab--active,
+.inspector__tab--active:hover {
   color: var(--text-primary);
+  background: var(--accent-muted);
   border-bottom-color: var(--accent);
 }
 
@@ -1333,7 +1336,9 @@
   border-bottom: 1px solid transparent;
   transition: border-color var(--transition-base);
 }
+.drawer--summary .drawer__head,
 .drawer--expanded .drawer__head { border-bottom-color: var(--border-subtle); }
+.drawer--summary .drawer__body { overflow: hidden; }
 
 .drawer__toggle {
   display: inline-flex;

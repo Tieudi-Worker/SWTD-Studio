@@ -87,6 +87,7 @@
   --leftrail-width: 240px;
   --inspector-width: 320px;
   --drawer-min-height: 32px;
+  --drawer-summary-height: 96px;
   --drawer-max-height: 280px;
 
   /* Transitions */

@@ -7,17 +7,24 @@ import IconButton from '../atoms/IconButton.jsx'
  * @property {string} line
  * @property {number} ts
  *
+ * @typedef {'collapsed'|'summary'|'expanded'} DrawerMode
+ *
  * @typedef {Object} ActivityDrawerProps
- * @property {boolean} expanded
+ * @property {DrawerMode} mode
  * @property {() => void} onToggle
  * @property {() => void} onClear
  * @property {LogLine[]} lines
  * @property {string} runStatus
  */
 
+const SUMMARY_TAIL = 2
+
 /** @param {ActivityDrawerProps} props */
-export default function ActivityDrawer({ expanded, onToggle, onClear, lines, runStatus }) {
+export default function ActivityDrawer({ mode, onToggle, onClear, lines, runStatus }) {
   const bodyRef = useRef(null)
+  const expanded = mode === 'expanded'
+  const summaryMode = mode === 'summary'
+  const bodyVisible = expanded || summaryMode
 
   useEffect(() => {
     if (!expanded || !bodyRef.current) return
@@ -29,8 +36,21 @@ export default function ActivityDrawer({ expanded, onToggle, onClear, lines, run
     ? 'no activity yet'
     : `${count} line${count === 1 ? '' : 's'}`
 
+  // Summary mode: peek the most-recent N lines without giving the
+  // drawer a scrollable body. Keeps the canvas dominant while still
+  // showing fresh tail output.
+  const visibleLines = summaryMode
+    ? (lines || []).slice(-SUMMARY_TAIL)
+    : (lines || [])
+
+  const nextLabel = mode === 'collapsed'
+    ? 'Peek activity'
+    : (mode === 'summary' ? 'Expand activity' : 'Collapse activity')
+
+  const chevron = mode === 'collapsed' ? '▸' : (mode === 'summary' ? '▹' : '▾')
+
   return (
-    <div className={'drawer' + (expanded ? ' drawer--expanded' : '')}>
+    <div className={'drawer drawer--' + mode}>
       <div className="drawer__head">
         <button
           type="button"
@@ -38,9 +58,9 @@ export default function ActivityDrawer({ expanded, onToggle, onClear, lines, run
           onClick={onToggle}
           aria-expanded={expanded}
           aria-controls="drawer-body"
-          title={expanded ? 'Collapse activity' : 'Expand activity'}
+          title={nextLabel}
         >
-          <span className="drawer__chevron" aria-hidden="true">{expanded ? '▾' : '▸'}</span>
+          <span className="drawer__chevron" aria-hidden="true">{chevron}</span>
           <span className="drawer__title">Activity</span>
           <span className="drawer__summary">{summary}</span>
           {runStatus === 'running' && <span className="drawer__pulse" aria-hidden="true" />}
@@ -67,19 +87,19 @@ export default function ActivityDrawer({ expanded, onToggle, onClear, lines, run
         )}
       </div>
 
-      {expanded && (
+      {bodyVisible && (
         <div className="drawer__body" id="drawer-body" ref={bodyRef}>
           {count === 0 && (
             <div className="drawer__empty">No log lines yet — run the pipeline to stream output.</div>
           )}
-          {(lines || []).map((l, i) => (
+          {visibleLines.map((l, i) => (
             <div key={i} className={'drawer__line drawer__line--' + (l.stream || 'sys')}>
               <span className="drawer__ts">{fmtTs(l.ts)}</span>
               <span className="drawer__stream">{(l.stream || 'sys').padEnd(6).slice(0, 6)}</span>
               <span className="drawer__text">{l.line}</span>
             </div>
           ))}
-          {runStatus === 'running' && <span className="drawer__cursor" aria-hidden="true" />}
+          {runStatus === 'running' && expanded && <span className="drawer__cursor" aria-hidden="true" />}
         </div>
       )}
     </div>

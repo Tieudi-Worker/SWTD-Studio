@@ -15,7 +15,7 @@ const LAYOUT_KEY = 'swtd_ui_layout'
 const DEFAULT_LAYOUT = {
   leftRailCollapsed: false,
   rightInspectorCollapsed: false,
-  activityDrawerExpanded: false
+  activityDrawerMode: 'collapsed'  /* 'collapsed' | 'summary' | 'expanded' */
 }
 
 function loadLayout() {
@@ -23,11 +23,17 @@ function loadLayout() {
     const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(LAYOUT_KEY) : null
     if (!raw) return DEFAULT_LAYOUT
     const parsed = JSON.parse(raw)
+    // Migrate legacy boolean `activityDrawerExpanded` → enum `activityDrawerMode`.
+    if (parsed.activityDrawerMode == null && typeof parsed.activityDrawerExpanded === 'boolean') {
+      parsed.activityDrawerMode = parsed.activityDrawerExpanded ? 'expanded' : 'collapsed'
+    }
     return { ...DEFAULT_LAYOUT, ...parsed }
   } catch {
     return DEFAULT_LAYOUT
   }
 }
+
+const DRAWER_CYCLE = { collapsed: 'summary', summary: 'expanded', expanded: 'collapsed' }
 
 function saveLayout(layout) {
   try {
@@ -145,7 +151,10 @@ export default function Shell() {
     setLayout(prev => ({ ...prev, rightInspectorCollapsed: !prev.rightInspectorCollapsed }))
   }, [])
   const toggleActivityDrawer = useCallback(() => {
-    setLayout(prev => ({ ...prev, activityDrawerExpanded: !prev.activityDrawerExpanded }))
+    setLayout(prev => ({
+      ...prev,
+      activityDrawerMode: DRAWER_CYCLE[prev.activityDrawerMode] || 'summary'
+    }))
   }, [])
 
   const clearActivity = useCallback(() => {
@@ -213,7 +222,7 @@ export default function Shell() {
       : []
     setListingState({ runId: null, status: 'running', lines: [] })
     setStep('listing')
-    setLayout(prev => ({ ...prev, activityDrawerExpanded: true }))
+    setLayout(prev => ({ ...prev, activityDrawerMode: 'expanded' }))
     setPendingRegen(new Set(regenList))
     const payload = { skuPath }
     if (regenList.length > 0) {
@@ -386,7 +395,8 @@ export default function Shell() {
     'shell',
     layout.leftRailCollapsed && 'shell--leftrail-collapsed',
     layout.rightInspectorCollapsed && 'shell--inspector-collapsed',
-    layout.activityDrawerExpanded && 'shell--drawer-expanded'
+    layout.activityDrawerMode === 'summary' && 'shell--drawer-summary',
+    layout.activityDrawerMode === 'expanded' && 'shell--drawer-expanded'
   ].filter(Boolean).join(' ')
 
   return (
@@ -449,7 +459,7 @@ export default function Shell() {
         </div>
         <div className="shell__drawer">
           <ActivityDrawer
-            expanded={layout.activityDrawerExpanded}
+            mode={layout.activityDrawerMode}
             onToggle={toggleActivityDrawer}
             onClear={clearActivity}
             lines={listingState.lines}
