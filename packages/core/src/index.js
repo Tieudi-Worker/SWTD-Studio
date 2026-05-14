@@ -1,1 +1,1 @@
-export { runPipeline } from './pipeline-runner.js'
+export { runPipeline, runRuntimeBin } from './pipeline-runner.js'
