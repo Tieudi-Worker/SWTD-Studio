@@ -5,15 +5,15 @@
   --bg-elevated: #1C1C20;
   --bg-hover: #22222A;
 
-  /* Borders */
+  /* Borders — F7 contrast bump: --border-default +1 step for scan-clarity */
   --border-subtle: #26262B;
-  --border-default: #2E2E35;
-  --border-strong: #3A3A42;
+  --border-default: #353540;
+  --border-strong: #45454F;
   --border-focus: #D4A857;
 
-  /* Text */
+  /* Text — F7 contrast bump: --text-secondary +1 step for body legibility */
   --text-primary: #E8E8EC;
-  --text-secondary: #8B8B94;
+  --text-secondary: #9C9CA5;
   --text-tertiary: #5A5A62;
   --text-disabled: #3A3A42;
 
@@ -65,6 +65,9 @@
   --text-body-sm:  13px;  --line-body-sm:  20px;
   --text-meta-md:  12px;  --line-meta-md:  18px;
   --text-meta-sm:  11px;  --line-meta-sm:  16px;
+  /* Caps labels — ultra-small uppercase metadata (mono). */
+  --text-caps-md:  10px;
+  --text-caps-sm:  9.5px;
 
   /* Semantic aliases — brief vocabulary (bg / surface / text-1 / ...).
      Additive only: existing token names still resolve. New code should

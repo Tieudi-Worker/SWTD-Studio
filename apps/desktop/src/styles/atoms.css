@@ -19,10 +19,10 @@
   user-select: none;
   white-space: nowrap;
   transition:
-    background var(--transition-fast),
-    border-color var(--transition-fast),
-    color var(--transition-fast),
-    box-shadow var(--transition-fast);
+    background var(--transition-base),
+    border-color var(--transition-base),
+    color var(--transition-base),
+    box-shadow var(--transition-base);
 }
 .atom-btn:focus-visible {
   outline: none;
@@ -30,8 +30,8 @@
   border-color: var(--border-focus);
 }
 
-.atom-btn--sm { height: 24px; padding: 0 var(--space-2); font-size: 11px; gap: var(--space-1); }
-.atom-btn--md { height: 32px; padding: 0 var(--space-3); font-size: 13px; }
+.atom-btn--sm { height: 24px; padding: 0 var(--space-2); font-size: var(--text-meta-sm); gap: var(--space-1); }
+.atom-btn--md { height: 32px; padding: 0 var(--space-3); font-size: var(--text-body-sm); }
 .atom-btn--full { width: 100%; }
 
 .atom-btn--primary {
@@ -89,14 +89,14 @@
   justify-content: center;
   flex-shrink: 0;
 }
-.atom-btn--sm .atom-btn__icon { font-size: 11px; }
-.atom-btn--md .atom-btn__icon { font-size: 13px; }
+.atom-btn--sm .atom-btn__icon { font-size: var(--text-meta-sm); }
+.atom-btn--md .atom-btn__icon { font-size: var(--text-body-sm); }
 
 .atom-btn__label { display: inline-block; }
 
 .atom-btn__kbd {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-caps-md);
   letter-spacing: 0.04em;
   padding: 1px 5px;
   margin-left: var(--space-1);
@@ -140,10 +140,10 @@
   cursor: pointer;
   color: var(--text-secondary);
   transition:
-    background var(--transition-fast),
-    border-color var(--transition-fast),
-    color var(--transition-fast),
-    box-shadow var(--transition-fast);
+    background var(--transition-base),
+    border-color var(--transition-base),
+    color var(--transition-base),
+    box-shadow var(--transition-base);
 }
 .atom-iconbtn:focus-visible {
   outline: none;
@@ -151,8 +151,8 @@
   border-color: var(--border-focus);
 }
 
-.atom-iconbtn--sm { width: 24px; height: 24px; font-size: 12px; }
-.atom-iconbtn--md { width: 32px; height: 32px; font-size: 14px; }
+.atom-iconbtn--sm { width: 24px; height: 24px; font-size: var(--text-meta-md); }
+.atom-iconbtn--md { width: 32px; height: 32px; font-size: var(--text-body-md); }
 
 .atom-iconbtn--primary {
   background: var(--accent);
@@ -258,8 +258,8 @@
   white-space: nowrap;
   line-height: 1;
 }
-.atom-chip--sm { height: 20px; padding: 0 var(--space-2); font-size: 10px; gap: var(--space-1); }
-.atom-chip--md { height: 24px; padding: 0 var(--space-3); font-size: 11px; }
+.atom-chip--sm { height: 20px; padding: 0 var(--space-2); font-size: var(--text-caps-md); gap: var(--space-1); }
+.atom-chip--md { height: 24px; padding: 0 var(--space-3); font-size: var(--text-meta-sm); }
 
 .atom-chip__icon { display: inline-flex; align-items: center; }
 .atom-chip__label { line-height: 1; }
@@ -310,17 +310,17 @@
   width: 100%;
   position: relative;
   transition:
-    border-color var(--transition-fast),
-    background var(--transition-fast),
-    box-shadow var(--transition-fast);
+    border-color var(--transition-base),
+    background var(--transition-base),
+    box-shadow var(--transition-base);
 }
 .atom-input:focus-within {
   border-color: var(--border-focus);
   box-shadow: var(--focus-ring);
 }
 
-.atom-input--sm { height: 28px; padding: 0 var(--space-2); font-size: 12px; }
-.atom-input--md { height: 32px; padding: 0 var(--space-3); font-size: 13px; }
+.atom-input--sm { height: 28px; padding: 0 var(--space-2); font-size: var(--text-meta-md); }
+.atom-input--md { height: 32px; padding: 0 var(--space-3); font-size: var(--text-body-sm); }
 
 .atom-input--error              { border-color: var(--danger); }
 .atom-input--error:focus-within { box-shadow: 0 0 0 2px var(--danger-muted); }
@@ -354,7 +354,7 @@
 
 .atom-input__kbd {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-caps-md);
   padding: 1px 5px;
   border-radius: 3px;
   background: rgba(255, 255, 255, 0.06);
@@ -365,7 +365,7 @@
 
 .atom-input__error {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-caps-md);
   color: var(--danger);
   letter-spacing: 0.04em;
 }
@@ -401,18 +401,18 @@
   font-weight: 500;
   color: var(--text-primary);
 }
-.atom-empty--sm .atom-empty__title { font-size: 13px; line-height: 20px; }
-.atom-empty--md .atom-empty__title { font-size: 16px; line-height: 24px; }
-.atom-empty--lg .atom-empty__title { font-size: 20px; line-height: 28px; letter-spacing: -0.01em; }
+.atom-empty--sm .atom-empty__title { font-size: var(--text-body-sm); line-height: var(--line-body-sm); }
+.atom-empty--md .atom-empty__title { font-size: var(--text-title-md); line-height: var(--line-title-md); }
+.atom-empty--lg .atom-empty__title { font-size: var(--text-title-lg); line-height: var(--line-title-lg); letter-spacing: -0.01em; }
 
 .atom-empty__body {
   font-family: var(--font-ui);
   color: var(--text-tertiary);
   max-width: 48ch;
 }
-.atom-empty--sm .atom-empty__body { font-size: 11px; line-height: 16px; }
-.atom-empty--md .atom-empty__body { font-size: 13px; line-height: 20px; }
-.atom-empty--lg .atom-empty__body { font-size: 14px; line-height: 22px; }
+.atom-empty--sm .atom-empty__body { font-size: var(--text-meta-sm); line-height: var(--line-meta-sm); }
+.atom-empty--md .atom-empty__body { font-size: var(--text-body-sm); line-height: var(--line-body-sm); }
+.atom-empty--lg .atom-empty__body { font-size: var(--text-body-md); line-height: var(--line-body-md); }
 
 .atom-empty__actions {
   display: inline-flex;
