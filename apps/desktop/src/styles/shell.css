@@ -784,8 +784,15 @@
 .slot__qc--missing { color: var(--danger); border-color: rgba(239, 68, 68, 0.35); }
 .slot__qc--unknown { color: var(--warning); border-color: rgba(251, 191, 36, 0.35); }
 
-.slot--done    { border-color: rgba(74, 222, 128, 0.35); }
+.slot--done    {
+  border-color: rgba(74, 222, 128, 0.35);
+  animation: slot-flash-done var(--duration-slow) var(--ease-out);
+}
 .slot--done    .slot__state { color: var(--success); }
+@keyframes slot-flash-done {
+  0%   { background: var(--success-muted); }
+  100% { background: var(--bg-elevated); }
+}
 .slot--running { border-color: rgba(212, 168, 87, 0.45); }
 .slot--running .slot__state { color: var(--accent); }
 .slot--error   { border-color: rgba(239, 68, 68, 0.35); }
@@ -1467,7 +1474,7 @@
     var(--bg-elevated) 100%
   );
   background-size: 200% 100%;
-  animation: atom-skeleton 1.4s ease-in-out infinite;
+  animation: atom-skeleton 1.4s var(--ease-in-out) infinite;
   border-radius: var(--radius-sm);
 }
 .skeleton--row { height: 22px; }
