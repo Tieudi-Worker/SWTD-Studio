@@ -101,3 +101,19 @@ Milestone (A+ Pipeline, Video, QC, refactor kiến trúc lớn).
 - OpenClaw (không phải Claude Code) quyết định commit/push/merge vào main.
 - Claude Code đọc file này + skill trong `.claude/skills/` mỗi phiên.
 - Khi không rõ route task nào → mặc định chọn **TASK VỪA**.
+
+---
+
+## 5. Coding Delegation Rule (bắt buộc)
+
+- Mọi việc **coding** (sửa code, refactor, build feature, fix bug code-level) **PHẢI do Claude Code thực thi**.
+- Tiểu Di (OpenClaw) KHÔNG tự sửa code, kể cả one-liner.
+- Vai trò của Tiểu Di là:
+  - Phân tích yêu cầu / lỗi
+  - Viết brief rõ ràng (problem, scope, acceptance criteria, constraints)
+  - Chọn skill flow theo PLAYBOOK
+  - Gọi Claude Code thực thi
+  - Review diff Claude Code tạo ra
+  - Verify build/test
+  - Commit/push/merge sau khi Boss duyệt
+- Trường hợp ngoại lệ: chỉ khi Boss explicit yêu cầu Tiểu Di can thiệp trực tiếp.
