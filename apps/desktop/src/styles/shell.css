@@ -1303,7 +1303,8 @@
 .statusbar__kbd-pair {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 0;
+  transition: gap var(--transition-base);
 }
 .statusbar__kbd {
   font-family: var(--font-mono);
@@ -1315,12 +1316,29 @@
   color: var(--text-secondary);
   letter-spacing: 0.04em;
 }
+/* Progressive disclosure: labels hide at rest so the statusbar reads
+   as a compact kbd hint row. Hovering or keyboard-focusing the row
+   reveals the labels with a smooth max-width transition. */
 .statusbar__kbd-label {
   font-family: var(--font-mono);
   font-size: var(--text-caps-sm);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-tertiary);
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  transition:
+    max-width var(--transition-base),
+    opacity var(--transition-base);
+}
+.statusbar__shortcuts:hover .statusbar__kbd-pair,
+.statusbar__shortcuts:focus-visible .statusbar__kbd-pair { gap: 4px; }
+.statusbar__shortcuts:hover .statusbar__kbd-label,
+.statusbar__shortcuts:focus-visible .statusbar__kbd-label {
+  max-width: 80px;
+  opacity: 1;
 }
 
 /* ── ActivityDrawer ──────────────────────────────────────────── */
