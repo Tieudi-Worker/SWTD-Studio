@@ -62,7 +62,9 @@ export default function Shell() {
   const [listingState, setListingState] = useState({
     runId: null,
     status: 'idle',
-    lines: []
+    lines: [],
+    pauseReason: null,
+    cohesionRequestPath: null
   })
   const [commandQuery, setCommandQuery] = useState('')
   const [paletteOpen, setPaletteOpen] = useState(false)
@@ -85,7 +87,9 @@ export default function Shell() {
               stream: 'sys',
               line: `▸ start ${evt.bin}  ${evt.skuPath}  ${(evt.extraArgs || []).join(' ')}`.trim(),
               ts: evt.ts
-            }]
+            }],
+            pauseReason: null,
+            cohesionRequestPath: null
           }
         }
         if (evt.kind === 'log') {
@@ -93,15 +97,20 @@ export default function Shell() {
           return { ...prev, lines: [...trimmed, { stream: evt.stream, line: evt.line, ts: evt.ts }] }
         }
         if (evt.kind === 'end') {
-          const status = evt.aborted ? 'cancelled' : (evt.ok ? 'ok' : 'err')
+          // A paused end is not a failure: master.js exited with code 2 to ask
+          // the operator to run cohesion review and write _cohesion_report.json.
+          const status = evt.aborted
+            ? 'cancelled'
+            : (evt.paused ? 'paused' : (evt.ok ? 'ok' : 'err'))
+          const tailLine = evt.paused
+            ? `▸ paused  reason=${evt.pauseReason || 'cohesion-review'}  code=${evt.code}`
+            : `▸ end  code=${evt.code}  aborted=${evt.aborted ? 'yes' : 'no'}`
           return {
             ...prev,
             status,
-            lines: [...prev.lines, {
-              stream: 'sys',
-              line: `▸ end  code=${evt.code}  aborted=${evt.aborted ? 'yes' : 'no'}`,
-              ts: evt.ts
-            }]
+            pauseReason: evt.paused ? (evt.pauseReason || 'cohesion-review') : null,
+            cohesionRequestPath: evt.paused ? (evt.cohesionRequestPath || null) : null,
+            lines: [...prev.lines, { stream: 'sys', line: tailLine, ts: evt.ts }]
           }
         }
         if (evt.kind === 'error') {
@@ -247,11 +256,22 @@ export default function Shell() {
     await api.cancelPipeline(listingState.runId)
   }, [listingState.runId])
 
+  const revealCohesionRequest = useCallback(async () => {
+    if (!api || !listingState.cohesionRequestPath) return
+    await api.revealPath(listingState.cohesionRequestPath)
+  }, [listingState.cohesionRequestPath])
+
   // Re-run validator + clear regen pins whenever a listing run reaches a
   // terminal state. We don't refresh while running — the runner is actively
-  // writing files and mid-run reads would be noisy.
+  // writing files and mid-run reads would be noisy. 'paused' is terminal too
+  // (the child process has exited, awaiting human review).
   useEffect(() => {
-    if (listingState.status === 'ok' || listingState.status === 'err' || listingState.status === 'cancelled') {
+    if (
+      listingState.status === 'ok'
+      || listingState.status === 'err'
+      || listingState.status === 'cancelled'
+      || listingState.status === 'paused'
+    ) {
       setPendingRegen(new Set())
       if (skuPath) refreshValidator()
     }
@@ -299,6 +319,7 @@ export default function Shell() {
     const listing = (() => {
       if (listingState.status === 'running')   return 'running'
       if (listingState.status === 'ok')        return 'done'
+      if (listingState.status === 'paused')    return 'paused'
       if (listingState.status === 'err')       return 'error'
       if (listingState.status === 'cancelled') return 'error'
       return ready ? 'idle' : 'locked'
@@ -410,6 +431,7 @@ export default function Shell() {
             validatorReport={validatorReport}
             validatingOutput={validatingOutput}
             onRefreshValidator={refreshValidator}
+            onRevealCohesionRequest={revealCohesionRequest}
           />
         </div>
         <div className="shell__drawer">
@@ -446,6 +468,7 @@ export default function Shell() {
           validatorReport={validatorReport}
           validatingOutput={validatingOutput}
           onRefreshValidator={refreshValidator}
+          onRevealCohesionRequest={revealCohesionRequest}
         />
       </aside>
 

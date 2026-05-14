@@ -283,7 +283,8 @@
   border-color: rgba(212, 168, 87, 0.45);
   background: var(--accent-muted);
 }
-.atom-chip--needs-fix {
+.atom-chip--needs-fix,
+.atom-chip--paused {
   color: var(--warning);
   border-color: rgba(251, 191, 36, 0.35);
   background: var(--warning-muted);

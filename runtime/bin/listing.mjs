@@ -10,7 +10,10 @@ if (argv.length === 0) {
 }
 
 try {
-  await runOnly('listing', argv);
+  const code = await runOnly('listing', argv);
+  // Propagate paused exit (code 2) so the caller can map it to a "paused"
+  // state instead of treating the run as failed.
+  if (code) process.exit(code);
 } catch (err) {
   console.error(`[hma-listing] ${err.message}`);
   process.exit(1);

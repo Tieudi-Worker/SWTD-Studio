@@ -83,7 +83,10 @@ export async function runLegacyScript(relPath, argv, options = {}) {
     child.on('error', reject);
     child.on('exit', (code, signal) => {
       if (signal) reject(new Error(`Legacy script killed by signal: ${signal}`));
-      else if (code === 0) resolve_(0);
+      // master.js uses code 2 to signal a paused pipeline (Vision / cohesion
+      // request waiting for human review). Treat it as a non-error outcome so
+      // callers can map it to a 'paused' UI state instead of generic failure.
+      else if (code === 0 || code === 2) resolve_(code);
       else reject(new Error(`Legacy script exited with code ${code}`));
     });
   });

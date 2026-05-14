@@ -50,7 +50,8 @@ export default function RightInspector({
   onSelectAllSlots,
   validatorReport,
   validatingOutput,
-  onRefreshValidator
+  onRefreshValidator,
+  onRevealCohesionRequest
 }) {
   const tabs = TABS_BY_STEP[step] || ['Detail']
   const [active, setActive] = React.useState(tabs[0])
@@ -122,6 +123,28 @@ export default function RightInspector({
               { k: 'runId',  v: listingState.runId ? shortPath(listingState.runId, 24) : '—' },
               { k: 'lines',  v: String((listingState.lines || []).length) }
             ]} />
+            {listingState.status === 'paused' && (
+              <div className="inspector__paused-note">
+                <p className="inspector__locked-copy">
+                  All 8 slots saved. Phase&nbsp;2.5 is waiting for a
+                  <code> _cohesion_report.json</code> next to the request.
+                </p>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  fullWidth
+                  onClick={onRevealCohesionRequest}
+                  disabled={!listingState.cohesionRequestPath || !onRevealCohesionRequest}
+                  disabledReason={
+                    !listingState.cohesionRequestPath
+                      ? 'Request path not captured from logs'
+                      : undefined
+                  }
+                >
+                  Open Cohesion Request
+                </Button>
+              </div>
+            )}
           </section>
         )}
 
@@ -320,14 +343,15 @@ function History({ skuPath, validation, validating, listingState }) {
   if (listingState?.runId) {
     const kind = listingState.status === 'ok'
       ? 'ok'
-      : listingState.status === 'err' || listingState.status === 'cancelled'
-        ? 'err'
-        : 'running'
-    events.push({
-      kind,
-      label: `Listing run ${listingState.status}`,
-      detail: listingState.runId
-    })
+      : listingState.status === 'paused'
+        ? 'paused'
+        : listingState.status === 'err' || listingState.status === 'cancelled'
+          ? 'err'
+          : 'running'
+    const label = listingState.status === 'paused'
+      ? 'Listing run paused for cohesion review'
+      : `Listing run ${listingState.status}`
+    events.push({ kind, label, detail: listingState.runId })
   }
 
   if (!events.length) {
@@ -339,7 +363,13 @@ function History({ skuPath, validation, validating, listingState }) {
       {events.map((e, i) => (
         <li key={i} className={'history__row history__row--' + e.kind}>
           <StatusDot
-            status={e.kind === 'ok' ? 'done' : e.kind === 'err' ? 'error' : e.kind === 'running' ? 'running' : 'idle'}
+            status={
+              e.kind === 'ok' ? 'done'
+                : e.kind === 'err' ? 'error'
+                : e.kind === 'running' ? 'running'
+                : e.kind === 'paused' ? 'warning'
+                : 'idle'
+            }
             size="sm"
           />
           <span className="history__label">{e.label}</span>

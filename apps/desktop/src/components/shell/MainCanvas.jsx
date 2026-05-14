@@ -59,7 +59,8 @@ export default function MainCanvas({
   runDisabledReason,
   validatorReport,
   validatingOutput,
-  onRefreshValidator
+  onRefreshValidator,
+  onRevealCohesionRequest
 }) {
   const header = STEP_HEADERS[step] || STEP_HEADERS.intake
   const skuName = skuPath ? lastSegment(skuPath) : null
@@ -127,6 +128,7 @@ export default function MainCanvas({
             validatorReport={validatorReport}
             validatingOutput={validatingOutput}
             onRefreshValidator={onRefreshValidator}
+            onRevealCohesionRequest={onRevealCohesionRequest}
           />
         )}
 
@@ -230,10 +232,12 @@ function ListingView({
   runDisabledReason,
   validatorReport,
   validatingOutput,
-  onRefreshValidator
+  onRefreshValidator,
+  onRevealCohesionRequest
 }) {
   const selectionCount = selectedSlots.size
   const running = listingState.status === 'running'
+  const paused = listingState.status === 'paused'
   const regenDisabledReason = runDisabledReason
     || (selectionCount === 0 ? 'Select one or more slots to regenerate' : undefined)
 
@@ -245,6 +249,13 @@ function ListingView({
 
   return (
     <div className="panel-stack">
+      {paused && (
+        <CohesionPauseBanner
+          requestPath={listingState.cohesionRequestPath}
+          onReveal={onRevealCohesionRequest}
+        />
+      )}
+
       <div className="panel">
         <div className="panel__head">
           <span className="panel__title">Listing slots</span>
@@ -321,6 +332,54 @@ function ListingView({
       />
     </div>
   )
+}
+
+function CohesionPauseBanner({ requestPath, onReveal }) {
+  // Surface the Phase 2.5 cohesion pause as a guided next-step, not a failure.
+  // The 8 listing slots finished successfully — master.js exited with code 2
+  // to request a Claude Code Vision review and a `_cohesion_report.json` file
+  // next to the request JSON. Re-running the pipeline picks up the report and
+  // continues.
+  const shortPath = requestPath ? shortenPath(requestPath, 64) : null
+  return (
+    <div className="panel panel--paused">
+      <div className="panel__head">
+        <span className="panel__title">8/8 generated · waiting for cohesion review</span>
+        <StatusChip status="paused" size="sm">Review</StatusChip>
+      </div>
+      <div className="panel__body">
+        <p className="panel__paragraph">
+          The 8 slot images are saved. Phase&nbsp;2.5 wants Claude Code to score
+          color, lighting, prop style, and mood, then write
+          <code> _cohesion_report.json</code> next to the request. Re-run the
+          listing once the report is in place — the pipeline will resume.
+        </p>
+        {requestPath && (
+          <div className="cohesion-banner__path" title={requestPath}>
+            <span className="cohesion-banner__path-k">request</span>
+            <code className="cohesion-banner__path-v">{shortPath}</code>
+          </div>
+        )}
+        <div className="cohesion-banner__actions">
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={onReveal}
+            disabled={!requestPath || !onReveal}
+            disabledReason={!requestPath ? 'Request path not captured from logs' : undefined}
+          >
+            Open Cohesion Request
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function shortenPath(p, max) {
+  if (!p) return ''
+  if (p.length <= max) return p
+  return '…' + p.slice(-(max - 1))
 }
 
 function SlotCard({ slot, state, selected, validator, disabled, onToggle }) {

@@ -4,7 +4,7 @@ import StatusDot from '../atoms/StatusDot.jsx'
 /**
  * Pipeline steps presented as a horizontal progress strip.
  *
- * @typedef {'done'|'active'|'locked'|'error'|'running'|'idle'} StepState
+ * @typedef {'done'|'active'|'locked'|'error'|'paused'|'running'|'idle'} StepState
  *
  * @typedef {Object} StepDef
  * @property {string} id
@@ -28,6 +28,7 @@ const STATE_DOT = {
   running: 'running',
   locked:  'locked',
   error:   'error',
+  paused:  'warning',
   idle:    'idle'
 }
 
@@ -37,6 +38,7 @@ const STATE_WORD = {
   running: 'running',
   locked:  'locked',
   error:   'error',
+  paused:  'review',
   idle:    'idle'
 }
 
@@ -54,7 +56,7 @@ export default function Stepper({ steps, activeId, onChange }) {
           isActive && 'stepper__step--current'
         ].filter(Boolean).join(' ')
 
-        const title = (state === 'locked' || state === 'error') && reason ? reason : undefined
+        const title = (state === 'locked' || state === 'error' || state === 'paused') && reason ? reason : undefined
 
         return (
           <React.Fragment key={step.id}>

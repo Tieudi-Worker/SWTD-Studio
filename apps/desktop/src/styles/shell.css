@@ -440,6 +440,8 @@
 .stepper__step--running .stepper__state { color: var(--accent); }
 .stepper__step--error .stepper__button { color: var(--danger); }
 .stepper__step--error .stepper__state { color: var(--danger); }
+.stepper__step--paused .stepper__button { color: var(--text-primary); }
+.stepper__step--paused .stepper__state { color: var(--warning); }
 .stepper__step--locked .stepper__button { opacity: 0.6; }
 .stepper__step--locked .stepper__state { color: var(--text-disabled); }
 
@@ -805,6 +807,51 @@
 }
 .panel__head-action:hover:not(:disabled) { color: var(--accent); }
 .panel__head-action:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Cohesion review pause banner — surfaced when the legacy pipeline exits
+   with code 2 and a _cohesion_request.json. Warning-toned so it reads as
+   "next action needed" rather than failure. */
+.panel--paused {
+  border-color: rgba(251, 191, 36, 0.45);
+  background: var(--warning-muted);
+}
+.panel--paused .panel__head {
+  background: rgba(251, 191, 36, 0.08);
+  border-bottom-color: rgba(251, 191, 36, 0.35);
+}
+.panel--paused .panel__title { color: var(--warning); }
+.cohesion-banner__path {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-3);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+.cohesion-banner__path-k {
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 10px;
+}
+.cohesion-banner__path-v {
+  color: var(--text-primary);
+  word-break: break-all;
+}
+.cohesion-banner__actions {
+  display: flex;
+  gap: var(--space-2);
+}
+.inspector__paused-note {
+  margin-top: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
 
 .qc-checklist {
   list-style: none;
