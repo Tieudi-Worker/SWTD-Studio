@@ -15,6 +15,8 @@ contextBridge.exposeInMainWorld('swtd', {
   readBrief: (skuPath) => ipcRenderer.invoke('swtd:read-brief', skuPath),
   runListing: (payload) => ipcRenderer.invoke('swtd:run-listing', payload),
   cancelPipeline: (runId) => ipcRenderer.invoke('swtd:cancel-pipeline', runId),
+  validateListingOutput: (skuPath) => ipcRenderer.invoke('swtd:validate-listing-output', skuPath),
+  revealPath: (targetPath) => ipcRenderer.invoke('swtd:reveal-path', targetPath),
   onPipelineEvent: (handler) => {
     listeners.add(handler)
     return () => listeners.delete(handler)

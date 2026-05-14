@@ -2,7 +2,7 @@ import React from 'react'
 
 /**
  * @typedef {'primary'|'secondary'|'ghost'|'danger'} IconButtonVariant
- * @typedef {'sm'|'md'|'lg'} IconButtonSize
+ * @typedef {'sm'|'md'} IconButtonSize
  *
  * @typedef {Object} IconButtonProps
  * @property {IconButtonVariant} [variant]

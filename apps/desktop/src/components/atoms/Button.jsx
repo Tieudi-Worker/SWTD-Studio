@@ -2,7 +2,7 @@ import React from 'react'
 
 /**
  * @typedef {'primary'|'secondary'|'ghost'|'danger'} ButtonVariant
- * @typedef {'sm'|'md'|'lg'} ButtonSize
+ * @typedef {'sm'|'md'} ButtonSize
  *
  * @typedef {Object} ButtonProps
  * @property {ButtonVariant} [variant]

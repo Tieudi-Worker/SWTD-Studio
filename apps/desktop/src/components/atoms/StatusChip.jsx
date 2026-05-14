@@ -8,7 +8,8 @@ const LABELS = {
   running: 'Running',
   'needs-fix': 'Needs fix',
   error: 'Error',
-  complete: 'Complete'
+  complete: 'Complete',
+  paused: 'Review'
 }
 
 const DOT_FOR_STATUS = {
@@ -18,11 +19,12 @@ const DOT_FOR_STATUS = {
   running: 'running',
   'needs-fix': 'warning',
   error: 'error',
-  complete: 'done'
+  complete: 'done',
+  paused: 'warning'
 }
 
 /**
- * @typedef {'ready'|'idle'|'locked'|'running'|'needs-fix'|'error'|'complete'} ChipStatus
+ * @typedef {'ready'|'idle'|'locked'|'running'|'needs-fix'|'error'|'complete'|'paused'} ChipStatus
  * @typedef {'sm'|'md'} ChipSize
  *
  * @typedef {Object} StatusChipProps

@@ -7,6 +7,7 @@ const RUN_TO_CHIP = {
   idle:      { status: 'idle',      label: 'Idle' },
   running:   { status: 'running',   label: 'Running' },
   ok:        { status: 'complete',  label: 'Complete' },
+  paused:    { status: 'paused',    label: 'Review' },
   err:       { status: 'error',     label: 'Failed' },
   cancelled: { status: 'needs-fix', label: 'Cancelled' }
 }
@@ -15,7 +16,7 @@ const RUN_TO_CHIP = {
  * @typedef {Object} TopBarProps
  * @property {string} workspace                Absolute path or empty.
  * @property {() => void} onPickWorkspace
- * @property {'idle'|'running'|'ok'|'err'|'cancelled'} runStatus
+ * @property {'idle'|'running'|'ok'|'paused'|'err'|'cancelled'} runStatus
  * @property {string} commandQuery
  * @property {(value: string) => void} onCommandQueryChange
  * @property {() => void} onOpenCommandPalette

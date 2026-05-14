@@ -1,6 +1,8 @@
 import React from 'react'
 import EmptyState from '../atoms/EmptyState.jsx'
 import StatusChip from '../atoms/StatusChip.jsx'
+import Button from '../atoms/Button.jsx'
+import { LISTING_SLOT_META } from '../../lib/slot-progress.js'
 
 const STEP_HEADERS = {
   intake:  { kicker: '01 · INTAKE',  title: 'Project & brief' },
@@ -46,7 +48,19 @@ export default function MainCanvas({
   validating,
   skuCount,
   onPickWorkspace,
-  listingState
+  listingState,
+  slotStates,
+  selectedSlots,
+  onToggleSlot,
+  onClearSlotSelection,
+  onSelectAllSlots,
+  onRunListing,
+  onRunListingRegen,
+  runDisabledReason,
+  validatorReport,
+  validatingOutput,
+  onRefreshValidator,
+  onRevealCohesionRequest
 }) {
   const header = STEP_HEADERS[step] || STEP_HEADERS.intake
   const skuName = skuPath ? lastSegment(skuPath) : null
@@ -101,7 +115,21 @@ export default function MainCanvas({
         )}
 
         {workspace && skuPath && step === 'listing' && (
-          <ListingView listingState={listingState} />
+          <ListingView
+            listingState={listingState}
+            slotStates={slotStates || {}}
+            selectedSlots={selectedSlots || new Set()}
+            onToggleSlot={onToggleSlot}
+            onClearSlotSelection={onClearSlotSelection}
+            onSelectAllSlots={onSelectAllSlots}
+            onRunListing={onRunListing}
+            onRunListingRegen={onRunListingRegen}
+            runDisabledReason={runDisabledReason}
+            validatorReport={validatorReport}
+            validatingOutput={validatingOutput}
+            onRefreshValidator={onRefreshValidator}
+            onRevealCohesionRequest={onRevealCohesionRequest}
+          />
         )}
 
         {workspace && skuPath && (step === 'aplus' || step === 'video' || step === 'qc') && (
@@ -192,66 +220,315 @@ function PathRow({ k, v }) {
   )
 }
 
-const LISTING_SLOTS = [
-  { id: 1, label: 'Title' },
-  { id: 2, label: 'Bullet 1' },
-  { id: 3, label: 'Bullet 2' },
-  { id: 4, label: 'Bullet 3' },
-  { id: 5, label: 'Bullet 4' },
-  { id: 6, label: 'Bullet 5' },
-  { id: 7, label: 'Description' },
-  { id: 8, label: 'Search terms' }
-]
+function ListingView({
+  listingState,
+  slotStates,
+  selectedSlots,
+  onToggleSlot,
+  onClearSlotSelection,
+  onSelectAllSlots,
+  onRunListing,
+  onRunListingRegen,
+  runDisabledReason,
+  validatorReport,
+  validatingOutput,
+  onRefreshValidator,
+  onRevealCohesionRequest
+}) {
+  const selectionCount = selectedSlots.size
+  const running = listingState.status === 'running'
+  const paused = listingState.status === 'paused'
+  const regenDisabledReason = runDisabledReason
+    || (selectionCount === 0 ? 'Select one or more slots to regenerate' : undefined)
 
-function ListingView({ listingState }) {
-  const slotState = deriveSlotState(listingState.lines)
+  const validatorByslot = React.useMemo(() => {
+    const map = {}
+    for (const s of validatorReport?.slots || []) map[s.slot] = s
+    return map
+  }, [validatorReport])
+
   return (
-    <div className="panel">
+    <div className="panel-stack">
+      {paused && (
+        <CohesionPauseBanner
+          requestPath={listingState.cohesionRequestPath}
+          onReveal={onRevealCohesionRequest}
+        />
+      )}
+
+      <div className="panel">
+        <div className="panel__head">
+          <span className="panel__title">Listing slots</span>
+          <span className="panel__meta">runtime/bin/listing.mjs</span>
+        </div>
+        <div className="panel__body">
+          <div className="slot-toolbar">
+            <div className="slot-toolbar__info">
+              <span className="slot-toolbar__count">
+                {selectionCount === 0
+                  ? 'No slots selected'
+                  : `${selectionCount} slot${selectionCount === 1 ? '' : 's'} selected`}
+              </span>
+              <button
+                type="button"
+                className="slot-toolbar__link"
+                onClick={onSelectAllSlots}
+                disabled={running}
+              >Select all</button>
+              <button
+                type="button"
+                className="slot-toolbar__link"
+                onClick={onClearSlotSelection}
+                disabled={running || selectionCount === 0}
+              >Clear</button>
+            </div>
+            <div className="slot-toolbar__actions">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={onRunListing}
+                disabled={!!runDisabledReason}
+                disabledReason={runDisabledReason}
+              >Run all 8</Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={onRunListingRegen}
+                disabled={!!regenDisabledReason}
+                disabledReason={regenDisabledReason}
+              >
+                {selectionCount > 0
+                  ? `Regenerate ${selectionCount}`
+                  : 'Regenerate selected'}
+              </Button>
+            </div>
+          </div>
+
+          <div className="slot-grid">
+            {LISTING_SLOT_META.map(s => {
+              const st = slotStates[s.id] || 'idle'
+              const selected = selectedSlots.has(s.id)
+              const v = validatorByslot[s.id]
+              return (
+                <SlotCard
+                  key={s.id}
+                  slot={s}
+                  state={st}
+                  selected={selected}
+                  validator={v}
+                  disabled={running}
+                  onToggle={() => onToggleSlot && onToggleSlot(s.id)}
+                />
+              )
+            })}
+          </div>
+        </div>
+      </div>
+
+      <ValidatorPanel
+        report={validatorReport}
+        validating={!!validatingOutput}
+        onRefresh={onRefreshValidator}
+      />
+    </div>
+  )
+}
+
+function CohesionPauseBanner({ requestPath, onReveal }) {
+  // Surface the Phase 2.5 cohesion pause as a guided next-step, not a failure.
+  // The 8 listing slots finished successfully — master.js exited with code 2
+  // to request a Claude Code Vision review and a `_cohesion_report.json` file
+  // next to the request JSON. Re-running the pipeline picks up the report and
+  // continues.
+  const shortPath = requestPath ? shortenPath(requestPath, 64) : null
+  return (
+    <div className="panel panel--paused">
       <div className="panel__head">
-        <span className="panel__title">Listing slots</span>
-        <span className="panel__meta">runtime/bin/listing.mjs</span>
+        <span className="panel__title">8/8 generated · waiting for cohesion review</span>
+        <StatusChip status="paused" size="sm">Review</StatusChip>
       </div>
       <div className="panel__body">
-        <div className="slot-grid">
-          {LISTING_SLOTS.map(s => {
-            const st = slotState[s.id] || 'idle'
-            return (
-              <div key={s.id} className={'slot slot--' + st}>
-                <div className="slot__no">{String(s.id).padStart(2, '0')}</div>
-                <div className="slot__label">{s.label}</div>
-                <div className="slot__state">{slotWord(st)}</div>
-              </div>
-            )
-          })}
+        <p className="panel__paragraph">
+          The 8 slot images are saved. Phase&nbsp;2.5 wants Claude Code to score
+          color, lighting, prop style, and mood, then write
+          <code> _cohesion_report.json</code> next to the request. Re-run the
+          listing once the report is in place — the pipeline will resume.
+        </p>
+        {requestPath && (
+          <div className="cohesion-banner__path" title={requestPath}>
+            <span className="cohesion-banner__path-k">request</span>
+            <code className="cohesion-banner__path-v">{shortPath}</code>
+          </div>
+        )}
+        <div className="cohesion-banner__actions">
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={onReveal}
+            disabled={!requestPath || !onReveal}
+            disabledReason={!requestPath ? 'Request path not captured from logs' : undefined}
+          >
+            Open Cohesion Request
+          </Button>
         </div>
       </div>
     </div>
   )
 }
 
+function shortenPath(p, max) {
+  if (!p) return ''
+  if (p.length <= max) return p
+  return '…' + p.slice(-(max - 1))
+}
+
+function SlotCard({ slot, state, selected, validator, disabled, onToggle }) {
+  const stateClass = 'slot slot--' + state + (selected ? ' slot--selected' : '')
+  const validatorBadge = validatorBadgeFor(state, validator)
+  return (
+    <button
+      type="button"
+      className={stateClass}
+      onClick={onToggle}
+      disabled={disabled}
+      aria-pressed={selected}
+      title={validator?.file ? validator.file : undefined}
+    >
+      <div className="slot__head">
+        <span className="slot__no">{String(slot.id).padStart(2, '0')}</span>
+        <span className={'slot__check' + (selected ? ' slot__check--on' : '')} aria-hidden="true">
+          {selected ? '✓' : ''}
+        </span>
+      </div>
+      <div className="slot__label">{slot.label}</div>
+      <div className="slot__role">{slot.role}</div>
+      <div className="slot__footer">
+        <span className="slot__state">{slotWord(state)}</span>
+        {validatorBadge && (
+          <span className={'slot__qc slot__qc--' + validatorBadge.tone} title={validatorBadge.title}>
+            {validatorBadge.label}
+          </span>
+        )}
+      </div>
+    </button>
+  )
+}
+
+function validatorBadgeFor(state, validator) {
+  if (!validator) return null
+  if (!validator.exists) return { tone: 'missing', label: 'missing', title: 'File not found on disk' }
+  if (validator.dimensionsOk === true) {
+    return { tone: 'ok', label: `${validator.width}×${validator.height}`, title: 'Dimensions OK' }
+  }
+  if (validator.dimensionsOk === false) {
+    return {
+      tone: 'bad',
+      label: `${validator.width ?? '?'}×${validator.height ?? '?'}`,
+      title: 'Expected 2000×2000'
+    }
+  }
+  return { tone: 'unknown', label: 'unchecked', title: validator.dimensionsReason || 'sharp not available' }
+}
+
 function slotWord(st) {
   switch (st) {
-    case 'ok':      return 'done'
+    case 'done':    return 'done'
     case 'running': return 'live'
-    case 'err':     return 'failed'
-    case 'skip':    return 'skipped'
+    case 'error':   return 'failed'
+    case 'skipped': return 'skipped'
     default:        return 'pending'
   }
 }
 
-function deriveSlotState(lines) {
-  const state = {}
-  for (const l of lines || []) {
-    const m = l.line && l.line.match(/slot[\s_-]*(\d+)/i)
-    if (!m) continue
-    const id = parseInt(m[1], 10)
-    if (id < 1 || id > 8) continue
-    if (/skip/i.test(l.line))                state[id] = 'skip'
-    else if (/fail|error/i.test(l.line))     state[id] = 'err'
-    else if (/done|ok|complete/i.test(l.line)) state[id] = 'ok'
-    else                                     state[id] = 'running'
+function ValidatorPanel({ report, validating, onRefresh }) {
+  const noReport = !report
+  const error = report && !report.summary && !Array.isArray(report.slots)
+  const summary = report?.summary
+  return (
+    <div className="panel">
+      <div className="panel__head">
+        <span className="panel__title">Output validator</span>
+        <div className="panel__head-right">
+          {summary && (
+            <StatusChip
+              status={report.ok ? 'complete' : 'needs-fix'}
+              size="sm"
+            >
+              {report.ok ? 'Pass' : 'Issues'}
+            </StatusChip>
+          )}
+          <button
+            type="button"
+            className="panel__head-action"
+            onClick={onRefresh}
+            disabled={validating}
+          >
+            {validating ? 'Checking…' : 'Re-check'}
+          </button>
+        </div>
+      </div>
+      <div className="panel__body">
+        {noReport && (
+          <p className="inspector__locked-copy">
+            Run listing or click <em>Re-check</em> to validate <code>output/listing/</code>.
+          </p>
+        )}
+        {error && (
+          <p className="inspector__locked-copy">
+            Validator error: <span className="muted">{report.error || 'unknown'}</span>
+          </p>
+        )}
+        {summary && (
+          <>
+            <ul className="qc-checklist">
+              <QcRow
+                ok={summary.missing === 0}
+                label="All 8 slot files present"
+                detail={`${summary.found}/8 found${summary.missing ? ` · missing ${summary.missing}` : ''}`}
+              />
+              <QcRow
+                ok={summary.dimsBad === 0 && (summary.dimsOk > 0 || summary.dimsUnchecked > 0)}
+                label="Image dimensions 2000×2000"
+                tone={summary.dimsBad > 0 ? 'bad' : (summary.dimsUnchecked > 0 ? 'unknown' : 'ok')}
+                detail={
+                  summary.sharpAvailable
+                    ? `${summary.dimsOk} ok · ${summary.dimsBad} bad`
+                    : 'unchecked — sharp not available in runtime'
+                }
+              />
+              <QcRow
+                ok
+                tone="info"
+                label="Output directory"
+                detail={report.listingDirExists ? report.listingDir : '— folder not yet created'}
+              />
+            </ul>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function QcRow({ ok, tone, label, detail }) {
+  const computedTone = tone || (ok ? 'ok' : 'bad')
+  return (
+    <li className={'qc-row qc-row--' + computedTone}>
+      <span className="qc-row__icon" aria-hidden="true">{qcIcon(computedTone)}</span>
+      <span className="qc-row__label">{label}</span>
+      <span className="qc-row__detail">{detail}</span>
+    </li>
+  )
+}
+
+function qcIcon(tone) {
+  switch (tone) {
+    case 'ok': return '✓'
+    case 'bad': return '✕'
+    case 'unknown': return '?'
+    case 'info': return '·'
+    default: return '·'
   }
-  return state
 }
 
 function StepPlaceholder({ step }) {

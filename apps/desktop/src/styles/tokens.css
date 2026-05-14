@@ -5,15 +5,15 @@
   --bg-elevated: #1C1C20;
   --bg-hover: #22222A;
 
-  /* Borders */
+  /* Borders — F7 contrast bump: --border-default +1 step for scan-clarity */
   --border-subtle: #26262B;
-  --border-default: #2E2E35;
-  --border-strong: #3A3A42;
+  --border-default: #353540;
+  --border-strong: #45454F;
   --border-focus: #D4A857;
 
-  /* Text */
+  /* Text — F7 contrast bump: --text-secondary +1 step for body legibility */
   --text-primary: #E8E8EC;
-  --text-secondary: #8B8B94;
+  --text-secondary: #9C9CA5;
   --text-tertiary: #5A5A62;
   --text-disabled: #3A3A42;
 
@@ -34,17 +34,20 @@
   --info: #60A5FA;
   --info-muted: rgba(96, 165, 250, 0.12);
 
-  /* Shadows — subtle for dark theme */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+  /* Elevation — one canonical shadow + one focus ring.
+     --shadow-lg retained because CommandPalette modal still references it. */
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.6);
+  --focus-ring: 0 0 0 2px var(--accent-glow);
+  --focus-ring-inset: inset 0 0 0 2px var(--accent-glow);
 
-  /* Radii */
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
+  /* Radii — calm-enterprise scale (was 4/6/8) */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
 
-  /* Spacing scale — use ONLY these */
+  /* Spacing scale — 4/8/12/16/20/24/32/48.
+     --space-5 (20) kept: canvas__header rhythm depends on it. */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -53,7 +56,29 @@
   --space-6: 24px;
   --space-8: 32px;
   --space-12: 48px;
-  --space-16: 64px;
+
+  /* Typography — 3 roles, two sizes each.
+     Title 16/20, Body 13/14, Meta 11/12. */
+  --text-title-lg: 20px;  --line-title-lg: 28px;
+  --text-title-md: 16px;  --line-title-md: 24px;
+  --text-body-md:  14px;  --line-body-md:  22px;
+  --text-body-sm:  13px;  --line-body-sm:  20px;
+  --text-meta-md:  12px;  --line-meta-md:  18px;
+  --text-meta-sm:  11px;  --line-meta-sm:  16px;
+  /* Caps labels — ultra-small uppercase metadata (mono). */
+  --text-caps-md:  10px;
+  --text-caps-sm:  9.5px;
+
+  /* Semantic aliases — brief vocabulary (bg / surface / text-1 / ...).
+     Additive only: existing token names still resolve. New code should
+     prefer these; old call sites stay untouched. */
+  --bg:         var(--bg-base);
+  --surface:    var(--bg-surface);
+  --surface-2:  var(--bg-elevated);
+  --border:     var(--border-subtle);
+  --text-1:     var(--text-primary);
+  --text-2:     var(--text-secondary);
+  --text-muted: var(--text-tertiary);
 
   /* Layout dimensions */
   --topbar-height: 44px;
@@ -62,10 +87,34 @@
   --leftrail-width: 240px;
   --inspector-width: 320px;
   --drawer-min-height: 32px;
+  --drawer-summary-height: 96px;
   --drawer-max-height: 280px;
 
   /* Transitions */
   --transition-fast: 100ms ease-out;
   --transition-base: 150ms ease-out;
   --transition-slow: 200ms ease-out;
+}
+
+/* B7 — Density modes (foundation only; no UI toggle wired yet).
+   Default is comfortable (matches the :root values above). Future
+   Phase C settings UI will set data-density on <html>. */
+:root[data-density="compact"] {
+  --topbar-height: 40px;
+  --statusbar-height: 24px;
+  --stepper-height: 36px;
+  --drawer-min-height: 28px;
+  --drawer-summary-height: 80px;
+  --leftrail-width: 220px;
+  --inspector-width: 300px;
+}
+
+:root[data-density="comfortable"] {
+  --topbar-height: 48px;
+  --statusbar-height: 32px;
+  --stepper-height: 44px;
+  --drawer-min-height: 36px;
+  --drawer-summary-height: 104px;
+  --leftrail-width: 256px;
+  --inspector-width: 340px;
 }

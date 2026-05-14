@@ -207,6 +207,7 @@ export default function LeftRail({
             icon={<SearchIcon />}
             title={filter ? 'No matches' : 'No SKUs'}
             description={filter ? 'Adjust the filter to find a SKU.' : 'This folder has no SKU subdirectories.'}
+            primaryAction={filter ? { label: 'Clear filter', onClick: () => onFilterChange('') } : undefined}
           />
         )}
         {filtered.map(s => {

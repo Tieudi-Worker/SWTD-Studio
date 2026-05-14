@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import TopBar from '../components/shell/TopBar.jsx'
 import LeftRail from '../components/shell/LeftRail.jsx'
 import Stepper from '../components/shell/Stepper.jsx'
@@ -8,13 +8,14 @@ import StatusBar from '../components/shell/StatusBar.jsx'
 import ActivityDrawer from '../components/shell/ActivityDrawer.jsx'
 import CommandPalette from '../components/shell/CommandPalette.jsx'
 import useKeyboardShortcuts from '../hooks/useKeyboardShortcuts.js'
+import { deriveSlotStates, regenSlotsToArg } from '../lib/slot-progress.js'
 
 const LAYOUT_KEY = 'swtd_ui_layout'
 
 const DEFAULT_LAYOUT = {
   leftRailCollapsed: false,
   rightInspectorCollapsed: false,
-  activityDrawerExpanded: false
+  activityDrawerMode: 'collapsed'  /* 'collapsed' | 'summary' | 'expanded' */
 }
 
 function loadLayout() {
@@ -22,11 +23,17 @@ function loadLayout() {
     const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(LAYOUT_KEY) : null
     if (!raw) return DEFAULT_LAYOUT
     const parsed = JSON.parse(raw)
+    // Migrate legacy boolean `activityDrawerExpanded` → enum `activityDrawerMode`.
+    if (parsed.activityDrawerMode == null && typeof parsed.activityDrawerExpanded === 'boolean') {
+      parsed.activityDrawerMode = parsed.activityDrawerExpanded ? 'expanded' : 'collapsed'
+    }
     return { ...DEFAULT_LAYOUT, ...parsed }
   } catch {
     return DEFAULT_LAYOUT
   }
 }
+
+const DRAWER_CYCLE = { collapsed: 'summary', summary: 'expanded', expanded: 'collapsed' }
 
 function saveLayout(layout) {
   try {
@@ -61,12 +68,31 @@ export default function Shell() {
   const [listingState, setListingState] = useState({
     runId: null,
     status: 'idle',
-    lines: []
+    lines: [],
+    pauseReason: null,
+    cohesionRequestPath: null
   })
   const [commandQuery, setCommandQuery] = useState('')
   const [paletteOpen, setPaletteOpen] = useState(false)
+  const [selectedSlots, setSelectedSlots] = useState(() => new Set())
+  const [pendingRegen, setPendingRegen] = useState(() => new Set())
+  const [validatorReport, setValidatorReport] = useState(null)
+  const [validatingOutput, setValidatingOutput] = useState(false)
 
   useEffect(() => { saveLayout(layout) }, [layout])
+
+  // B1 — auto-toggle inspector on SKU-presence transition.
+  // Opens when a SKU is loaded, closes when returning to an empty
+  // dashboard. We only react to *transitions* so manual toggles
+  // inside the same SKU session are respected.
+  const prevHasSkuRef = useRef(!!skuPath)
+  useEffect(() => {
+    const hasSku = !!skuPath
+    if (hasSku !== prevHasSkuRef.current) {
+      setLayout(prev => ({ ...prev, rightInspectorCollapsed: !hasSku }))
+      prevHasSkuRef.current = hasSku
+    }
+  }, [skuPath])
 
   useEffect(() => {
     if (!api?.onPipelineEvent) return
@@ -80,7 +106,9 @@ export default function Shell() {
               stream: 'sys',
               line: `▸ start ${evt.bin}  ${evt.skuPath}  ${(evt.extraArgs || []).join(' ')}`.trim(),
               ts: evt.ts
-            }]
+            }],
+            pauseReason: null,
+            cohesionRequestPath: null
           }
         }
         if (evt.kind === 'log') {
@@ -88,15 +116,20 @@ export default function Shell() {
           return { ...prev, lines: [...trimmed, { stream: evt.stream, line: evt.line, ts: evt.ts }] }
         }
         if (evt.kind === 'end') {
-          const status = evt.aborted ? 'cancelled' : (evt.ok ? 'ok' : 'err')
+          // A paused end is not a failure: master.js exited with code 2 to ask
+          // the operator to run cohesion review and write _cohesion_report.json.
+          const status = evt.aborted
+            ? 'cancelled'
+            : (evt.paused ? 'paused' : (evt.ok ? 'ok' : 'err'))
+          const tailLine = evt.paused
+            ? `▸ paused  reason=${evt.pauseReason || 'cohesion-review'}  code=${evt.code}`
+            : `▸ end  code=${evt.code}  aborted=${evt.aborted ? 'yes' : 'no'}`
           return {
             ...prev,
             status,
-            lines: [...prev.lines, {
-              stream: 'sys',
-              line: `▸ end  code=${evt.code}  aborted=${evt.aborted ? 'yes' : 'no'}`,
-              ts: evt.ts
-            }]
+            pauseReason: evt.paused ? (evt.pauseReason || 'cohesion-review') : null,
+            cohesionRequestPath: evt.paused ? (evt.cohesionRequestPath || null) : null,
+            lines: [...prev.lines, { stream: 'sys', line: tailLine, ts: evt.ts }]
           }
         }
         if (evt.kind === 'error') {
@@ -118,7 +151,10 @@ export default function Shell() {
     setLayout(prev => ({ ...prev, rightInspectorCollapsed: !prev.rightInspectorCollapsed }))
   }, [])
   const toggleActivityDrawer = useCallback(() => {
-    setLayout(prev => ({ ...prev, activityDrawerExpanded: !prev.activityDrawerExpanded }))
+    setLayout(prev => ({
+      ...prev,
+      activityDrawerMode: DRAWER_CYCLE[prev.activityDrawerMode] || 'summary'
+    }))
   }, [])
 
   const clearActivity = useCallback(() => {
@@ -132,6 +168,11 @@ export default function Shell() {
       setWorkspace(res.path)
       const list = await api.listSkus(res.path)
       setSkus(list?.items || [])
+      // When the picked folder IS a single SKU, jump straight to it — there
+      // is exactly one option and forcing the user to click it adds friction.
+      if (list?.mode === 'single' && list.items?.length === 1) {
+        chooseSku(list.items[0].path)
+      }
     }
   }, [])
 
@@ -145,6 +186,9 @@ export default function Shell() {
     if (!target) return
     setSkuPath(target)
     setStep('intake')
+    setSelectedSlots(new Set())
+    setPendingRegen(new Set())
+    setValidatorReport(null)
     if (!api) return
     setValidating(true)
     try {
@@ -153,6 +197,11 @@ export default function Shell() {
     } finally {
       setValidating(false)
     }
+    // Best-effort: probe existing output for this SKU so the validator badge
+    // is populated before the user clicks "Run listing".
+    api.validateListingOutput(target).then((r) => {
+      if (r?.ok && r.report) setValidatorReport(r.report)
+    }).catch(() => {})
   }, [])
 
   const revalidate = useCallback(async () => {
@@ -166,25 +215,97 @@ export default function Shell() {
     }
   }, [skuPath])
 
-  const runListing = useCallback(async () => {
+  const runListing = useCallback(async (regenSlots) => {
     if (!api || !skuPath || !validation?.ok || listingState.status === 'running') return
+    const regenList = Array.isArray(regenSlots)
+      ? regenSlots.filter(n => Number.isInteger(n) && n >= 1 && n <= 8)
+      : []
     setListingState({ runId: null, status: 'running', lines: [] })
     setStep('listing')
-    setLayout(prev => ({ ...prev, activityDrawerExpanded: true }))
-    const res = await api.runListing({ skuPath })
+    setLayout(prev => ({ ...prev, activityDrawerMode: 'expanded' }))
+    setPendingRegen(new Set(regenList))
+    const payload = { skuPath }
+    if (regenList.length > 0) {
+      payload.skipSlots = regenSlotsToArg(regenList)
+    }
+    const res = await api.runListing(payload)
     if (!res?.ok) {
       setListingState({
         runId: null,
         status: 'err',
         lines: [{ stream: 'stderr', line: `[start failed] ${res?.error || 'unknown'}`, ts: Date.now() }]
       })
+      setPendingRegen(new Set())
     }
   }, [skuPath, validation, listingState.status])
+
+  const runListingFull = useCallback(() => runListing(), [runListing])
+  const runListingRegen = useCallback(() => {
+    const ids = Array.from(selectedSlots)
+    if (ids.length === 0) return runListing()
+    return runListing(ids)
+  }, [runListing, selectedSlots])
+
+  const toggleSlotSelection = useCallback((slotId) => {
+    setSelectedSlots(prev => {
+      const next = new Set(prev)
+      if (next.has(slotId)) next.delete(slotId); else next.add(slotId)
+      return next
+    })
+  }, [])
+  const clearSlotSelection = useCallback(() => setSelectedSlots(new Set()), [])
+  const selectAllSlots = useCallback(() => {
+    setSelectedSlots(new Set([1, 2, 3, 4, 5, 6, 7, 8]))
+  }, [])
+
+  const refreshValidator = useCallback(async () => {
+    if (!api || !skuPath) return
+    setValidatingOutput(true)
+    try {
+      const res = await api.validateListingOutput(skuPath)
+      if (res?.ok && res.report) {
+        setValidatorReport(res.report)
+      } else {
+        setValidatorReport({ ok: false, error: res?.error || 'validation failed', slots: [], summary: null })
+      }
+    } finally {
+      setValidatingOutput(false)
+    }
+  }, [skuPath])
 
   const cancelListing = useCallback(async () => {
     if (!api || !listingState.runId) return
     await api.cancelPipeline(listingState.runId)
   }, [listingState.runId])
+
+  const revealCohesionRequest = useCallback(async () => {
+    if (!api || !listingState.cohesionRequestPath) return
+    await api.revealPath(listingState.cohesionRequestPath)
+  }, [listingState.cohesionRequestPath])
+
+  // Re-run validator + clear regen pins whenever a listing run reaches a
+  // terminal state. We don't refresh while running — the runner is actively
+  // writing files and mid-run reads would be noisy. 'paused' is terminal too
+  // (the child process has exited, awaiting human review).
+  useEffect(() => {
+    if (
+      listingState.status === 'ok'
+      || listingState.status === 'err'
+      || listingState.status === 'cancelled'
+      || listingState.status === 'paused'
+    ) {
+      setPendingRegen(new Set())
+      if (skuPath) refreshValidator()
+    }
+  }, [listingState.status, skuPath, refreshValidator])
+
+  const slotStates = useMemo(
+    () => deriveSlotStates(listingState.lines, {
+      pendingRegen: Array.from(pendingRegen),
+      runStatus: listingState.status
+    }),
+    [listingState.lines, listingState.status, pendingRegen]
+  )
 
   const lastLine = useMemo(() => {
     const lines = listingState.lines
@@ -220,6 +341,7 @@ export default function Shell() {
     const listing = (() => {
       if (listingState.status === 'running')   return 'running'
       if (listingState.status === 'ok')        return 'done'
+      if (listingState.status === 'paused')    return 'paused'
       if (listingState.status === 'err')       return 'error'
       if (listingState.status === 'cancelled') return 'error'
       return ready ? 'idle' : 'locked'
@@ -251,7 +373,7 @@ export default function Shell() {
 
   useKeyboardShortcuts({
     'mod+k':  () => setPaletteOpen(prev => !prev),
-    'mod+r':  () => { if (!runDisabledReason) runListing() },
+    'mod+r':  () => { if (!runDisabledReason) runListingFull() },
     'mod+.':  () => { if (!cancelDisabledReason) cancelListing() },
     'mod+b':  toggleLeftRail,
     'mod+\\': toggleRightInspector,
@@ -273,7 +395,8 @@ export default function Shell() {
     'shell',
     layout.leftRailCollapsed && 'shell--leftrail-collapsed',
     layout.rightInspectorCollapsed && 'shell--inspector-collapsed',
-    layout.activityDrawerExpanded && 'shell--drawer-expanded'
+    layout.activityDrawerMode === 'summary' && 'shell--drawer-summary',
+    layout.activityDrawerMode === 'expanded' && 'shell--drawer-expanded'
   ].filter(Boolean).join(' ')
 
   return (
@@ -320,11 +443,23 @@ export default function Shell() {
             skuCount={skus.length}
             onPickWorkspace={pickWorkspace}
             listingState={listingState}
+            slotStates={slotStates}
+            selectedSlots={selectedSlots}
+            onToggleSlot={toggleSlotSelection}
+            onClearSlotSelection={clearSlotSelection}
+            onSelectAllSlots={selectAllSlots}
+            onRunListing={runListingFull}
+            onRunListingRegen={runListingRegen}
+            runDisabledReason={runDisabledReason}
+            validatorReport={validatorReport}
+            validatingOutput={validatingOutput}
+            onRefreshValidator={refreshValidator}
+            onRevealCohesionRequest={revealCohesionRequest}
           />
         </div>
         <div className="shell__drawer">
           <ActivityDrawer
-            expanded={layout.activityDrawerExpanded}
+            mode={layout.activityDrawerMode}
             onToggle={toggleActivityDrawer}
             onClear={clearActivity}
             lines={listingState.lines}
@@ -342,11 +477,21 @@ export default function Shell() {
           listingState={listingState}
           lockedReason={lockedReason}
           onRevalidate={revalidate}
-          onRunListing={runListing}
+          onRunListing={runListingFull}
+          onRunListingRegen={runListingRegen}
           onCancelListing={cancelListing}
           runDisabledReason={runDisabledReason}
           cancelDisabledReason={cancelDisabledReason}
           revalidateDisabledReason={revalidateDisabledReason}
+          slotStates={slotStates}
+          selectedSlots={selectedSlots}
+          onToggleSlot={toggleSlotSelection}
+          onClearSlotSelection={clearSlotSelection}
+          onSelectAllSlots={selectAllSlots}
+          validatorReport={validatorReport}
+          validatingOutput={validatingOutput}
+          onRefreshValidator={refreshValidator}
+          onRevealCohesionRequest={revealCohesionRequest}
         />
       </aside>
 
@@ -366,7 +511,7 @@ export default function Shell() {
           onNavigateStep={handleStepChange}
           onChooseSku={chooseSku}
           onPickWorkspace={pickWorkspace}
-          onRunListing={runListing}
+          onRunListing={runListingFull}
           onCancelListing={cancelListing}
           onRevalidate={revalidate}
           onToggleLeftRail={toggleLeftRail}

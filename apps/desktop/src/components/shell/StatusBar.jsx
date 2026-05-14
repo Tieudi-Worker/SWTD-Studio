@@ -5,6 +5,7 @@ const STATUS_TO_DOT = {
   idle:      'idle',
   running:   'running',
   ok:        'done',
+  paused:    'warning',
   err:       'error',
   cancelled: 'warning'
 }
@@ -13,6 +14,7 @@ const STATUS_WORD = {
   idle:      'idle',
   running:   'running',
   ok:        'complete',
+  paused:    'awaiting review',
   err:       'failed',
   cancelled: 'cancelled'
 }
@@ -28,7 +30,7 @@ const SHORTCUTS = [
 
 /**
  * @typedef {Object} StatusBarProps
- * @property {'idle'|'running'|'ok'|'err'|'cancelled'} runStatus
+ * @property {'idle'|'running'|'ok'|'paused'|'err'|'cancelled'} runStatus
  * @property {{stream:string, line:string, ts:number}|null} lastLine
  * @property {() => void} [onOpenShortcuts]
  */
