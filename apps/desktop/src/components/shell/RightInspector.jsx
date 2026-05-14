@@ -2,10 +2,11 @@ import React from 'react'
 import Button from '../atoms/Button.jsx'
 import StatusChip from '../atoms/StatusChip.jsx'
 import StatusDot from '../atoms/StatusDot.jsx'
+import { LISTING_SLOT_META } from '../../lib/slot-progress.js'
 
 const TABS_BY_STEP = {
   intake:  ['Brief', 'Validation', 'History'],
-  listing: ['Run', 'Slots'],
+  listing: ['Run', 'Slots', 'QC'],
   aplus:   ['Plan'],
   video:   ['Plan'],
   qc:      ['Plan']
@@ -37,10 +38,19 @@ export default function RightInspector({
   lockedReason,
   onRevalidate,
   onRunListing,
+  onRunListingRegen,
   onCancelListing,
   runDisabledReason,
   cancelDisabledReason,
-  revalidateDisabledReason
+  revalidateDisabledReason,
+  slotStates,
+  selectedSlots,
+  onToggleSlot,
+  onClearSlotSelection,
+  onSelectAllSlots,
+  validatorReport,
+  validatingOutput,
+  onRefreshValidator
 }) {
   const tabs = TABS_BY_STEP[step] || ['Detail']
   const [active, setActive] = React.useState(tabs[0])
@@ -104,7 +114,7 @@ export default function RightInspector({
           </section>
         )}
 
-        {step === 'listing' && (
+        {step === 'listing' && active === 'Run' && (
           <section className="inspector__section">
             <div className="inspector__section-head">Listing run</div>
             <DefList items={[
@@ -112,6 +122,35 @@ export default function RightInspector({
               { k: 'runId',  v: listingState.runId ? shortPath(listingState.runId, 24) : '—' },
               { k: 'lines',  v: String((listingState.lines || []).length) }
             ]} />
+          </section>
+        )}
+
+        {step === 'listing' && active === 'Slots' && (
+          <section className="inspector__section">
+            <div className="inspector__section-head">Slot progress</div>
+            <SlotList
+              slotStates={slotStates || {}}
+              selectedSlots={selectedSlots || new Set()}
+              validatorReport={validatorReport}
+              onToggleSlot={onToggleSlot}
+              disabled={listingState.status === 'running'}
+            />
+            <SlotSelectionActions
+              selectedSlots={selectedSlots || new Set()}
+              onSelectAllSlots={onSelectAllSlots}
+              onClearSlotSelection={onClearSlotSelection}
+            />
+          </section>
+        )}
+
+        {step === 'listing' && active === 'QC' && (
+          <section className="inspector__section">
+            <div className="inspector__section-head">Output validator</div>
+            <ValidatorSummary
+              report={validatorReport}
+              validating={!!validatingOutput}
+              onRefresh={onRefreshValidator}
+            />
           </section>
         )}
 
@@ -166,7 +205,27 @@ export default function RightInspector({
               disabled={!!runDisabledReason}
               disabledReason={runDisabledReason}
             >
-              Run listing
+              Run all 8 slots
+            </Button>
+            <Button
+              variant="secondary"
+              size="md"
+              fullWidth
+              leftIcon={<RefreshIcon />}
+              onClick={onRunListingRegen}
+              disabled={
+                !!runDisabledReason || !selectedSlots || selectedSlots.size === 0
+              }
+              disabledReason={
+                runDisabledReason
+                  || (!selectedSlots || selectedSlots.size === 0
+                      ? 'Select one or more slots to regenerate'
+                      : undefined)
+              }
+            >
+              {selectedSlots && selectedSlots.size > 0
+                ? `Regenerate ${selectedSlots.size} slot${selectedSlots.size === 1 ? '' : 's'}`
+                : 'Regenerate selected'}
             </Button>
             <Button
               variant="danger"
@@ -289,6 +348,150 @@ function History({ skuPath, validation, validating, listingState }) {
       ))}
     </ul>
   )
+}
+
+function SlotList({ slotStates, selectedSlots, validatorReport, onToggleSlot, disabled }) {
+  const validatorByslot = React.useMemo(() => {
+    const map = {}
+    for (const s of validatorReport?.slots || []) map[s.slot] = s
+    return map
+  }, [validatorReport])
+
+  return (
+    <ul className="slot-list">
+      {LISTING_SLOT_META.map(s => {
+        const state = slotStates[s.id] || 'idle'
+        const selected = selectedSlots.has(s.id)
+        const v = validatorByslot[s.id]
+        return (
+          <li key={s.id} className={'slot-list__row slot-list__row--' + state}>
+            <label className="slot-list__check">
+              <input
+                type="checkbox"
+                checked={selected}
+                disabled={disabled}
+                onChange={() => onToggleSlot && onToggleSlot(s.id)}
+              />
+              <span className="slot-list__check-box" aria-hidden="true" />
+            </label>
+            <span className="slot-list__no">{String(s.id).padStart(2, '0')}</span>
+            <span className="slot-list__role">{s.role}</span>
+            <span className="slot-list__state">{slotWord(state)}</span>
+            <span className={'slot-list__qc slot-list__qc--' + (v ? validatorTone(v) : 'none')}>
+              {v ? validatorChip(v) : '—'}
+            </span>
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
+
+function SlotSelectionActions({ selectedSlots, onSelectAllSlots, onClearSlotSelection }) {
+  const count = selectedSlots.size
+  return (
+    <div className="slot-list__actions">
+      <button type="button" className="slot-toolbar__link" onClick={onSelectAllSlots}>Select all</button>
+      <button
+        type="button"
+        className="slot-toolbar__link"
+        onClick={onClearSlotSelection}
+        disabled={count === 0}
+      >
+        Clear ({count})
+      </button>
+    </div>
+  )
+}
+
+function ValidatorSummary({ report, validating, onRefresh }) {
+  const summary = report?.summary
+  return (
+    <>
+      <div className="qc-summary-head">
+        <StatusChip
+          status={summary ? (report.ok ? 'complete' : 'needs-fix') : 'idle'}
+          size="sm"
+        >
+          {summary ? (report.ok ? 'Pass' : 'Issues') : 'No data'}
+        </StatusChip>
+        <button
+          type="button"
+          className="slot-toolbar__link"
+          onClick={onRefresh}
+          disabled={validating}
+        >
+          {validating ? 'Checking…' : 'Re-check'}
+        </button>
+      </div>
+
+      {!summary && !report?.error && (
+        <p className="inspector__locked-copy">
+          Run listing or click <em>Re-check</em> to validate <code>output/listing/</code>.
+        </p>
+      )}
+
+      {report?.error && (
+        <p className="inspector__locked-copy">Validator error: {report.error}</p>
+      )}
+
+      {summary && (
+        <ul className="qc-checklist">
+          <li className={'qc-row qc-row--' + (summary.missing === 0 ? 'ok' : 'bad')}>
+            <span className="qc-row__icon" aria-hidden="true">{summary.missing === 0 ? '✓' : '✕'}</span>
+            <span className="qc-row__label">8 files present</span>
+            <span className="qc-row__detail">{summary.found}/8</span>
+          </li>
+          <li className={'qc-row qc-row--' + (summary.dimsBad === 0
+              ? (summary.dimsUnchecked > 0 ? 'unknown' : 'ok')
+              : 'bad')}>
+            <span className="qc-row__icon" aria-hidden="true">
+              {summary.dimsBad === 0
+                ? (summary.dimsUnchecked > 0 ? '?' : '✓')
+                : '✕'}
+            </span>
+            <span className="qc-row__label">2000×2000</span>
+            <span className="qc-row__detail">
+              {summary.sharpAvailable
+                ? `${summary.dimsOk}/${summary.dimsOk + summary.dimsBad + summary.dimsUnchecked}`
+                : 'unchecked'}
+            </span>
+          </li>
+          {!summary.sharpAvailable && (
+            <li className="qc-row qc-row--info">
+              <span className="qc-row__icon" aria-hidden="true">·</span>
+              <span className="qc-row__label">sharp unavailable</span>
+              <span className="qc-row__detail">dimensions skipped</span>
+            </li>
+          )}
+        </ul>
+      )}
+    </>
+  )
+}
+
+function slotWord(state) {
+  switch (state) {
+    case 'done':    return 'done'
+    case 'running': return 'live'
+    case 'error':   return 'failed'
+    case 'skipped': return 'skipped'
+    default:        return 'pending'
+  }
+}
+
+function validatorTone(v) {
+  if (!v.exists) return 'bad'
+  if (v.dimensionsOk === true) return 'ok'
+  if (v.dimensionsOk === false) return 'bad'
+  return 'unknown'
+}
+
+function validatorChip(v) {
+  if (!v.exists) return 'missing'
+  if (v.dimensionsOk === true) return `${v.width}×${v.height}`
+  if (v.dimensionsOk === false) return `${v.width ?? '?'}×${v.height ?? '?'}`
+  return '·'
 }
 
 function DefList({ items }) {

@@ -207,6 +207,23 @@ app.whenReady().then(() => {
     return readBriefSafe(briefPath)
   })
 
+  // --- Listing output validator ---------------------------------------------
+  ipcMain.handle('swtd:validate-listing-output', async (_evt, skuPath) => {
+    if (!skuPath || typeof skuPath !== 'string') {
+      return { ok: false, error: 'skuPath required' }
+    }
+    if (!fs.existsSync(skuPath)) {
+      return { ok: false, error: 'SKU folder does not exist.' }
+    }
+    try {
+      const { validateListingOutput } = await loadCore()
+      const report = await validateListingOutput({ skuPath, runtimeRoot: RUNTIME_ROOT })
+      return { ok: true, report }
+    } catch (err) {
+      return { ok: false, error: err && err.message ? err.message : String(err) }
+    }
+  })
+
   createWindow()
 })
 

@@ -8,6 +8,7 @@ import StatusBar from '../components/shell/StatusBar.jsx'
 import ActivityDrawer from '../components/shell/ActivityDrawer.jsx'
 import CommandPalette from '../components/shell/CommandPalette.jsx'
 import useKeyboardShortcuts from '../hooks/useKeyboardShortcuts.js'
+import { deriveSlotStates, regenSlotsToArg } from '../lib/slot-progress.js'
 
 const LAYOUT_KEY = 'swtd_ui_layout'
 
@@ -65,6 +66,10 @@ export default function Shell() {
   })
   const [commandQuery, setCommandQuery] = useState('')
   const [paletteOpen, setPaletteOpen] = useState(false)
+  const [selectedSlots, setSelectedSlots] = useState(() => new Set())
+  const [pendingRegen, setPendingRegen] = useState(() => new Set())
+  const [validatorReport, setValidatorReport] = useState(null)
+  const [validatingOutput, setValidatingOutput] = useState(false)
 
   useEffect(() => { saveLayout(layout) }, [layout])
 
@@ -145,6 +150,9 @@ export default function Shell() {
     if (!target) return
     setSkuPath(target)
     setStep('intake')
+    setSelectedSlots(new Set())
+    setPendingRegen(new Set())
+    setValidatorReport(null)
     if (!api) return
     setValidating(true)
     try {
@@ -153,6 +161,11 @@ export default function Shell() {
     } finally {
       setValidating(false)
     }
+    // Best-effort: probe existing output for this SKU so the validator badge
+    // is populated before the user clicks "Run listing".
+    api.validateListingOutput(target).then((r) => {
+      if (r?.ok && r.report) setValidatorReport(r.report)
+    }).catch(() => {})
   }, [])
 
   const revalidate = useCallback(async () => {
@@ -166,25 +179,86 @@ export default function Shell() {
     }
   }, [skuPath])
 
-  const runListing = useCallback(async () => {
+  const runListing = useCallback(async (regenSlots) => {
     if (!api || !skuPath || !validation?.ok || listingState.status === 'running') return
+    const regenList = Array.isArray(regenSlots)
+      ? regenSlots.filter(n => Number.isInteger(n) && n >= 1 && n <= 8)
+      : []
     setListingState({ runId: null, status: 'running', lines: [] })
     setStep('listing')
     setLayout(prev => ({ ...prev, activityDrawerExpanded: true }))
-    const res = await api.runListing({ skuPath })
+    setPendingRegen(new Set(regenList))
+    const payload = { skuPath }
+    if (regenList.length > 0) {
+      payload.skipSlots = regenSlotsToArg(regenList)
+    }
+    const res = await api.runListing(payload)
     if (!res?.ok) {
       setListingState({
         runId: null,
         status: 'err',
         lines: [{ stream: 'stderr', line: `[start failed] ${res?.error || 'unknown'}`, ts: Date.now() }]
       })
+      setPendingRegen(new Set())
     }
   }, [skuPath, validation, listingState.status])
+
+  const runListingFull = useCallback(() => runListing(), [runListing])
+  const runListingRegen = useCallback(() => {
+    const ids = Array.from(selectedSlots)
+    if (ids.length === 0) return runListing()
+    return runListing(ids)
+  }, [runListing, selectedSlots])
+
+  const toggleSlotSelection = useCallback((slotId) => {
+    setSelectedSlots(prev => {
+      const next = new Set(prev)
+      if (next.has(slotId)) next.delete(slotId); else next.add(slotId)
+      return next
+    })
+  }, [])
+  const clearSlotSelection = useCallback(() => setSelectedSlots(new Set()), [])
+  const selectAllSlots = useCallback(() => {
+    setSelectedSlots(new Set([1, 2, 3, 4, 5, 6, 7, 8]))
+  }, [])
+
+  const refreshValidator = useCallback(async () => {
+    if (!api || !skuPath) return
+    setValidatingOutput(true)
+    try {
+      const res = await api.validateListingOutput(skuPath)
+      if (res?.ok && res.report) {
+        setValidatorReport(res.report)
+      } else {
+        setValidatorReport({ ok: false, error: res?.error || 'validation failed', slots: [], summary: null })
+      }
+    } finally {
+      setValidatingOutput(false)
+    }
+  }, [skuPath])
 
   const cancelListing = useCallback(async () => {
     if (!api || !listingState.runId) return
     await api.cancelPipeline(listingState.runId)
   }, [listingState.runId])
+
+  // Re-run validator + clear regen pins whenever a listing run reaches a
+  // terminal state. We don't refresh while running — the runner is actively
+  // writing files and mid-run reads would be noisy.
+  useEffect(() => {
+    if (listingState.status === 'ok' || listingState.status === 'err' || listingState.status === 'cancelled') {
+      setPendingRegen(new Set())
+      if (skuPath) refreshValidator()
+    }
+  }, [listingState.status, skuPath, refreshValidator])
+
+  const slotStates = useMemo(
+    () => deriveSlotStates(listingState.lines, {
+      pendingRegen: Array.from(pendingRegen),
+      runStatus: listingState.status
+    }),
+    [listingState.lines, listingState.status, pendingRegen]
+  )
 
   const lastLine = useMemo(() => {
     const lines = listingState.lines
@@ -251,7 +325,7 @@ export default function Shell() {
 
   useKeyboardShortcuts({
     'mod+k':  () => setPaletteOpen(prev => !prev),
-    'mod+r':  () => { if (!runDisabledReason) runListing() },
+    'mod+r':  () => { if (!runDisabledReason) runListingFull() },
     'mod+.':  () => { if (!cancelDisabledReason) cancelListing() },
     'mod+b':  toggleLeftRail,
     'mod+\\': toggleRightInspector,
@@ -320,6 +394,17 @@ export default function Shell() {
             skuCount={skus.length}
             onPickWorkspace={pickWorkspace}
             listingState={listingState}
+            slotStates={slotStates}
+            selectedSlots={selectedSlots}
+            onToggleSlot={toggleSlotSelection}
+            onClearSlotSelection={clearSlotSelection}
+            onSelectAllSlots={selectAllSlots}
+            onRunListing={runListingFull}
+            onRunListingRegen={runListingRegen}
+            runDisabledReason={runDisabledReason}
+            validatorReport={validatorReport}
+            validatingOutput={validatingOutput}
+            onRefreshValidator={refreshValidator}
           />
         </div>
         <div className="shell__drawer">
@@ -342,11 +427,20 @@ export default function Shell() {
           listingState={listingState}
           lockedReason={lockedReason}
           onRevalidate={revalidate}
-          onRunListing={runListing}
+          onRunListing={runListingFull}
+          onRunListingRegen={runListingRegen}
           onCancelListing={cancelListing}
           runDisabledReason={runDisabledReason}
           cancelDisabledReason={cancelDisabledReason}
           revalidateDisabledReason={revalidateDisabledReason}
+          slotStates={slotStates}
+          selectedSlots={selectedSlots}
+          onToggleSlot={toggleSlotSelection}
+          onClearSlotSelection={clearSlotSelection}
+          onSelectAllSlots={selectAllSlots}
+          validatorReport={validatorReport}
+          validatingOutput={validatingOutput}
+          onRefreshValidator={refreshValidator}
         />
       </aside>
 
@@ -366,7 +460,7 @@ export default function Shell() {
           onNavigateStep={handleStepChange}
           onChooseSku={chooseSku}
           onPickWorkspace={pickWorkspace}
-          onRunListing={runListing}
+          onRunListing={runListingFull}
           onCancelListing={cancelListing}
           onRevalidate={revalidate}
           onToggleLeftRail={toggleLeftRail}
