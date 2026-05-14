@@ -21,6 +21,8 @@ const RUN_TO_CHIP = {
  * @property {(value: string) => void} onCommandQueryChange
  * @property {() => void} onOpenCommandPalette
  * @property {() => void} [onOpenSettings]
+ * @property {'comfortable'|'compact'} [density]
+ * @property {() => void} [onToggleDensity]
  */
 
 /** @param {TopBarProps} props */
@@ -31,7 +33,9 @@ export default function TopBar({
   commandQuery,
   onCommandQueryChange,
   onOpenCommandPalette,
-  onOpenSettings
+  onOpenSettings,
+  density,
+  onToggleDensity
 }) {
   const chip = RUN_TO_CHIP[runStatus] || RUN_TO_CHIP.idle
   const wsLabel = workspace ? shortenPath(workspace, 44) : 'No workspace'
@@ -81,6 +85,14 @@ export default function TopBar({
         <IconButton
           size="md"
           variant="ghost"
+          icon={density === 'compact' ? <DensityCompactIcon /> : <DensityComfortableIcon />}
+          label={density === 'compact' ? 'Density: compact (switch to comfortable)' : 'Density: comfortable (switch to compact)'}
+          active={density === 'compact'}
+          onClick={onToggleDensity}
+        />
+        <IconButton
+          size="md"
+          variant="ghost"
           icon={<GearIcon />}
           label="Settings"
           onClick={onOpenSettings}
@@ -124,6 +136,26 @@ function UserIcon() {
     <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
       <circle cx="8" cy="5.5" r="2.6" />
       <path d="M2.5 14c.8-2.7 3-4 5.5-4s4.7 1.3 5.5 4" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function DensityComfortableIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
+      <line x1="3" y1="4" x2="13" y2="4" />
+      <line x1="3" y1="8" x2="13" y2="8" />
+      <line x1="3" y1="12" x2="13" y2="12" />
+    </svg>
+  )
+}
+
+function DensityCompactIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
+      <line x1="3" y1="5" x2="13" y2="5" />
+      <line x1="3" y1="8" x2="13" y2="8" />
+      <line x1="3" y1="11" x2="13" y2="11" />
     </svg>
   )
 }

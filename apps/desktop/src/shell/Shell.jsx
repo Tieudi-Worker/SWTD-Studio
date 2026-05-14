@@ -15,7 +15,8 @@ const LAYOUT_KEY = 'swtd_ui_layout'
 const DEFAULT_LAYOUT = {
   leftRailCollapsed: false,
   rightInspectorCollapsed: false,
-  activityDrawerMode: 'collapsed'  /* 'collapsed' | 'summary' | 'expanded' */
+  activityDrawerMode: 'collapsed',  /* 'collapsed' | 'summary' | 'expanded' */
+  density: 'comfortable'            /* 'comfortable' | 'compact' */
 }
 
 function loadLayout() {
@@ -80,6 +81,21 @@ export default function Shell() {
   const [validatingOutput, setValidatingOutput] = useState(false)
 
   useEffect(() => { saveLayout(layout) }, [layout])
+
+  // C4 — Sync density to <html data-density="..."> so the
+  // [data-density="compact"] CSS overrides defined in tokens.css
+  // take effect across the whole renderer.
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    document.documentElement.setAttribute('data-density', layout.density || 'comfortable')
+  }, [layout.density])
+
+  const toggleDensity = useCallback(() => {
+    setLayout(prev => ({
+      ...prev,
+      density: prev.density === 'compact' ? 'comfortable' : 'compact'
+    }))
+  }, [])
 
   // B1 — auto-toggle inspector on SKU-presence transition.
   // Opens when a SKU is loaded, closes when returning to an empty
@@ -409,6 +425,8 @@ export default function Shell() {
           commandQuery={commandQuery}
           onCommandQueryChange={setCommandQuery}
           onOpenCommandPalette={openPalette}
+          density={layout.density}
+          onToggleDensity={toggleDensity}
         />
       </header>
 
@@ -517,6 +535,8 @@ export default function Shell() {
           onToggleLeftRail={toggleLeftRail}
           onToggleInspector={toggleRightInspector}
           onToggleDrawer={toggleActivityDrawer}
+          onToggleDensity={toggleDensity}
+          density={layout.density}
           runDisabledReason={runDisabledReason}
           cancelDisabledReason={cancelDisabledReason}
           revalidateDisabledReason={revalidateDisabledReason}

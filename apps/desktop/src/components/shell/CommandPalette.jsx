@@ -50,6 +50,8 @@ export default function CommandPalette({
   onToggleLeftRail,
   onToggleInspector,
   onToggleDrawer,
+  onToggleDensity,
+  density,
   runDisabledReason,
   cancelDisabledReason,
   revalidateDisabledReason,
@@ -141,6 +143,14 @@ export default function CommandPalette({
       shortcut: '⌘J',
       run: () => { onToggleDrawer() }
     })
+    if (onToggleDensity) {
+      base.push({
+        id: 'set:density',
+        group: 'Settings',
+        label: density === 'compact' ? 'Density: switch to comfortable' : 'Density: switch to compact',
+        run: () => { onToggleDensity() }
+      })
+    }
 
     return base
   }, [
@@ -148,7 +158,8 @@ export default function CommandPalette({
     runDisabledReason, cancelDisabledReason, revalidateDisabledReason,
     onNavigateStep, onChooseSku, onPickWorkspace,
     onRunListing, onCancelListing, onRevalidate,
-    onToggleLeftRail, onToggleInspector, onToggleDrawer
+    onToggleLeftRail, onToggleInspector, onToggleDrawer,
+    onToggleDensity, density
   ])
 
   const filtered = useMemo(() => {
