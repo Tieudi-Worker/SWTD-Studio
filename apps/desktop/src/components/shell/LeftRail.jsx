@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useState } from 'react'
 import Input from '../atoms/Input.jsx'
 import IconButton from '../atoms/IconButton.jsx'
 import EmptyState from '../atoms/EmptyState.jsx'
@@ -21,7 +21,35 @@ import StatusDot from '../atoms/StatusDot.jsx'
  * @property {(v: string) => void} onFilterChange
  * @property {string} skuPath
  * @property {(path: string) => void} onChooseSku
+ * @property {{ ok:boolean, brief?:object, error?:string }|null} [validation]
+ * @property {string} [runStatus]
  */
+
+const COLLECTIONS = [
+  { id: 'all',       label: 'All',       dot: 'idle' },
+  { id: 'draft',     label: 'Draft',     dot: 'warning' },
+  { id: 'ready',     label: 'Ready',     dot: 'done' },
+  { id: 'needs-fix', label: 'Needs Fix', dot: 'error' },
+  { id: 'complete',  label: 'Complete',  dot: 'done' }
+]
+
+function bucketize(skus, skuPath, validation, runStatus) {
+  const draft = skus.filter(s => !s.hasBrief)
+  const ready = skus.filter(s => s.hasBrief)
+  const needsFix = (skuPath && validation && validation.ok === false)
+    ? skus.filter(s => s.path === skuPath)
+    : []
+  const complete = (skuPath && runStatus === 'ok')
+    ? skus.filter(s => s.path === skuPath)
+    : []
+  return {
+    'all': skus,
+    'draft': draft,
+    'ready': ready,
+    'needs-fix': needsFix,
+    'complete': complete
+  }
+}
 
 /** @param {LeftRailProps} props */
 export default function LeftRail({
@@ -34,13 +62,24 @@ export default function LeftRail({
   filter,
   onFilterChange,
   skuPath,
-  onChooseSku
+  onChooseSku,
+  validation,
+  runStatus
 }) {
+  const [collection, setCollection] = useState('all')
+
+  const buckets = useMemo(
+    () => bucketize(skus, skuPath, validation, runStatus),
+    [skus, skuPath, validation, runStatus]
+  )
+
+  const scoped = buckets[collection] || skus
+
   const filtered = useMemo(() => {
-    if (!filter) return skus
+    if (!filter) return scoped
     const q = filter.toLowerCase()
-    return skus.filter(s => s.name.toLowerCase().includes(q))
-  }, [skus, filter])
+    return scoped.filter(s => s.name.toLowerCase().includes(q))
+  }, [scoped, filter])
 
   if (collapsed) {
     return (
@@ -100,9 +139,33 @@ export default function LeftRail({
       </button>
 
       <div className="leftrail__section-head">
+        <span className="leftrail__section-title">Collections</span>
+      </div>
+      <ul className="leftrail__collections" role="list" aria-label="Collections">
+        {COLLECTIONS.map(c => {
+          const count = (buckets[c.id] || []).length
+          const active = collection === c.id
+          return (
+            <li key={c.id}>
+              <button
+                type="button"
+                className={'leftrail__collection' + (active ? ' leftrail__collection--active' : '')}
+                onClick={() => setCollection(c.id)}
+                aria-pressed={active}
+              >
+                <StatusDot status={c.dot} size="sm" />
+                <span className="leftrail__collection-label">{c.label}</span>
+                <span className="leftrail__collection-count">{count}</span>
+              </button>
+            </li>
+          )
+        })}
+      </ul>
+
+      <div className="leftrail__section-head">
         <span className="leftrail__section-title">SKUs</span>
         <span className="leftrail__section-count">
-          {filtered.length}{filter ? `/${skus.length}` : ''}
+          {filtered.length}{filter || collection !== 'all' ? `/${skus.length}` : ''}
         </span>
       </div>
 

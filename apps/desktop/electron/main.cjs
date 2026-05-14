@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron')
+const { app, BrowserWindow, Menu, ipcMain, dialog } = require('electron')
 const path = require('node:path')
 const fs = require('node:fs')
 const { pathToFileURL } = require('node:url')
@@ -59,6 +59,8 @@ async function readBriefSafe(briefPath) {
 }
 
 app.whenReady().then(() => {
+  Menu.setApplicationMenu(null)
+
   // --- Health probe ----------------------------------------------------------
   ipcMain.handle('swtd:ping', () => ({ ok: true, ts: Date.now() }))
 

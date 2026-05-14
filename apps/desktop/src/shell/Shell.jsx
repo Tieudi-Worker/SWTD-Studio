@@ -301,6 +301,8 @@ export default function Shell() {
           onFilterChange={setFilter}
           skuPath={skuPath}
           onChooseSku={chooseSku}
+          validation={validation}
+          runStatus={listingState.status}
         />
       </aside>
 

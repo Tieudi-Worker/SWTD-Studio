@@ -4,7 +4,7 @@ import StatusChip from '../atoms/StatusChip.jsx'
 import StatusDot from '../atoms/StatusDot.jsx'
 
 const TABS_BY_STEP = {
-  intake:  ['Brief', 'Health'],
+  intake:  ['Brief', 'Validation', 'History'],
   listing: ['Run', 'Slots'],
   aplus:   ['Plan'],
   video:   ['Plan'],
@@ -78,20 +78,30 @@ export default function RightInspector({
           {skuPath && <div className="inspector__sku-path" title={skuPath}>{shortPath(skuPath, 36)}</div>}
         </section>
 
-        {step === 'intake' && (
-          <>
-            <section className="inspector__section">
-              <div className="inspector__section-head">Brief health</div>
-              <BriefHealth validation={validation} />
-            </section>
+        {step === 'intake' && active === 'Brief' && (
+          <section className="inspector__section">
+            <div className="inspector__section-head">Brief fields</div>
+            <DefList items={briefFields(validation)} />
+          </section>
+        )}
 
-            {active === 'Brief' && (
-              <section className="inspector__section">
-                <div className="inspector__section-head">Brief fields</div>
-                <DefList items={briefFields(validation)} />
-              </section>
-            )}
-          </>
+        {step === 'intake' && active === 'Validation' && (
+          <section className="inspector__section">
+            <div className="inspector__section-head">Brief health</div>
+            <BriefHealth validation={validation} />
+          </section>
+        )}
+
+        {step === 'intake' && active === 'History' && (
+          <section className="inspector__section">
+            <div className="inspector__section-head">Recent changes</div>
+            <History
+              skuPath={skuPath}
+              validation={validation}
+              validating={validating}
+              listingState={listingState}
+            />
+          </section>
         )}
 
         {step === 'listing' && (
@@ -231,6 +241,53 @@ function BriefHealth({ validation }) {
         ))}
       </ul>
     </>
+  )
+}
+
+function History({ skuPath, validation, validating, listingState }) {
+  const events = []
+  if (skuPath) {
+    events.push({ kind: 'sku', label: 'SKU loaded', detail: lastSegment(skuPath) })
+  }
+  if (validating) {
+    events.push({ kind: 'running', label: 'Validating brief', detail: '—' })
+  } else if (validation) {
+    events.push({
+      kind: validation.ok ? 'ok' : 'err',
+      label: validation.ok ? 'Brief validated' : 'Validation failed',
+      detail: validation.ok ? 'all checks passed' : (validation.error || 'invalid')
+    })
+  }
+  if (listingState?.runId) {
+    const kind = listingState.status === 'ok'
+      ? 'ok'
+      : listingState.status === 'err' || listingState.status === 'cancelled'
+        ? 'err'
+        : 'running'
+    events.push({
+      kind,
+      label: `Listing run ${listingState.status}`,
+      detail: listingState.runId
+    })
+  }
+
+  if (!events.length) {
+    return <p className="inspector__locked-copy">No activity yet. Pick a SKU to populate history.</p>
+  }
+
+  return (
+    <ul className="history">
+      {events.map((e, i) => (
+        <li key={i} className={'history__row history__row--' + e.kind}>
+          <StatusDot
+            status={e.kind === 'ok' ? 'done' : e.kind === 'err' ? 'error' : e.kind === 'running' ? 'running' : 'idle'}
+            size="sm"
+          />
+          <span className="history__label">{e.label}</span>
+          <span className="history__detail" title={e.detail}>{e.detail}</span>
+        </li>
+      ))}
+    </ul>
   )
 }
 
