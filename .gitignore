@@ -30,7 +30,10 @@ Thumbs.db
 .idea/
 
 # Claude Code
-.claude/
+# Keep project-owned Claude skills, but ignore transient local Claude state.
+.claude/*
+!.claude/skills/
+!.claude/skills/**
 
 # Desktop app build
 apps/desktop/node_modules/
