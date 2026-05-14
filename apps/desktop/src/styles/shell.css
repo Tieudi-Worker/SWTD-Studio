@@ -702,7 +702,7 @@
     border-color var(--transition-base),
     color var(--transition-base),
     box-shadow var(--transition-base),
-    transform var(--transition-base);
+    transform var(--duration-base) var(--ease-spring-soft);
 }
 .slot:hover:not(:disabled) {
   background: var(--bg-hover);
