@@ -953,23 +953,133 @@
 .slot__qc--missing { color: var(--danger); border-color: rgba(239, 68, 68, 0.35); }
 .slot__qc--unknown { color: var(--warning); border-color: rgba(251, 191, 36, 0.35); }
 
-.slot--done    {
+.slot--done,
+.slot--success {
   border-color: rgba(74, 222, 128, 0.35);
   animation: slot-flash-done var(--duration-slow) var(--ease-out);
 }
-.slot--done    .slot__state { color: var(--success); }
+.slot--done    .slot__state,
+.slot--success .slot__state { color: var(--success); }
 @keyframes slot-flash-done {
   0%   { background: var(--success-muted); }
   100% { background: var(--bg-elevated); }
 }
-.slot--running { border-color: rgba(212, 168, 87, 0.45); }
-.slot--running .slot__state { color: var(--accent); }
-.slot--error   { border-color: rgba(239, 68, 68, 0.35); }
-.slot--error   .slot__state { color: var(--danger); }
+.slot--running,
+.slot--generating { border-color: rgba(212, 168, 87, 0.45); }
+.slot--running    .slot__state,
+.slot--generating .slot__state { color: var(--accent); }
+.slot--error,
+.slot--failed   { border-color: rgba(239, 68, 68, 0.35); }
+.slot--error  .slot__state,
+.slot--failed .slot__state { color: var(--danger); }
 .slot--skipped .slot__state { color: var(--warning); }
+
+/* Phase 1 — canonical states layered on top.
+   queued: idle visual + soft amber pulse on the slot__check badge so the
+           operator sees "I queued this, the runner just hasn't started yet."
+   approved: green ring + check-stamp; takes precedence over success.
+   failed:  one-shot horizontal shake to draw attention without being loud. */
+.slot--queued .slot__check {
+  background: var(--warning-muted);
+  border: 1px solid var(--warning);
+  color: var(--warning);
+  animation: slot-queued-pulse 1.4s ease-in-out infinite;
+}
+@keyframes slot-queued-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--warning-muted); opacity: 1; }
+  50%      { box-shadow: 0 0 0 6px transparent;        opacity: 0.7; }
+}
+.slot--queued .slot__state { color: var(--warning); }
+
+.slot--approved {
+  border-color: var(--success);
+  box-shadow: inset 0 0 0 1px var(--success-muted);
+}
+.slot--approved .slot__state { color: var(--success); }
+
+.slot--failed { animation: slot-shake 240ms var(--ease-out) 1; }
+@keyframes slot-shake {
+  0%, 100%      { transform: translateX(0); }
+  20%           { transform: translateX(-3px); }
+  40%           { transform: translateX(3px); }
+  60%           { transform: translateX(-2px); }
+  80%           { transform: translateX(2px); }
+}
+
+.slot__preview--queued {
+  background: var(--warning-muted);
+  border: 1px dashed var(--warning);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.slot__preview--queued .slot__preview-hint {
+  color: var(--warning);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: var(--text-caps-md);
+}
+
+/* Stagger reveal — when MainCanvas paints 8 slot cards, each one fades in
+   with a small delay computed from its index. Capped at 480ms total via
+   nth-child clamp so a 20-slot grid in the future won't run away. */
+.slot-grid > * {
+  animation: slot-reveal var(--duration-base) var(--ease-out) both;
+}
+.slot-grid > *:nth-child(1) { animation-delay: 0ms; }
+.slot-grid > *:nth-child(2) { animation-delay: 60ms; }
+.slot-grid > *:nth-child(3) { animation-delay: 120ms; }
+.slot-grid > *:nth-child(4) { animation-delay: 180ms; }
+.slot-grid > *:nth-child(5) { animation-delay: 240ms; }
+.slot-grid > *:nth-child(6) { animation-delay: 300ms; }
+.slot-grid > *:nth-child(7) { animation-delay: 360ms; }
+.slot-grid > *:nth-child(8) { animation-delay: 420ms; }
+.slot-grid > *:nth-child(n + 9) { animation-delay: 480ms; }
+@keyframes slot-reveal {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 .slot--selected {
   border-color: var(--accent);
   box-shadow: inset 0 0 0 1px var(--accent-muted);
+}
+
+/* TopBar — mock pipeline badge (dev-only, surfaced via mockMode prop) */
+.topbar__mock-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-caps-md);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--warning);
+  background: var(--warning-muted);
+  border: 1px dashed var(--warning);
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  cursor: help;
+  animation: topbar-mock-blink 2.4s ease-in-out infinite;
+}
+@keyframes topbar-mock-blink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.65; }
+}
+
+/* Reduced-motion guard — every animation we added respects user preference. */
+@media (prefers-reduced-motion: reduce) {
+  .slot--success,
+  .slot--done,
+  .slot--queued .slot__check,
+  .slot--failed,
+  .slot-grid > *,
+  .topbar__mock-badge {
+    animation: none !important;
+    transform: none !important;
+  }
 }
 
 .panel__head-right {
@@ -1303,6 +1413,47 @@
   line-height: 18px;
   margin: 0;
 }
+
+/* Phase 1 — RunTimeline ─────────────────────────────────
+   Read-only chronological list of pipeline state transitions for the
+   current listing run. Compact monospace rows, color-keyed by event
+   kind so the operator can scan an 8-slot run at a glance. */
+.run-timeline {
+  font-family: var(--font-mono);
+  font-size: var(--text-meta-sm);
+  line-height: 1.45;
+}
+.run-timeline--empty { color: var(--text-tertiary); }
+.run-timeline__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.run-timeline__row {
+  display: grid;
+  grid-template-columns: 64px 32px 1fr;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: var(--space-1) 0;
+  border-bottom: 1px dotted var(--border-subtle);
+  color: var(--text-secondary);
+}
+.run-timeline__row:last-child { border-bottom: none; }
+.run-timeline__ts    { color: var(--text-tertiary); font-size: var(--text-caps-md); letter-spacing: 0.02em; }
+.run-timeline__slot  { color: var(--accent); font-weight: 600; }
+.run-timeline__label { color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; }
+
+.run-timeline__row--start { color: var(--accent); }
+.run-timeline__row--start    .run-timeline__label   { color: var(--accent); }
+.run-timeline__row--end      .run-timeline__label   { color: var(--text-primary); font-weight: 500; }
+.run-timeline__row--success  .run-timeline__slot,
+.run-timeline__row--success  .run-timeline__label   { color: var(--success); }
+.run-timeline__row--failed   .run-timeline__slot,
+.run-timeline__row--failed   .run-timeline__label   { color: var(--danger); }
+.run-timeline__row--generating .run-timeline__slot,
+.run-timeline__row--generating .run-timeline__label { color: var(--warning); }
 
 .health {
   display: grid;

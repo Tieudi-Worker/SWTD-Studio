@@ -29,6 +29,24 @@
   box-shadow: var(--focus-ring);
   border-color: var(--border-focus);
 }
+/* Phase 1 — tactile press feedback. Soft spring on hover, micro-depress
+   on active. Disabled / loading buttons opt out so they look inert. */
+.atom-btn:not(.atom-btn--disabled):not(.atom-btn--loading) {
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--duration-fast) var(--ease-spring-soft);
+}
+.atom-btn:not(.atom-btn--disabled):not(.atom-btn--loading):hover  { transform: translateY(-1px); }
+.atom-btn:not(.atom-btn--disabled):not(.atom-btn--loading):active { transform: translateY(1px); transition-duration: var(--duration-instant); }
+@media (prefers-reduced-motion: reduce) {
+  .atom-btn { transition: none !important; }
+  .atom-btn:hover, .atom-btn:active { transform: none !important; }
+}
+.atom-btn--loading .atom-btn__label { opacity: 0.65; }
+.atom-btn--loading { cursor: progress; }
 
 .atom-btn--sm { height: 24px; padding: 0 var(--space-2); font-size: var(--text-meta-sm); gap: var(--space-1); }
 .atom-btn--md { height: 32px; padding: 0 var(--space-3); font-size: var(--text-body-sm); }
