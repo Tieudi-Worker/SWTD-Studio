@@ -1,0 +1,39 @@
+{
+  "id": "04-comparison-vs",
+  "name": "Comparison · Us vs them",
+  "version": 1,
+  "slot_roles": ["features", "size-scale"],
+  "aspect_ratio": "1:1",
+  "needs_product_images": true,
+  "include_brand_modifier": true,
+  "best_for": ["category-vs-product comparison", "differentiation grid", "feature parity table"],
+  "rules": {
+    "do": [
+      "5-row checkmark / X grid (Us column vs Average Competitor column)",
+      "Never name competitors directly — say 'most {PRODUCT_CATEGORY}' or 'average {PRODUCT_CATEGORY}'",
+      "Defensible claims only (ranges OK: 'Varies (8–15g)')"
+    ],
+    "dont": [
+      "no named competitor brand (legal risk)",
+      "no fake numbers (use ranges or 'varies' when honest)",
+      "no more than 5 rows (becomes a wall of text)"
+    ]
+  },
+  "body": "Amazon listing comparison image for {{PRODUCT_NAME}}, 2000×2000 square. Two-column comparison grid: left column labeled \"{{BRAND_NAME}}\" with {{BRAND_PRIMARY_COLOR_NAME}} background, right column labeled \"Average {{PRODUCT_CATEGORY}}\" with a neutral light-gray background. 5 rows. Each row shows a feature claim with a green checkmark in the brand column and a red X or category-range value in the competitor column. The 5 features are derived from: {{FEATURE_LIST}}. Headline above the grid in {{BRAND_FONT_PRIMARY}}: a single defensible differentiator (≤ 8 words) in the {{BRAND_VOICE_ADJECTIVES}} voice. No named competitor brand.",
+  "angles": [
+    {
+      "id": "default",
+      "name": "5-row checkmark grid (default)",
+      "description": "Classic us-vs-them grid with checkmarks and X marks.",
+      "prompt_modifier": "",
+      "aspect_ratio": null
+    },
+    {
+      "id": "stacked-bars",
+      "name": "Stacked bar visual",
+      "description": "Each feature is a horizontal bar showing brand vs category average proportionally.",
+      "prompt_modifier": "Replace the checkmark grid with 4 stacked horizontal bars. Each bar shows the brand value (filled in {{BRAND_ACCENT_COLOR}}) against the category average (filled in neutral gray). Numeric value labels at the right of each bar.",
+      "aspect_ratio": null
+    }
+  ]
+}

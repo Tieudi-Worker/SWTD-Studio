@@ -1,0 +1,39 @@
+{
+  "id": "08-gift-flatlay",
+  "name": "Flat-lay · Gift / group composition",
+  "version": 1,
+  "slot_roles": ["gift-set"],
+  "aspect_ratio": "1:1",
+  "needs_product_images": true,
+  "include_brand_modifier": true,
+  "best_for": ["multi-pack composition", "gift bundle", "flat-lay merchandising"],
+  "rules": {
+    "do": [
+      "top-down flat-lay composition with multiple product units arranged geometrically",
+      "consistent product orientation across all units",
+      "complementary props that say 'gift' without distracting"
+    ],
+    "dont": [
+      "no random angles (each unit should be aligned, not chaotic)",
+      "no foreground objects covering the product label",
+      "no people, no hands in frame"
+    ]
+  },
+  "body": "Top-down flat-lay gift composition for {{PRODUCT_NAME}}, 2000×2000 square. 3–5 product units arranged in a geometric pattern (rosette, fan, or grid) on a {{BRAND_PRIMARY_COLOR_NAME}} surface. Each unit oriented the same way so the labels read consistently. Two or three complementary props nearby that imply a gifting context (e.g., a single sprig of greenery, a folded ribbon in {{BRAND_ACCENT_COLOR}}, a piece of geometric kraft paper) without dominating the frame. Soft top-down shadow. Subtle vignette focusing the eye on the central unit. No people, no hands.",
+  "angles": [
+    {
+      "id": "default",
+      "name": "Geometric rosette (default)",
+      "description": "3-5 units arranged in a clean geometric rosette.",
+      "prompt_modifier": "",
+      "aspect_ratio": null
+    },
+    {
+      "id": "ribbon-tied",
+      "name": "Ribbon-tied bundle",
+      "description": "Units stacked and tied with a soft {{BRAND_ACCENT_COLOR}} ribbon.",
+      "prompt_modifier": "Replace the geometric arrangement with a small vertical bundle of 3 units tied with a soft {{BRAND_ACCENT_COLOR}} ribbon. Bow visible top-center. One sprig of greenery tucked under the ribbon. Background remains {{BRAND_PRIMARY_COLOR_NAME}}, flat-lay angle preserved.",
+      "aspect_ratio": null
+    }
+  ]
+}

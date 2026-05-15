@@ -1,0 +1,39 @@
+{
+  "id": "07-emotional-vignette",
+  "name": "Editorial · Emotional vignette",
+  "version": 1,
+  "slot_roles": ["emotional"],
+  "aspect_ratio": "1:1",
+  "needs_product_images": true,
+  "include_brand_modifier": true,
+  "best_for": ["emotional moment", "editorial mood", "brand storytelling"],
+  "rules": {
+    "do": [
+      "single emotive moment, not a product hero",
+      "editorial color grading + mood lighting",
+      "product is present but secondary to the feeling"
+    ],
+    "dont": [
+      "no overlay text (mood-first)",
+      "no recognizable faces (hands, silhouettes, gesture only)",
+      "no busy environment that competes with the product"
+    ]
+  },
+  "body": "Editorial emotional vignette for {{PRODUCT_NAME}}, 2000×2000 square. A single emotive moment: the {{ICP_PERSONA_NAME}} persona experiencing the relief that {{PRODUCT_NAME}} provides — frame it around the pain '{{ICP_PAIN}}' resolving. Editorial color grading, mood lighting from a single soft side light. Product is present in frame but secondary; the feeling is primary. No overlay text. Hands, silhouettes, or environment only — no recognizable faces. Palette anchored in {{BRAND_PRIMARY_COLOR_NAME}} with one subtle {{BRAND_ACCENT_COLOR}} accent.",
+  "angles": [
+    {
+      "id": "default",
+      "name": "Soft side-light moment (default)",
+      "description": "Single soft side light, calm mood.",
+      "prompt_modifier": "",
+      "aspect_ratio": null
+    },
+    {
+      "id": "golden-hour",
+      "name": "Golden-hour outdoor",
+      "description": "Warm golden-hour outdoor light, slight lens flare.",
+      "prompt_modifier": "Move the moment outdoors at golden hour. Warm directional light from low angle. Subtle natural lens flare in one corner. Slight color grade toward warmer tones while preserving brand color accents.",
+      "aspect_ratio": null
+    }
+  ]
+}

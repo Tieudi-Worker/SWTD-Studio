@@ -1,0 +1,39 @@
+{
+  "id": "03-inside-cutaway",
+  "name": "Inside · Cutaway / texture",
+  "version": 1,
+  "slot_roles": ["use-case"],
+  "aspect_ratio": "1:1",
+  "needs_product_images": true,
+  "include_brand_modifier": true,
+  "best_for": ["product anatomy", "ingredient reveal", "texture close-up"],
+  "rules": {
+    "do": [
+      "cross-section / cutaway / texture-on-skin",
+      "macro-level detail of the interior or texture",
+      "one short hero phrase (≤ 6 words) in brand display font"
+    ],
+    "dont": [
+      "no people in the cutaway shot",
+      "no exaggerated 'exploded view' if the product is a simple object",
+      "no cluttered ingredient labels"
+    ]
+  },
+  "body": "Amazon listing inside-the-product image for {{PRODUCT_NAME}}, 2000×2000 square. A clean cross-section / cutaway of the product revealing its interior detail. Background: {{BRAND_PRIMARY_COLOR_NAME}}. Macro-level detail showing the most distinctive interior feature. One short hero phrase in {{BRAND_FONT_PRIMARY}}, set in uppercase, color {{BRAND_ACCENT_COLOR}}. Phrase: short, energetic, in the {{BRAND_VOICE_ADJECTIVES}} voice. Lighting emphasizes texture without becoming gimmicky.",
+  "angles": [
+    {
+      "id": "default",
+      "name": "Cutaway diagonal (default)",
+      "description": "Clean diagonal cutaway revealing interior, hero phrase top-left.",
+      "prompt_modifier": "",
+      "aspect_ratio": null
+    },
+    {
+      "id": "texture-macro",
+      "name": "Texture macro (no cutaway)",
+      "description": "Close-up of the surface or texture of the product, not a literal cutaway.",
+      "prompt_modifier": "Skip the cutaway. Instead, frame is a tight texture macro — surface detail at ~3× life size, fine grain visible. Hero phrase bottom-right in {{BRAND_ACCENT_COLOR}}.",
+      "aspect_ratio": null
+    }
+  ]
+}

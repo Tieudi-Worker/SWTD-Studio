@@ -1,0 +1,39 @@
+{
+  "id": "05-lifestyle-grid",
+  "name": "Lifestyle · 4-occasion grid",
+  "version": 1,
+  "slot_roles": ["in-use", "lifestyle-close"],
+  "aspect_ratio": "1:1",
+  "needs_product_images": true,
+  "include_brand_modifier": true,
+  "best_for": ["use-case panel", "occasion grid", "lifestyle vignettes"],
+  "rules": {
+    "do": [
+      "2×2 grid of four lifestyle vignettes, each with a single circular icon and an uppercase label",
+      "each vignette frames the product in a specific real-world occasion",
+      "consistent color grading across all four panels (treated as one shoot)"
+    ],
+    "dont": [
+      "no inconsistent lighting between panels",
+      "no faces in close-up (use hands, partial silhouettes, environment)",
+      "no copy on the vignettes themselves — only the four labels"
+    ]
+  },
+  "body": "Amazon listing lifestyle grid for {{PRODUCT_NAME}}, 2000×2000 square. 2×2 grid of four lifestyle vignettes showing the product in distinct use-case moments. Each vignette has a {{BRAND_ACCENT_COLOR}} circular icon top-left and a short uppercase label in {{BRAND_FONT_PRIMARY}} (≤ 3 words each). Suggested four occasions for a {{PRODUCT_CATEGORY}}: post-workout fuel, mid-day boost, on-the-go quick win, late-night craving — pick four that best match {{PRODUCT_OCCASION}}. Consistent color grading across all four panels so it reads as one shoot, not four AI generations. Hands and environment present — no full faces.",
+  "angles": [
+    {
+      "id": "default",
+      "name": "2×2 occasion grid (default)",
+      "description": "Four equal panels, each one moment.",
+      "prompt_modifier": "",
+      "aspect_ratio": null
+    },
+    {
+      "id": "hero-plus-three",
+      "name": "Hero + three thumbnails",
+      "description": "One large hero vignette plus three smaller thumbnails.",
+      "prompt_modifier": "Layout shifts: one large hero vignette occupying the left 60%, three smaller thumbnails stacked on the right 40%. Hero shows the highest-value occasion; thumbnails show secondary moments.",
+      "aspect_ratio": null
+    }
+  ]
+}

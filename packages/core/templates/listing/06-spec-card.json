@@ -1,0 +1,39 @@
+{
+  "id": "06-spec-card",
+  "name": "Spec · Numbers confidence card",
+  "version": 1,
+  "slot_roles": ["size-scale"],
+  "aspect_ratio": "1:1",
+  "needs_product_images": true,
+  "include_brand_modifier": true,
+  "best_for": ["nutrition panel", "spec card", "size + dimensions"],
+  "rules": {
+    "do": [
+      "white spec card centered on brand color background",
+      "headline + body + 4-6 numeric data points",
+      "numbers match the actual product (operator-verified)"
+    ],
+    "dont": [
+      "no inflated claims",
+      "no decorative icons that hide the numbers",
+      "no overlapping text"
+    ]
+  },
+  "body": "Amazon listing spec/confidence card for {{PRODUCT_NAME}}, 2000×2000 square. White rounded-corner spec card centered on a {{BRAND_PRIMARY_COLOR_NAME}} background. Card content: a 1-line headline in {{BRAND_FONT_PRIMARY}} (≤ 8 words) in {{BRAND_PRIMARY_COLOR_NAME}} text, followed by a single supporting line, then a horizontal row of 4-6 numeric data points. Data points come from: {{PRODUCT_DIMENSIONS}} and {{FEATURE_LIST}}. Each data point: big number in {{BRAND_PRIMARY_COLOR_NAME}}, small unit label underneath. Card has a soft drop shadow to lift it off the background. The composition reads as a designed spec sheet, not a stock infographic.",
+  "angles": [
+    {
+      "id": "default",
+      "name": "Card center, numbers row (default)",
+      "description": "Classic Barebells-style spec card.",
+      "prompt_modifier": "",
+      "aspect_ratio": null
+    },
+    {
+      "id": "vertical-stack",
+      "name": "Vertical stat stack",
+      "description": "Data points stacked vertically with horizontal divider rules.",
+      "prompt_modifier": "Layout shift: data points stack vertically, each row separated by a thin {{BRAND_ACCENT_COLOR}} divider rule. Each row: big number left-aligned, unit label right-aligned. Headline floats above the stack.",
+      "aspect_ratio": null
+    }
+  ]
+}

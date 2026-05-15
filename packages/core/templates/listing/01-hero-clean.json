@@ -1,0 +1,47 @@
+{
+  "id": "01-hero-clean",
+  "name": "Hero · Clean studio",
+  "version": 1,
+  "slot_roles": ["main"],
+  "aspect_ratio": "1:1",
+  "needs_product_images": true,
+  "include_brand_modifier": true,
+  "best_for": ["Amazon hero shot", "PDP cover image", "platform thumbnail"],
+  "rules": {
+    "do": [
+      "centered composition with the product floating at a slight 3D angle",
+      "single saturated background color taken from the brand primary",
+      "soft drop shadow under the product",
+      "photorealistic studio lighting"
+    ],
+    "dont": [
+      "no people, no hands",
+      "no overlay text on the image (overlay added separately downstream)",
+      "no busy props or backgrounds"
+    ]
+  },
+  "body": "Amazon hero product listing image for {{PRODUCT_NAME}}, 2000×2000 square format, centered composition. A single {{PRODUCT_NAME}} floating straight-on at a slight 3D angle on a {{BRAND_PRIMARY_COLOR_NAME}} background. Soft drop shadow underneath. Photorealistic, studio-quality lighting. Product is the only subject — no people, no overlay text, no busy background. Crisp packaging readability is critical.",
+  "angles": [
+    {
+      "id": "default",
+      "name": "Clean studio (default)",
+      "description": "The reference Barebells-style hero — solid color background, centered product.",
+      "prompt_modifier": "",
+      "aspect_ratio": null
+    },
+    {
+      "id": "luxury-gold",
+      "name": "Luxury gold accent",
+      "description": "Premium feel with subtle gold accent lines and deeper shadow.",
+      "prompt_modifier": "Add subtle gold accent lines radiating from the product. Faint gold-dust particles in air. Deeper, more dramatic shadow beneath for a premium feel.",
+      "aspect_ratio": null
+    },
+    {
+      "id": "vibrant-radial",
+      "name": "Vibrant radial pop",
+      "description": "Background shifts from solid to a soft radial gradient for a more energetic hero.",
+      "prompt_modifier": "Background shifts from solid {{BRAND_PRIMARY_COLOR_NAME}} to a soft radial gradient with the brightest point centered on the product. Slight color bloom around the silhouette. Energy without distraction.",
+      "aspect_ratio": null
+    }
+  ]
+}

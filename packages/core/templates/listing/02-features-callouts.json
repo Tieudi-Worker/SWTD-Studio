@@ -1,0 +1,39 @@
+{
+  "id": "02-features-callouts",
+  "name": "Features · Numbered callouts",
+  "version": 1,
+  "slot_roles": ["features"],
+  "aspect_ratio": "1:1",
+  "needs_product_images": true,
+  "include_brand_modifier": true,
+  "best_for": ["benefits panel", "feature infographic", "spec callouts"],
+  "rules": {
+    "do": [
+      "four numbered circle callouts connected by thin lines",
+      "callout color taken from brand accent",
+      "tight typography matching brand fonts"
+    ],
+    "dont": [
+      "no overlapping text",
+      "no more than 4 callouts (visual noise)",
+      "no callout pointing to ambiguous parts of the product"
+    ]
+  },
+  "body": "Amazon listing features image for {{PRODUCT_NAME}}, 2000×2000 square. Centered hero shot of the product on a {{BRAND_PRIMARY_COLOR_NAME}} background. Four numbered callouts in {{BRAND_ACCENT_COLOR}} circles arranged around the product, connected to specific product features by thin {{BRAND_ACCENT_COLOR}} lines. The four callouts read: {{FEATURE_LIST}}. Callout typography: {{BRAND_FONT_PRIMARY}}, uppercase, tight letter spacing. The product remains the focal anchor.",
+  "angles": [
+    {
+      "id": "default",
+      "name": "Gold-circle callouts (default)",
+      "description": "Four callouts with the Barebells-style gold-circle treatment.",
+      "prompt_modifier": "",
+      "aspect_ratio": null
+    },
+    {
+      "id": "icon-cards",
+      "name": "Icon cards instead of numbers",
+      "description": "Each callout is a small icon card rather than a numbered circle.",
+      "prompt_modifier": "Replace the numbered circles with small rectangular icon cards. Each card has a simple line-art icon on top and the feature label underneath. Cards float at a subtle 5-degree skew for energy.",
+      "aspect_ratio": null
+    }
+  ]
+}
