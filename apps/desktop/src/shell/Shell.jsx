@@ -10,6 +10,8 @@ import CommandPalette from '../components/shell/CommandPalette.jsx'
 import useKeyboardShortcuts from '../hooks/useKeyboardShortcuts.js'
 import { deriveSlotStates, regenSlotsToArg, mergeStatesWithValidator } from '../lib/slot-progress.js'
 import { deriveAplusStates, regenModulesToArg } from '../lib/aplus-progress.js'
+import { deriveCanonicalSlotStates } from '../lib/slot-state-machine.js'
+import { isMockActive, startMockRun } from '../lib/mock-pipeline.js'
 
 const LAYOUT_KEY = 'swtd_ui_layout'
 
@@ -207,10 +209,20 @@ export default function Shell() {
   // the correct state slice.
   const runBinByIdRef = useRef(new Map())
 
-  useEffect(() => {
-    if (!api?.onPipelineEvent) return
-    return api.onPipelineEvent((evt) => {
-      const reducer = (prev) => {
+  // Run-timeline ref: chronological log of slot state transitions for the
+  // current listing run. Kept in a ref so updates don't re-render Shell;
+  // RunTimeline reads via timelineVersion below.
+  const runTimelineRef = useRef([])
+  const [runTimelineVersion, setRunTimelineVersion] = useState(0)
+  function appendTimelineEvent(evt) {
+    runTimelineRef.current.push(evt)
+    setRunTimelineVersion(v => v + 1)
+  }
+
+  // Shared pipeline-event router. Real IPC and the mock pipeline both
+  // flow through this so the reducer + timeline stay in lockstep.
+  const handlePipelineEvent = useCallback((evt) => {
+    const reducer = (prev) => {
         if (evt.kind === 'start') {
           return {
             runId: evt.runId,
@@ -270,9 +282,18 @@ export default function Shell() {
         // Default + back-compat: anything not explicitly tagged aplus routes
         // to listing, which preserves the Phase 2 contract exactly.
         setListingState(reducer)
+        // Timeline tracks listing only (A+ has its own progress chip row).
+        appendTimelineEvent(evt)
       }
-    })
   }, [])
+
+  useEffect(() => {
+    if (!api?.onPipelineEvent) return
+    return api.onPipelineEvent(handlePipelineEvent)
+  }, [handlePipelineEvent])
+
+  // Active mock-run cancel handle (null when no mock in flight).
+  const mockCancelRef = useRef(null)
 
   const toggleLeftRail = useCallback(() => {
     setLayout(prev => ({ ...prev, leftRailCollapsed: !prev.leftRailCollapsed }))
@@ -357,14 +378,31 @@ export default function Shell() {
   }, [skuPath])
 
   const runListing = useCallback(async (regenSlots) => {
-    if (!api || !skuPath || !validation?.ok || listingState.status === 'running') return
+    if (!skuPath || listingState.status === 'running') return
+    const mockMode = isMockActive()
+    if (!mockMode && (!api || !validation?.ok)) return
     const regenList = Array.isArray(regenSlots)
       ? regenSlots.filter(n => Number.isInteger(n) && n >= 1 && n <= 8)
       : []
+    // Reset timeline for a fresh run so stale entries don't bleed across runs.
+    runTimelineRef.current = []
+    setRunTimelineVersion(v => v + 1)
     setListingState({ runId: null, status: 'running', lines: [] })
     setStep('listing')
     setLayout(prev => ({ ...prev, activityDrawerMode: 'expanded' }))
-    setPendingRegen(new Set(regenList))
+    setPendingRegen(new Set(regenList.length ? regenList : [1,2,3,4,5,6,7,8]))
+
+    if (mockMode) {
+      // Drive the shared event router with synthetic events so the same
+      // reducer + timeline + slotStates path handles real and mock runs.
+      mockCancelRef.current = startMockRun({
+        slotIds: regenList.length ? regenList : undefined,
+        emit: handlePipelineEvent,
+        skuPath
+      })
+      return
+    }
+
     const payload = { skuPath }
     if (regenList.length > 0) {
       payload.skipSlots = regenSlotsToArg(regenList)
@@ -378,7 +416,7 @@ export default function Shell() {
       })
       setPendingRegen(new Set())
     }
-  }, [skuPath, validation, listingState.status])
+  }, [skuPath, validation, listingState.status, handlePipelineEvent])
 
   const runListingFull = useCallback(() => runListing(), [runListing])
   const runListingRegen = useCallback(() => {
@@ -568,6 +606,13 @@ export default function Shell() {
   }, [aplusState.runId])
 
   const cancelListing = useCallback(async () => {
+    // Mock run cancellation: pull the saved cancel handle and clear it.
+    if (mockCancelRef.current) {
+      const cancel = mockCancelRef.current
+      mockCancelRef.current = null
+      try { cancel() } catch { /* nothing to do */ }
+      return
+    }
     if (!api || !listingState.runId) return
     await api.cancelPipeline(listingState.runId)
   }, [listingState.runId])
@@ -615,6 +660,19 @@ export default function Shell() {
       validatorReport
     ),
     [listingState.lines, listingState.status, pendingRegen, validatorReport]
+  )
+
+  // Canonical 6-state derivation (idle/queued/generating/success/failed/approved).
+  // Layers on top of the legacy 5-state machine so existing inspector code
+  // can keep its current semantics during the Phase 1 migration window.
+  const canonicalSlotStates = useMemo(
+    () => deriveCanonicalSlotStates({
+      legacyStates: slotStates,
+      pendingRegen: Array.from(pendingRegen),
+      runStatus: listingState.status,
+      approvals: slotReview.approvals
+    }),
+    [slotStates, pendingRegen, listingState.status, slotReview.approvals]
   )
 
   const aplusModuleStates = useMemo(
@@ -761,6 +819,7 @@ export default function Shell() {
           onToggleTheme={toggleTheme}
           language={lang}
           onToggleLanguage={toggleLanguage}
+          mockMode={isMockActive()}
         />
       </header>
 
@@ -796,7 +855,7 @@ export default function Shell() {
             skuCount={skus.length}
             onPickWorkspace={pickWorkspace}
             listingState={listingState}
-            slotStates={slotStates}
+            slotStates={canonicalSlotStates}
             selectedSlots={selectedSlots}
             onToggleSlot={toggleSlotSelection}
             onClearSlotSelection={clearSlotSelection}
@@ -884,6 +943,8 @@ export default function Shell() {
           aplusValidating={aplusValidating}
           onRefreshAplusValidator={refreshAplusValidator}
           language={lang}
+          runTimeline={runTimelineRef.current}
+          runTimelineVersion={runTimelineVersion}
         />
       </aside>
 

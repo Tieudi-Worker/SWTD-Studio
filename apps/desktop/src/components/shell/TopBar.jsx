@@ -44,7 +44,8 @@ export default function TopBar({
   theme,
   onToggleTheme,
   language = 'en',
-  onToggleLanguage
+  onToggleLanguage,
+  mockMode = false
 }) {
   const chip = RUN_TO_CHIP[runStatus] || RUN_TO_CHIP.idle
   const wsLabel = workspace ? shortenPath(workspace, 44) : t('topbar.workspace_empty', language)
@@ -90,6 +91,12 @@ export default function TopBar({
       </div>
 
       <div className="topbar__right">
+        {mockMode && (
+          <span
+            className="topbar__mock-badge"
+            title="Mock pipeline active — synthetic events, no real API calls. Toggle with ?mock=1 or VITE_SWTD_MOCK_PIPELINE=1."
+          >MOCK</span>
+        )}
         <StatusChip status={chip.status} size="sm">{t(chip.labelKey, language)}</StatusChip>
         {onToggleLanguage && (
           <IconButton
