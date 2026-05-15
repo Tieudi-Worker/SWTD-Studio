@@ -86,6 +86,15 @@ export function createProviderCore(opts = {}) {
       return adapter
     },
 
+    /**
+     * Reset the `custom` provider back to the no-op template. Used when the
+     * operator clears the Custom Provider configuration from Settings — the
+     * adapter starts refusing generate calls again until the next save.
+     */
+    resetCustomToTemplate() {
+      registry.registerProvider(customProviderTemplate)
+    },
+
     /* Key vault surface (renderer NEVER sees getKey) */
     hasKeyFor: (id) => keyVault.hasKey(id),
     saveKey:   (id, value) => keyVault.setKey(id, value),

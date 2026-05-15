@@ -269,10 +269,42 @@ export function SlotCardReview({
             const daysLeft = Math.max(0, Math.round((tmpImage.expiresAt - Date.now()) / (24*60*60*1000)))
             const expFn = t('slot.gen.expires_in_days', language)
             const expLabel = typeof expFn === 'function' ? expFn(daysLeft) : ''
+            const served = tmpImage.providerId || 'mock'
+            // US6: surface fallback substitution. The first chain entry is
+            // the originally-requested provider when the served provider
+            // differs from it. Tooltip lists the chain so the operator
+            // can see WHY the fallback happened.
+            const chain = Array.isArray(tmpImage.fallbackChain) ? tmpImage.fallbackChain : []
+            const requested = chain.length > 0 ? chain[0].providerId : served
+            const substituted = chain.length > 0 && requested !== served
+            const viaFn = t('provider.served_via', language)
+            const viaLabel = typeof viaFn === 'function' ? viaFn(served) : `via ${served}`
+            const tooltip = substituted
+              ? `${viaLabel}\n` + chain.map((e) => `↳ ${e.providerId}: ${e.reason}${e.status ? ' (' + e.status + ')' : ''}`).join('\n')
+              : viaLabel
             return (
-              <span className={'slot-card__gen-tag slot-card__gen-tag--' + (tmpImage.providerId || 'mock')}>
-                {(tmpImage.providerId || 'mock').toUpperCase()} · {expLabel}
-              </span>
+              <>
+                <span
+                  className={
+                    'slot-card__gen-tag slot-card__gen-tag--' + served
+                    + (substituted ? ' slot-card__gen-tag--fallback' : '')
+                  }
+                  title={tooltip}
+                >
+                  {served.toUpperCase()} · {expLabel}
+                  {substituted && (
+                    <span className="slot-card__gen-tag-substitution" aria-hidden="true"> ⤿</span>
+                  )}
+                </span>
+                {substituted && (
+                  <span
+                    className="slot-card__gen-tag slot-card__gen-tag--fallback-note"
+                    title={tooltip}
+                  >
+                    {t('provider.fallback_used', language) || 'fallback used'}
+                  </span>
+                )}
+              </>
             )
           })()}
           {generationError && (

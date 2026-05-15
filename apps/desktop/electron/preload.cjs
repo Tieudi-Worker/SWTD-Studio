@@ -71,6 +71,12 @@ contextBridge.exposeInMainWorld('swtdProvider', {
   editImage:     (input) => ipcRenderer.invoke('swtd:provider:edit-image',     input),
   cancelGeneration: (genId) => ipcRenderer.invoke('swtd:provider:cancel-generation', genId),
 
+  /* Custom provider config — non-secret triple (Boss D1: name + baseUrl +
+   * optional modelPrefix). The apiKey continues to go through saveKey. */
+  getCustomConfig:   ()      => ipcRenderer.invoke('swtd:provider:get-custom-config'),
+  saveCustomConfig:  (cfg)   => ipcRenderer.invoke('swtd:provider:save-custom-config',  cfg),
+  clearCustomConfig: ()      => ipcRenderer.invoke('swtd:provider:clear-custom-config'),
+
   /* Research / Insight Brief (IPC shipped P4.2; operator UI lands P4.4) */
   researchInsight:  (input) => ipcRenderer.invoke('swtd:provider:research-insight',  input),
   getInsightBrief:  (skuPath) => ipcRenderer.invoke('swtd:provider:get-insight-brief', skuPath),

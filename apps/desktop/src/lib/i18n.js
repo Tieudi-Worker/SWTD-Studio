@@ -328,15 +328,21 @@ const UI_TEXT = {
   'template.context.workspace': { en: 'workspace default', vi: 'workspace default' },
   'template.context.none':      { en: 'not loaded',     vi: 'chưa tải' },
 
-  /* Phase 3 — provider adapter ──────────────────────── */
+  /* Phase 4 — provider adapter (safeStorage-backed vault) ──────────────────────── */
   'settings.title':              { en: 'Settings',                vi: 'Cài đặt' },
   'settings.close':              { en: 'Close',                   vi: 'Đóng' },
-  'settings.provider.heading':   { en: 'Image generation provider', vi: 'Provider sinh ảnh' },
-  'settings.provider.hint':      { en: 'Pick a provider for the per-slot Generate action. Mock works without a key.',
-                                   vi: 'Chọn provider cho hành động Generate từng slot. Mock chạy được mà không cần key.' },
+  'settings.provider.heading':   { en: 'Image generation providers', vi: 'Provider sinh ảnh' },
+  'settings.provider.hint':      { en: 'Configure each provider, then pick the primary route at the bottom. Mock is available offline.',
+                                   vi: 'Cấu hình từng provider, sau đó chọn route chính ở dưới. Mock chạy offline.' },
 
-  'provider.key.warning':        { en: 'API keys are stored in this Electron renderer\'s localStorage only. Anyone with access to this machine can read them. Future hardening will move keys to the OS keychain.',
-                                   vi: 'API keys được lưu trong localStorage của Electron renderer này. Bất kỳ ai truy cập được máy này đều có thể đọc. Lần tăng cường sau sẽ chuyển sang OS keychain.' },
+  /* Phase 4 vault warnings. Active key depends on safeStorage availability. */
+  'provider.key.warning_v2':     { en: 'API keys are stored via the OS keychain wrapper (Electron safeStorage). Plaintext keys never leave the main process.',
+                                   vi: 'API keys được lưu qua OS keychain (Electron safeStorage). Plaintext không bao giờ rời main process.' },
+  'provider.key.warning_aes':    { en: 'OS encryption is unavailable on this host — keys are AES-256-GCM encrypted on disk with a derived key. Configure a system keyring for stronger protection.',
+                                   vi: 'OS encryption không khả dụng — keys được mã hóa AES-256-GCM trên đĩa với derived key. Cấu hình system keyring để bảo vệ mạnh hơn.' },
+  /* Legacy key retained so any orphan caller doesn't break; points to v2 copy. */
+  'provider.key.warning':        { en: 'API keys live in the safeStorage-backed vault in main. The renderer cannot read them after save.',
+                                   vi: 'API keys được lưu trong safeStorage vault ở main. Renderer không đọc được sau khi lưu.' },
   'provider.key.placeholder':    { en: 'Paste API key…',          vi: 'Dán API key…' },
   'provider.key.save':           { en: 'Save',                    vi: 'Lưu' },
   'provider.key.reveal':         { en: 'Reveal (30 s)',           vi: 'Hiện (30 giây)' },
@@ -365,6 +371,50 @@ const UI_TEXT = {
     en: (id) => `${id.toUpperCase()} not configured — used Mock instead`,
     vi: (id) => `${id.toUpperCase()} chưa cấu hình — đã dùng Mock`
   },
+
+  /* Phase 4.3 — 5-tab Settings copy (US1) */
+  'provider.settings.tab.openai':  { en: 'OpenAI',  vi: 'OpenAI'  },
+  'provider.settings.tab.gemini':  { en: 'Gemini',  vi: 'Gemini'  },
+  'provider.settings.tab.kie':     { en: 'Kie.ai',  vi: 'Kie.ai'  },
+  'provider.settings.tab.fal':     { en: 'Fal.ai',  vi: 'Fal.ai'  },
+  'provider.settings.tab.custom':  { en: 'Custom',  vi: 'Custom'  },
+  'provider.settings.field.apiKey':        { en: 'API Key',           vi: 'API Key' },
+  'provider.settings.field.providerName':  { en: 'Provider Name',     vi: 'Tên Provider' },
+  'provider.settings.field.baseUrl':       { en: 'Base URL',          vi: 'Base URL' },
+  'provider.settings.field.modelPrefix':   { en: 'Model path prefix', vi: 'Model path prefix' },
+  'provider.settings.field.defaultImageModel': { en: 'Default image model', vi: 'Image model mặc định' },
+  'provider.settings.field.defaultModel':  { en: 'Default model',     vi: 'Model mặc định' },
+  'provider.settings.field.defaultModelGroup': { en: 'Default model group', vi: 'Nhóm model mặc định' },
+  'provider.settings.field.defaultQuality': { en: 'Default quality',  vi: 'Quality mặc định' },
+  'provider.settings.field.outputFormat':  { en: 'Output format',     vi: 'Định dạng xuất' },
+  'provider.settings.field.required':      { en: 'This field is required',  vi: 'Trường này bắt buộc' },
+  'provider.settings.field.url_invalid':   { en: 'Base URL must be a valid http(s) URL', vi: 'Base URL phải là http(s) hợp lệ' },
+  'provider.settings.save_config':         { en: 'Save configuration', vi: 'Lưu cấu hình' },
+  'provider.settings.clear_config':        { en: 'Clear configuration', vi: 'Xoá cấu hình' },
+  'provider.settings.replace_key':         { en: 'Replace key',       vi: 'Thay key' },
+  'provider.settings.defaults_heading':    { en: 'Default model / quality', vi: 'Model / quality mặc định' },
+  'provider.settings.defaults_locked_hint': {
+    en: 'These defaults are locked in v1. Per-call overrides are supported via the image_generate input.',
+    vi: 'Các giá trị này khoá trong v1. Override theo từng call qua image_generate input.'
+  },
+  'provider.settings.custom.hint': {
+    en: 'Configure an OpenAI-compatible endpoint (e.g. 9router). Provider Name and Base URL are required; Model Prefix is optional.',
+    vi: 'Cấu hình endpoint OpenAI-compatible (vd 9router). Tên + Base URL bắt buộc; Model Prefix tuỳ chọn.'
+  },
+  'provider.loading':                      { en: 'Loading providers…', vi: 'Đang tải providers…' },
+
+  /* Default Route section + fallback toggle */
+  'provider.route.heading':              { en: 'Default route',         vi: 'Route mặc định' },
+  'provider.route.hint':                 { en: 'Pick the provider that the per-slot Generate button calls first. Fallback chain ordering is operator-managed below.', vi: 'Chọn provider mà Generate gọi đầu tiên. Thứ tự fallback chain do operator quản lý phía dưới.' },
+  'provider.route.primary':              { en: 'Primary',               vi: 'Chính' },
+  'provider.route.fallback_chain':       { en: 'Fallback chain',        vi: 'Fallback chain' },
+  'provider.route.allow_mock_fallback':  { en: 'Use Mock fallback when no real provider is configured', vi: 'Dùng Mock khi không có provider thật' },
+
+  /* SlotCard `via <provider>` badge + fallback substitution */
+  'provider.served_via':                 { en: (id) => `via ${id}`, vi: (id) => `qua ${id}` },
+  'provider.fallback_used':              { en: 'fallback used',     vi: 'đã fallback' },
+  'provider.error.all_providers_failed': { en: 'all providers failed', vi: 'tất cả provider thất bại' },
+  'provider.error.provider_unsupported_edit': { en: 'provider does not support edit', vi: 'provider không hỗ trợ edit' },
 
   /* SlotCard Generate / Cancel */
   'slot.action.generate':              { en: '⚡ Generate', vi: '⚡ Sinh' },

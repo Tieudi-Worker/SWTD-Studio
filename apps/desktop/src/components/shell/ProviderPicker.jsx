@@ -1,54 +1,43 @@
 import React from 'react'
 import { t } from '../../lib/i18n.js'
 import {
-  loadProviders,
   getActiveProviderId,
   setActiveProviderId
 } from '../../lib/providers/registry.js'
 
-const swtdProvider = typeof window !== 'undefined' ? window.swtdProvider : null
-
 /**
- * Provider picker UI mounted inside SettingsModal.
+ * Provider picker — Phase 4.3 slim default-route selector.
  *
- * Phase 4.2 rewrite (US1 minimal cut + US2 secure-key surface):
- *  - Provider list comes from `window.swtdProvider.listProviders()` (main
- *    process is now the single source of truth for the provider set).
- *  - Key fields write through `saveKey` / `clearKey` IPC; the renderer
- *    NEVER reads the plaintext key back. Saved state is rendered as a
- *    `••••` mask + Replace button. (SC2.)
- *  - The Phase 3 "Reveal (30 s)" feature is removed — the renderer
- *    architecturally cannot retrieve the key after save in Phase 4.
- *  - Test connection delegates to `testProvider` IPC.
- *  - 5-tab Settings layout + new-provider (Gemini/Kie/Custom) panels are
- *    P4.3 work; this picker still renders one row per provider in the
- *    existing single-list layout to preserve Phase 3 UI behavior.
+ * Lives inside `SettingsModal.jsx` below the 5-tab section. Key fields,
+ * Save / Replace, and Test connection moved into `ProviderSettingsTab.jsx`
+ * — this component only picks the primary provider for the per-slot
+ * Generate button and toggles `allowMockFallback`.
  *
- * Spec: docs/features/phase-4-provider-core/spec.md US1 / US2 / US4
- * Plan: docs/features/phase-4-provider-core/plan.md §4.2 + §4.7
+ * The radio selection writes to both:
+ *   - `setActiveProviderId(id)` — renderer-side picker preference
+ *   - `swtdProvider.setRouteConfig({ primary: id })` via the parent's
+ *     `onChange` handler — main-side fallback router primary
+ *
+ * Plan §4.4 + spec §2 US6.
  */
-export default function ProviderPicker({ language = 'en', onChange }) {
-  const [providers, setProviders] = React.useState([])
-  const [vaultInfo, setVaultInfo] = React.useState(null)
+export default function ProviderPicker({
+  language = 'en',
+  providers = [],
+  routeConfig = null,
+  onChange,
+  onToggleMockFallback
+}) {
   const [activeId, setActiveId] = React.useState(() => getActiveProviderId())
-  // Test-connection state per provider id.
-  const [testResults, setTestResults] = React.useState({})
-  // Unsaved key drafts per provider id. Never persisted beyond this component.
-  const [keyDrafts, setKeyDrafts] = React.useState({})
-  const [pendingSave, setPendingSave] = React.useState({})
 
-  const refresh = React.useCallback(async () => {
-    if (!swtdProvider?.listProviders) {
-      setProviders([])
-      return
+  // Keep renderer pref + main route config in sync when the modal opens
+  // with a different primary already configured (e.g. a previous session).
+  React.useEffect(() => {
+    if (routeConfig?.primary && routeConfig.primary !== activeId) {
+      setActiveProviderId(routeConfig.primary)
+      setActiveId(routeConfig.primary)
     }
-    const res = await swtdProvider.listProviders().catch(() => null)
-    if (!res?.ok) { setProviders([]); return }
-    setProviders(res.providers || [])
-    setVaultInfo(res.vault || null)
-  }, [])
-
-  React.useEffect(() => { refresh() }, [refresh])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routeConfig?.primary])
 
   function selectProvider(id) {
     setActiveProviderId(id)
@@ -56,145 +45,59 @@ export default function ProviderPicker({ language = 'en', onChange }) {
     onChange?.(id)
   }
 
-  async function saveKey(providerId) {
-    const draft = (keyDrafts[providerId] || '').trim()
-    if (!draft) return
-    setPendingSave((p) => ({ ...p, [providerId]: true }))
-    try {
-      const r = await swtdProvider.saveKey(providerId, draft)
-      if (!r?.ok) throw new Error(r?.error || 'save failed')
-      // Clear local draft so plaintext is gone from renderer memory.
-      setKeyDrafts((p) => ({ ...p, [providerId]: '' }))
-      setTestResults((p) => ({ ...p, [providerId]: null }))
-      await refresh()
-    } catch (err) {
-      setTestResults((p) => ({ ...p, [providerId]: { ok: false, reason: 'invalid-response' } }))
-    } finally {
-      setPendingSave((p) => ({ ...p, [providerId]: false }))
-    }
-  }
-
-  async function removeKey(providerId) {
-    const r = await swtdProvider.clearKey(providerId).catch(() => null)
-    if (r?.ok) {
-      setTestResults((p) => ({ ...p, [providerId]: null }))
-      await refresh()
-    }
-  }
-
-  async function testConnection(provider) {
-    setTestResults((p) => ({ ...p, [provider.id]: { pending: true } }))
-    const r = await swtdProvider.testProvider(provider.id).catch(() => ({ ok: false, reason: 'network' }))
-    setTestResults((p) => ({ ...p, [provider.id]: r }))
-  }
-
-  const warningText = vaultInfo?.encryptionAvailable
-    ? t('provider.key.warning_v2', language) || 'API keys are stored via the OS keychain wrapper. Plaintext keys never leave main.'
-    : t('provider.key.warning_aes', language) || 'OS encryption unavailable on this host — keys are AES-encrypted on disk with a derived key. Configure a system keyring for stronger protection.'
+  const choices = providers.length > 0 ? providers : []
+  const allowMock = !!routeConfig?.allowMockFallback
 
   return (
-    <div className="provider-picker">
-      <div className="provider-picker__warning" role="note">
-        ⚠ {warningText}
-      </div>
-      {providers.length === 0 && (
-        <div className="provider-picker__hint" role="note">
-          {t('provider.loading', language) || 'Loading providers…'}
-        </div>
+    <div className="provider-route">
+      {choices.length === 0 && (
+        <div className="provider-tab__hint">{t('provider.loading', language) || 'Loading providers…'}</div>
       )}
-      {providers.map((p) => {
-        const isActive = p.id === activeId
-        const saved = !!p.hasKey
+      {choices.map((p) => {
         const requiresApiKey = (p.authFields || []).some((f) => f.id === 'apiKey' && f.required)
-        const test = testResults[p.id]
+        const saved = !!p.hasKey
+        const isActive = p.id === activeId
         return (
-          <div
+          <label
             key={p.id}
-            className={'provider-picker__row' + (isActive ? ' provider-picker__row--active' : '')}
+            className={'provider-route__row' + (isActive ? ' provider-route__row--active' : '')}
           >
-            <label className="provider-picker__select-row">
-              <input
-                type="radio"
-                name="provider-active"
-                checked={isActive}
-                onChange={() => selectProvider(p.id)}
-              />
-              <span className="provider-picker__label">{p.label}</span>
-              {!requiresApiKey && (
-                <span className="provider-picker__tag provider-picker__tag--mock">
-                  {t('provider.tag.no_key', language)}
-                </span>
-              )}
-              {requiresApiKey && saved && (
-                <span className="provider-picker__tag provider-picker__tag--saved">
-                  {t('provider.tag.saved', language)}
-                </span>
-              )}
-              {requiresApiKey && !saved && (
-                <span className="provider-picker__tag provider-picker__tag--missing">
-                  {t('provider.tag.missing', language)}
-                </span>
-              )}
-            </label>
-
-            {requiresApiKey && (
-              <div className="provider-picker__key-row">
-                {saved ? (
-                  <>
-                    <code className="provider-picker__masked-key">••••••••</code>
-                    <button
-                      type="button"
-                      className="provider-picker__link provider-picker__link--danger"
-                      onClick={() => removeKey(p.id)}
-                    >{t('provider.key.clear', language)}</button>
-                  </>
-                ) : (
-                  <>
-                    <input
-                      type="password"
-                      className="provider-picker__input"
-                      placeholder={t('provider.key.placeholder', language)}
-                      value={keyDrafts[p.id] || ''}
-                      onChange={(e) => setKeyDrafts((prev) => ({ ...prev, [p.id]: e.target.value }))}
-                    />
-                    <button
-                      type="button"
-                      className="provider-picker__link"
-                      onClick={() => saveKey(p.id)}
-                      disabled={!(keyDrafts[p.id] || '').trim() || !!pendingSave[p.id]}
-                    >{t('provider.key.save', language)}</button>
-                  </>
-                )}
-              </div>
+            <input
+              type="radio"
+              name="provider-primary"
+              checked={isActive}
+              onChange={() => selectProvider(p.id)}
+            />
+            <span className="provider-route__label">{p.label}</span>
+            {!requiresApiKey && (
+              <span className="provider-route__tag provider-route__tag--mock">
+                {t('provider.tag.no_key', language)}
+              </span>
             )}
-
-            <div className="provider-picker__test-row">
-              <button
-                type="button"
-                className="provider-picker__link"
-                onClick={() => testConnection(p)}
-                disabled={test?.pending}
-              >
-                {test?.pending
-                  ? t('provider.test.pending', language)
-                  : t('provider.test.button', language)}
-              </button>
-              {test && !test.pending && (
-                <span
-                  className={
-                    'provider-picker__test-result provider-picker__test-result--'
-                    + (test.ok ? 'ok' : 'fail')
-                  }
-                >
-                  {test.ok
-                    ? t('provider.test.ok', language)
-                    : (t('provider.test.fail.' + (test.reason || 'unknown'), language) || t('provider.test.fail.unknown', language))}
-                </span>
-              )}
-            </div>
-          </div>
+            {requiresApiKey && saved && (
+              <span className="provider-route__tag provider-route__tag--saved">
+                {t('provider.tag.saved', language)}
+              </span>
+            )}
+            {requiresApiKey && !saved && (
+              <span className="provider-route__tag provider-route__tag--missing">
+                {t('provider.tag.missing', language)}
+              </span>
+            )}
+          </label>
         )
       })}
+      <label className="provider-route__toggle">
+        <input
+          type="checkbox"
+          checked={allowMock}
+          onChange={(e) => onToggleMockFallback?.(e.target.checked)}
+        />
+        <span>
+          {t('provider.route.allow_mock_fallback', language)
+            || 'Use Mock fallback when no real provider is configured'}
+        </span>
+      </label>
     </div>
   )
 }

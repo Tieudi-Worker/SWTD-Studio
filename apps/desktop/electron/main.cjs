@@ -67,7 +67,79 @@ async function initializeProviderCore() {
     mediaStore,
     logger: mod.createLogger(console)
   })
+
+  // Phase 4.3 — restore the operator's configured Custom Provider, if any.
+  // The non-secret config (providerName / baseUrl / modelPrefix) lives in
+  // a small JSON file under userData; the secret apiKey lives in the
+  // vault. Boot-time re-register replaces the no-op `customProviderTemplate`
+  // so generateImage works after a restart without re-saving Settings.
+  const cfg = await loadCustomProviderConfig()
+  if (cfg) {
+    try {
+      providerCore.registerCustom({
+        id: 'custom',
+        providerName: cfg.providerName,
+        baseUrl: cfg.baseUrl,
+        modelPrefix: cfg.modelPrefix || null,
+        models: Array.isArray(cfg.models) ? cfg.models : undefined
+      })
+    } catch (e) {
+      console.warn('[provider-core] could not re-register custom provider:', e.message)
+    }
+  }
   return providerCore
+}
+
+/* -------------------------------------------------------------------------- */
+/* Custom-provider config persistence (non-secret).                            */
+/*                                                                             */
+/* The apiKey itself lives in the safeStorage-backed KeyVault. The other       */
+/* three Boss-D1 fields (providerName, baseUrl, optional modelPrefix) are      */
+/* persisted as JSON under userData so the adapter can be re-registered at     */
+/* boot. We deliberately keep this OUT of the vault — the vault encrypts       */
+/* every value, and providerName/baseUrl are not secret. Keeping them          */
+/* separate also makes them inspectable for debugging without touching the     */
+/* encrypted store.                                                            */
+/* -------------------------------------------------------------------------- */
+
+function customConfigPath() {
+  return path.join(app.getPath('userData'), 'provider-core', 'custom-config.json')
+}
+
+async function loadCustomProviderConfig() {
+  try {
+    const raw = await fs.promises.readFile(customConfigPath(), 'utf8')
+    const parsed = JSON.parse(raw)
+    if (!parsed || typeof parsed !== 'object') return null
+    if (typeof parsed.providerName !== 'string' || !parsed.providerName) return null
+    if (typeof parsed.baseUrl !== 'string' || !parsed.baseUrl) return null
+    return {
+      providerName: parsed.providerName,
+      baseUrl: parsed.baseUrl,
+      modelPrefix: typeof parsed.modelPrefix === 'string' ? parsed.modelPrefix : null,
+      models: Array.isArray(parsed.models) ? parsed.models.filter((m) => typeof m === 'string') : null
+    }
+  } catch {
+    return null
+  }
+}
+
+async function saveCustomProviderConfig(cfg) {
+  const dir = path.dirname(customConfigPath())
+  await fs.promises.mkdir(dir, { recursive: true })
+  const payload = {
+    providerName: cfg.providerName,
+    baseUrl: cfg.baseUrl,
+    modelPrefix: cfg.modelPrefix || null,
+    models: Array.isArray(cfg.models) ? cfg.models : null
+  }
+  const tmp = customConfigPath() + '.tmp'
+  await fs.promises.writeFile(tmp, JSON.stringify(payload, null, 2))
+  await fs.promises.rename(tmp, customConfigPath())
+}
+
+async function clearCustomProviderConfig() {
+  try { await fs.promises.unlink(customConfigPath()) } catch { /* ignore */ }
 }
 
 /**
@@ -608,6 +680,54 @@ app.whenReady().then(async () => {
     try {
       const route = providerCore.setRouteConfig(args || {})
       return { ok: true, route }
+    } catch (e) {
+      return { ok: false, error: e && e.message ? e.message : String(e) }
+    }
+  })
+
+  // Custom provider configuration (Boss D1: providerName + baseUrl + apiKey,
+  // optional modelPrefix). The non-secret triple lives in a JSON file under
+  // userData; the apiKey continues to live in the KeyVault via
+  // `swtd:provider:save-key`. Saving re-registers the adapter so the
+  // operator can generate immediately without restarting.
+  ipcMain.handle('swtd:provider:get-custom-config', async () => {
+    const err = requireProviderCore(); if (err) return err
+    const cfg = await loadCustomProviderConfig()
+    return { ok: true, config: cfg }
+  })
+
+  ipcMain.handle('swtd:provider:save-custom-config', async (_evt, args = {}) => {
+    const err = requireProviderCore(); if (err) return err
+    const { providerName, baseUrl, modelPrefix, models } = args || {}
+    if (typeof providerName !== 'string' || !providerName.trim()) {
+      return { ok: false, error: 'providerName required' }
+    }
+    if (typeof baseUrl !== 'string' || !/^https?:\/\//i.test(baseUrl)) {
+      return { ok: false, error: 'baseUrl must be a valid http(s) URL' }
+    }
+    try {
+      const cfg = {
+        providerName: providerName.trim(),
+        baseUrl: baseUrl.trim().replace(/\/+$/, ''),
+        modelPrefix: typeof modelPrefix === 'string' && modelPrefix.trim() ? modelPrefix.trim() : null,
+        models: Array.isArray(models) ? models.filter((m) => typeof m === 'string' && m.trim()) : null
+      }
+      await saveCustomProviderConfig(cfg)
+      providerCore.registerCustom({ id: 'custom', ...cfg })
+      return { ok: true, config: cfg }
+    } catch (e) {
+      return { ok: false, error: e && e.message ? e.message : String(e) }
+    }
+  })
+
+  ipcMain.handle('swtd:provider:clear-custom-config', async () => {
+    const err = requireProviderCore(); if (err) return err
+    try {
+      await clearCustomProviderConfig()
+      // Reset the in-memory adapter to the no-op template so generateImage
+      // starts returning `Custom provider not configured` again.
+      providerCore.resetCustomToTemplate()
+      return { ok: true }
     } catch (e) {
       return { ok: false, error: e && e.message ? e.message : String(e) }
     }

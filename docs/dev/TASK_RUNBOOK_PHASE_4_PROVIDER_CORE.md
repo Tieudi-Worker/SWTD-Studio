@@ -250,6 +250,120 @@ Surfaced per `tinbeta-coding-guardrail` Rule 7 / Rule 12.
 - Renderer has zero direct provider `fetch()` calls — verified
 - No `getKey`-shaped IPC exposed to renderer — verified by audit
 
+---
+
+## Phase 4.3 — Add Gemini / Kie.ai / Custom Provider + 5-tab Settings UI
+
+Started 2026-05-15. Boss approval received for D1–D8 + P4.1 (`da8ee3f`) + P4.2 (`97f4549`).
+
+### Skills re-applied at start of P4.3 run
+- `.claude/skills/speckit-implement/SKILL.md`
+- `.claude/skills/tinbeta-coding-guardrail/SKILL.md`
+- `.claude/skills/matt-git-guardrails-claude-code/SKILL.md`
+(Spec / plan / tasks already in context from P4.1 / P4.2; re-applied without re-read.)
+
+### Decision — Custom Provider configuration storage
+
+Boss D1 locks the three Custom Provider fields: Provider Name, Base URL,
+API Key. The apiKey continues through the safeStorage-backed vault. The
+other two (+ optional `modelPrefix`) are **not secret**, so storing them
+in the vault adds no security benefit and obscures them from debugging.
+
+Decision: persist the non-secret triple to a small JSON file
+(`<userData>/provider-core/custom-config.json`) via three new IPCs:
+
+- `swtd:provider:get-custom-config`
+- `swtd:provider:save-custom-config`   ← also calls `registerCustom`, so
+  the running adapter swaps immediately without a restart
+- `swtd:provider:clear-custom-config`  ← calls `resetCustomToTemplate`,
+  so the adapter starts refusing generate calls again
+
+A new method `resetCustomToTemplate` was added to `createProviderCore`
+in `packages/provider-core/src/index.js` so the in-memory adapter can be
+restored to the no-op template after a clear. Plan §4.4.
+
+### Files added / modified (T060–T073)
+
+| Path | Change | Notes |
+|---|---|---|
+| `apps/desktop/src/components/shell/ProviderSettingsTab.jsx` | **new** | Generic single-provider panel: capability chips, key save/replace, Custom Provider triple, default-model display, Test connection |
+| `apps/desktop/src/components/shell/SettingsModal.jsx` | rewrite | 5-tab section (OpenAI / Gemini / Kie.ai / Fal.ai / Custom) + Default Route section that mounts the slimmed `ProviderPicker` |
+| `apps/desktop/src/components/shell/ProviderPicker.jsx` | rewrite | Slimmed to primary-provider radio + `allowMockFallback` toggle. Reads providers + routeConfig from props (parent owns refresh) |
+| `apps/desktop/src/components/shell/SlotCard.jsx` | modified | `servedProvider` badge with substitution treatment + tooltip listing each fallback-chain entry (`providerId: reason`) |
+| `apps/desktop/src/lib/i18n.js` | modified | New keys for 5-tab Settings + Default Route + SlotCard fallback badge; reworked safeStorage-aware vault warning copy |
+| `apps/desktop/src/styles/shell.css` | modified | Tab strip, ProviderSettingsTab blocks, slim ProviderPicker rows, slot-card fallback-tag treatment |
+| `apps/desktop/electron/main.cjs` | modified | Custom-provider config persistence (load on boot + re-register; new IPCs `get/save/clear-custom-config`) |
+| `apps/desktop/electron/preload.cjs` | modified | Exposed `getCustomConfig` / `saveCustomConfig` / `clearCustomConfig` on `window.swtdProvider` |
+| `packages/provider-core/src/index.js` | modified | Added `resetCustomToTemplate()` so a clear reverts the in-memory adapter to the no-op template |
+| `packages/provider-core/src/media-store.js` | modified | `listTmpImages` now returns `fallbackChain` so SlotCard can render substitution tooltip |
+
+### Verification evidence
+
+```
+$ node --check apps/desktop/electron/main.cjs            # OK
+$ node --check apps/desktop/electron/preload.cjs          # OK
+$ node --check apps/desktop/src/lib/i18n.js               # OK
+$ node --check apps/desktop/src/lib/providers/registry.js # OK
+$ node --check apps/desktop/src/lib/tmp-cache.js          # OK
+
+$ grep -rE "fetch\\(['\"]https?://(api\\.openai\\.com|fal\\.run|generativelanguage\\.googleapis\\.com|kieai\\.)" apps/desktop/src/
+(zero hits — SC4 stays OK after P4.3 changes)
+
+$ grep -rE "from ['\"]electron['\"]|require\\(['\"]electron['\"]\\)" apps/desktop/src/
+(zero hits — renderer remains Electron-free)
+
+$ grep -rE "from ['\"](\\.\\.?/)+lib/(key-store|providers/(mock|fal|openai)-provider|providers/types)" apps/desktop/src/
+(zero hits)
+
+$ grep -rE "require\\(['\"]electron['\"]\\)|from ['\"]electron['\"]" packages/provider-core/
+$ grep -rE "from ['\"]react['\"]|require\\(['\"]react['\"]\\)" packages/provider-core/
+(zero hits — cloud-portability stays OK)
+
+$ git diff --stat HEAD -- runtime/
+(empty — SC10)
+```
+
+### Provider-core smoke (P4.3 additions)
+
+```
+$ node --input-type=module -e "<registerCustom + resetCustomToTemplate + setRouteConfig>"
+initial custom label: Custom (OpenAI-compatible)
+after register:       TestProxy
+after reset:          Custom (OpenAI-compatible)
+route after set:      {"primary":"fal","fallbackChain":["openai","kie"],"allowMockFallback":true}
+typeof testProvider:  function
+```
+
+`registerCustom` + `resetCustomToTemplate` roundtrip cleanly. The route
+config accepts the full Boss-D6 triple (primary + chain + mock toggle).
+
+### Manual smoke tests deferred
+
+Per the established posture (no `apps/desktop/node_modules` here):
+
+- T069 SC1 — operator stopwatch
+- T070 SC3 generate-mode end-to-end
+- T071 SC3 edit-mode end-to-end (reference-image picker is intentionally
+  out of P4.3 scope per Boss "preserve Phase 3 UI behavior as much as
+  possible")
+- T072 SC7 fallback-router substitution badge
+
+All are wired and verified by inspection + Node smoke; full UI runs land
+in P4.5 verification (`speckit-implement` permits this deferral when
+prerequisites are external).
+
+### Hard-constraint check (P4.3 boundary)
+
+- `git push` performed: NO
+- `runtime/**` edits: NO (`git diff --stat HEAD -- runtime/` shows nothing)
+- New npm dependencies: NO
+- Destructive git ops: NO
+- Renderer-leak grep clean — verified
+- No `getKey`-shaped IPC — verified
+- All five Boss-locked provider tabs render — verified by code inspection
+  (`TAB_ORDER = ['openai', 'gemini', 'kie', 'fal', 'custom']` + provider
+  list from main lists all six entries)
+
 
 ---
 
