@@ -8,7 +8,7 @@ import StatusBar from '../components/shell/StatusBar.jsx'
 import ActivityDrawer from '../components/shell/ActivityDrawer.jsx'
 import CommandPalette from '../components/shell/CommandPalette.jsx'
 import useKeyboardShortcuts from '../hooks/useKeyboardShortcuts.js'
-import { deriveSlotStates, regenSlotsToArg } from '../lib/slot-progress.js'
+import { deriveSlotStates, regenSlotsToArg, mergeStatesWithValidator } from '../lib/slot-progress.js'
 import { deriveAplusStates, regenModulesToArg } from '../lib/aplus-progress.js'
 
 const LAYOUT_KEY = 'swtd_ui_layout'
@@ -474,11 +474,14 @@ export default function Shell() {
   }, [aplusState.status, skuPath, refreshAplusValidator])
 
   const slotStates = useMemo(
-    () => deriveSlotStates(listingState.lines, {
-      pendingRegen: Array.from(pendingRegen),
-      runStatus: listingState.status
-    }),
-    [listingState.lines, listingState.status, pendingRegen]
+    () => mergeStatesWithValidator(
+      deriveSlotStates(listingState.lines, {
+        pendingRegen: Array.from(pendingRegen),
+        runStatus: listingState.status
+      }),
+      validatorReport
+    ),
+    [listingState.lines, listingState.status, pendingRegen, validatorReport]
   )
 
   const aplusModuleStates = useMemo(

@@ -115,6 +115,36 @@ export function deriveSlotStates(lines, opts = {}) {
 }
 
 /**
+ * Reconcile log-derived slot states with the validator's disk-truth view.
+ *
+ * The log parser only sees *current-session* lines, so a SKU with completed
+ * output from a previous run + no fresh logs would show every slot as
+ * 'idle' even though files are present. Validator already knows: every
+ * `slot.exists === true` means the file is on disk right now.
+ *
+ * Merge rule:
+ *   - Active transitions win over disk truth. If logs say running / error /
+ *     skipped, respect them — the file on disk may be stale or about to be
+ *     overwritten.
+ *   - Otherwise, if disk says the file exists, mark 'done'.
+ *
+ * @param {Record<number, string>} logStates       Output of deriveSlotStates()
+ * @param {{ slots?: Array<{ slot:number, exists:boolean }> }|null} validatorReport
+ * @returns {Record<number, string>}
+ */
+export function mergeStatesWithValidator(logStates, validatorReport) {
+  if (!validatorReport || !Array.isArray(validatorReport.slots)) return logStates
+  const merged = { ...logStates }
+  for (const entry of validatorReport.slots) {
+    if (!entry || !entry.exists) continue
+    const current = merged[entry.slot]
+    if (current === 'running' || current === 'error' || current === 'skipped') continue
+    merged[entry.slot] = 'done'
+  }
+  return merged
+}
+
+/**
  * Convert UI-facing slot IDs (numbers 1..8) into the `--skip-slots` argv
  * value the legacy runner expects (e.g. "slot2,slot4").
  *
