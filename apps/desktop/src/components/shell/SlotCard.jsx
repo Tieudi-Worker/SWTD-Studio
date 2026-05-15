@@ -88,14 +88,24 @@ function SlotPreview({ previewSrc, previewKey, state, validator }) {
   )
 }
 
-/** Pure tile: head + preview + label + state footer. */
-export function SlotCard({ slot, state, selected, validator, disabled, onToggle, language = 'en' }) {
+/** Pure tile: head + preview + label + state footer.
+ *  Phase 3: a tmp-generated image (provider-adapter output) takes
+ *  precedence over the validator's listing-folder preview. */
+export function SlotCard({ slot, state, selected, validator, disabled, onToggle, language = 'en', tmpImage }) {
   const stateClass = 'slot slot--' + state + (selected ? ' slot--selected' : '')
   const validatorBadge = validatorBadgeFor(state, validator)
-  const previewSrc = validator?.exists && validator.file && typeof window !== 'undefined' && window.swtd?.assetUrl
+  const validatorPreviewSrc = validator?.exists && validator.file && typeof window !== 'undefined' && window.swtd?.assetUrl
     ? window.swtd.assetUrl(validator.file)
     : null
-  const previewKey = previewSrc && validator ? `${validator.width}x${validator.height}` : ''
+  const tmpPreviewSrc = tmpImage?.file && typeof window !== 'undefined' && window.swtd?.assetUrl
+    ? window.swtd.assetUrl(tmpImage.file)
+    : null
+  const previewSrc = tmpPreviewSrc || validatorPreviewSrc
+  // Use tmp generatedAt as the cache-buster when tmp wins; otherwise the
+  // existing validator width×height tuple still busts the cache on regen.
+  const previewKey = tmpPreviewSrc
+    ? `tmp-${tmpImage.generatedAt}`
+    : (previewSrc && validator ? `${validator.width}x${validator.height}` : '')
   return (
     <button
       type="button"
@@ -135,17 +145,25 @@ export function SlotCardReview({
   /* Phase 2 — template engine */
   templateSelection,         // { templateId, angleId } | undefined
   composedPrompt,            // { text, missingVars: string[], … } | null
-  onSetTemplate              // (slotId, selection|null) => void
+  onSetTemplate,             // (slotId, selection|null) => void
+  /* Phase 3 — provider adapter */
+  tmpImage,                  // { file, generatedAt, expiresAt, providerId, ... } | null
+  generationError,           // string reason from last failed generate, or null
+  onGenerate,                // (slotId) => void
+  onCancelGenerate           // (slotId) => void
 }) {
   const hasFile = !!validator?.exists
   const missingVars = composedPrompt?.missingVars || []
   const hasMissing = missingVars.length > 0
+  const isGenerating = state === 'generating' || state === 'queued'
+  const canGenerate = !!composedPrompt && !isGenerating && !!onGenerate
   const wrapClass = [
     'slot-card',
     `slot-card--${state}`,
     approval === 'approved'   && 'slot-card--approved',
     approval === 'needs-regen' && 'slot-card--needs-regen',
-    hasMissing                 && 'slot-card--has-missing'
+    hasMissing                 && 'slot-card--has-missing',
+    tmpImage                   && 'slot-card--has-tmp'
   ].filter(Boolean).join(' ')
 
   function stop(e) { e.stopPropagation() }
@@ -165,6 +183,14 @@ export function SlotCardReview({
     stop(e)
     onToggleExpanded && onToggleExpanded(slot.id)
   }
+  function handleGenerate(e) {
+    stop(e)
+    if (canGenerate) onGenerate(slot.id)
+  }
+  function handleCancelGenerate(e) {
+    stop(e)
+    onCancelGenerate && onCancelGenerate(slot.id)
+  }
 
   return (
     <div className={wrapClass}>
@@ -176,8 +202,31 @@ export function SlotCardReview({
         disabled={disabled}
         onToggle={onToggle}
         language={language}
+        tmpImage={tmpImage}
       />
       <div className="slot-card__actions">
+        {onGenerate && (
+          isGenerating ? (
+            <button
+              type="button"
+              className="slot-card__act slot-card__act--cancel"
+              onClick={handleCancelGenerate}
+              title="Cancel in-flight generation"
+            >{t('slot.action.cancel', language)}</button>
+          ) : (
+            <button
+              type="button"
+              className={'slot-card__act slot-card__act--generate' + (canGenerate ? '' : ' slot-card__act--disabled')}
+              onClick={handleGenerate}
+              disabled={!canGenerate}
+              title={
+                !composedPrompt
+                  ? t('slot.action.generate_no_template', language)
+                  : 'Generate via active provider'
+              }
+            >{t('slot.action.generate', language)}</button>
+          )
+        )}
         <button
           type="button"
           className={'slot-card__act' + (approval === 'approved' ? ' slot-card__act--on' : '')}
@@ -213,6 +262,25 @@ export function SlotCardReview({
           onChange={onSetTemplate}
           language={language}
         />
+      )}
+      {(tmpImage || generationError) && (
+        <div className="slot-card__gen-status" onClick={stop}>
+          {tmpImage && (() => {
+            const daysLeft = Math.max(0, Math.round((tmpImage.expiresAt - Date.now()) / (24*60*60*1000)))
+            const expFn = t('slot.gen.expires_in_days', language)
+            const expLabel = typeof expFn === 'function' ? expFn(daysLeft) : ''
+            return (
+              <span className={'slot-card__gen-tag slot-card__gen-tag--' + (tmpImage.providerId || 'mock')}>
+                {(tmpImage.providerId || 'mock').toUpperCase()} · {expLabel}
+              </span>
+            )
+          })()}
+          {generationError && (
+            <span className="slot-card__gen-tag slot-card__gen-tag--error">
+              {t('slot.gen.error.' + generationError, language) || t('slot.gen.error.unknown', language)}
+            </span>
+          )}
+        </div>
       )}
       {composedPrompt && (
         <div className="slot-card__composed" onClick={stop}>

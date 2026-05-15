@@ -2250,3 +2250,262 @@
 .brand-context-banner--sku       .brand-context-banner__source { color: var(--success); }
 .brand-context-banner--workspace .brand-context-banner__source { color: var(--accent); }
 .brand-context-banner--none      .brand-context-banner__source { color: var(--warning); }
+
+/* ═════════════════════════════════════════════════════════════════
+   Phase 3 — Model Provider Adapter
+   TopBar provider chip · Settings modal · Provider picker
+   Slot generate/cancel actions · Tmp-image gen-status · Fallback banner
+   ═════════════════════════════════════════════════════════════════ */
+
+/* TopBar provider chip — shows active provider id; warns if key missing. */
+.topbar__provider-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  height: 22px;
+  padding: 0 var(--space-2);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: var(--text-caps-md);
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+.topbar__provider-chip:hover { border-color: var(--border-strong); background: var(--bg-surface); }
+.topbar__provider-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.topbar__provider-key { color: var(--text-tertiary); text-transform: uppercase; }
+.topbar__provider-val { color: var(--text-primary); font-weight: 600; }
+.topbar__provider-chip--mock   .topbar__provider-val { color: var(--text-secondary); }
+.topbar__provider-chip--fal    .topbar__provider-val { color: var(--accent); }
+.topbar__provider-chip--openai .topbar__provider-val { color: var(--success); }
+.topbar__provider-chip--missing { border-color: var(--warning); }
+.topbar__provider-warn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  margin-left: 2px;
+  background: var(--warning);
+  color: var(--bg-base);
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 10px;
+}
+
+/* Settings modal — sized for provider picker, slightly wider. */
+.modal-card--settings { width: 680px; max-height: 80vh; }
+.modal-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  flex-shrink: 0;
+}
+.modal-card__close {
+  background: transparent;
+  border: none;
+  color: var(--text-tertiary);
+  font-size: 22px;
+  line-height: 1;
+  padding: 2px 8px;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+.modal-card__close:hover { color: var(--text-primary); background: var(--bg-elevated); }
+.modal-card__close:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.settings-section + .settings-section { margin-top: var(--space-5); }
+.settings-section__title {
+  margin: 0 0 var(--space-1) 0;
+  font-family: var(--font-ui);
+  font-size: var(--text-body-md);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.settings-section__hint {
+  margin: 0 0 var(--space-3) 0;
+  color: var(--text-tertiary);
+  font-size: var(--text-body-sm);
+  line-height: var(--line-body-sm);
+}
+
+/* Provider picker — radio + key controls per provider. */
+.provider-picker { display: flex; flex-direction: column; gap: var(--space-3); }
+.provider-picker__warning {
+  padding: var(--space-2) var(--space-3);
+  background: var(--warning-muted);
+  border: 1px solid var(--warning);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: var(--text-body-sm);
+  line-height: var(--line-body-sm);
+}
+.provider-picker__row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+}
+.provider-picker__row--active {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent-muted);
+}
+.provider-picker__select-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+}
+.provider-picker__label { font-weight: 600; color: var(--text-primary); }
+.provider-picker__tag {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 var(--space-2);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: var(--radius-sm);
+}
+.provider-picker__tag--mock    { background: var(--bg-surface);   color: var(--text-tertiary); }
+.provider-picker__tag--saved   { background: var(--success-muted); color: var(--success); }
+.provider-picker__tag--missing { background: var(--warning-muted); color: var(--warning); }
+
+.provider-picker__key-row,
+.provider-picker__test-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+.provider-picker__input {
+  flex: 1 1 240px;
+  min-width: 160px;
+  height: 28px;
+  padding: 0 var(--space-2);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: var(--text-body-sm);
+}
+.provider-picker__input:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: var(--accent); }
+.provider-picker__masked-key {
+  flex: 1 1 auto;
+  min-width: 160px;
+  padding: 4px var(--space-2);
+  background: var(--bg-surface);
+  border: 1px dashed var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--text-body-sm);
+}
+.provider-picker__link {
+  background: transparent;
+  border: none;
+  padding: 2px 4px;
+  font-family: var(--font-mono);
+  font-size: var(--text-caps-md);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+.provider-picker__link:hover:not(:disabled) { background: var(--bg-surface); }
+.provider-picker__link:disabled { color: var(--text-tertiary); cursor: not-allowed; }
+.provider-picker__link--danger { color: var(--danger); }
+.provider-picker__docs { font-size: var(--text-caps-md); color: var(--text-tertiary); text-decoration: none; }
+.provider-picker__docs:hover { color: var(--accent); }
+.provider-picker__test-result {
+  font-family: var(--font-mono);
+  font-size: var(--text-caps-md);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.provider-picker__test-result--ok   { color: var(--success); }
+.provider-picker__test-result--fail { color: var(--danger); }
+
+/* Slot action — Generate / Cancel chip variants on top of existing
+   .slot-card__act buttons (defined above near line 784). */
+.slot-card__act--generate { color: var(--accent); border-color: var(--accent-muted); }
+.slot-card__act--generate:hover:not(:disabled) { background: var(--accent-muted); }
+.slot-card__act--cancel   { color: var(--warning); border-color: var(--warning); }
+.slot-card__act--cancel:hover:not(:disabled)   { background: var(--warning-muted); }
+.slot-card__act--disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* Slot has a tmp-generated preview — softly highlight to differentiate
+   from filesystem-validated images. */
+.slot-card--has-tmp .slot {
+  box-shadow: inset 0 0 0 1px var(--accent-muted);
+}
+
+/* Generation status strip below the action row — provider chip + expiry,
+   or an error chip if last generation failed. */
+.slot-card__gen-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  background: var(--bg-elevated);
+  border-top: 1px solid var(--border-subtle);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+.slot-card__gen-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+}
+.slot-card__gen-tag--mock   { color: var(--text-tertiary); }
+.slot-card__gen-tag--fal    { color: var(--accent); background: var(--accent-muted); }
+.slot-card__gen-tag--openai { color: var(--success); background: var(--success-muted); }
+.slot-card__gen-tag--error  { color: var(--danger);  background: var(--danger-muted, var(--warning-muted)); }
+
+/* Provider fallback banner — surfaces when resolveActiveProvider() fell
+   back to mock because the requested provider has no API key. */
+.provider-fallback-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--warning-muted);
+  border: 1px solid var(--warning);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: var(--text-body-sm);
+}
+.provider-fallback-banner__tag {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 var(--space-2);
+  background: var(--bg-base);
+  color: var(--warning);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  border-radius: var(--radius-sm);
+}
+.provider-fallback-banner__body { color: var(--text-secondary); }

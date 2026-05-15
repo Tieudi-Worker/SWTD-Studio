@@ -326,7 +326,61 @@ const UI_TEXT = {
   'template.context.label':     { en: 'Brand context',  vi: 'Brand context' },
   'template.context.sku':       { en: 'SKU override',   vi: 'SKU override' },
   'template.context.workspace': { en: 'workspace default', vi: 'workspace default' },
-  'template.context.none':      { en: 'not loaded',     vi: 'chưa tải' }
+  'template.context.none':      { en: 'not loaded',     vi: 'chưa tải' },
+
+  /* Phase 3 — provider adapter ──────────────────────── */
+  'settings.title':              { en: 'Settings',                vi: 'Cài đặt' },
+  'settings.close':              { en: 'Close',                   vi: 'Đóng' },
+  'settings.provider.heading':   { en: 'Image generation provider', vi: 'Provider sinh ảnh' },
+  'settings.provider.hint':      { en: 'Pick a provider for the per-slot Generate action. Mock works without a key.',
+                                   vi: 'Chọn provider cho hành động Generate từng slot. Mock chạy được mà không cần key.' },
+
+  'provider.key.warning':        { en: 'API keys are stored in this Electron renderer\'s localStorage only. Anyone with access to this machine can read them. Future hardening will move keys to the OS keychain.',
+                                   vi: 'API keys được lưu trong localStorage của Electron renderer này. Bất kỳ ai truy cập được máy này đều có thể đọc. Lần tăng cường sau sẽ chuyển sang OS keychain.' },
+  'provider.key.placeholder':    { en: 'Paste API key…',          vi: 'Dán API key…' },
+  'provider.key.save':           { en: 'Save',                    vi: 'Lưu' },
+  'provider.key.reveal':         { en: 'Reveal (30 s)',           vi: 'Hiện (30 giây)' },
+  'provider.key.hide':           { en: 'Hide',                    vi: 'Ẩn' },
+  'provider.key.clear':          { en: 'Clear',                   vi: 'Xoá' },
+  'provider.key.get_one':        { en: 'Get a key',               vi: 'Lấy API key' },
+
+  'provider.tag.no_key':         { en: 'no API key needed',       vi: 'không cần API key' },
+  'provider.tag.saved':          { en: 'key saved',               vi: 'đã lưu key' },
+  'provider.tag.missing':        { en: 'no key — falls back to Mock', vi: 'chưa có key — sẽ chạy Mock' },
+
+  'provider.test.button':        { en: 'Test connection',         vi: 'Kiểm tra' },
+  'provider.test.pending':       { en: 'Testing…',                vi: 'Đang kiểm tra…' },
+  'provider.test.ok':            { en: 'OK',                      vi: 'OK' },
+  'provider.test.fail.invalid-key':  { en: 'No key',              vi: 'Chưa có key' },
+  'provider.test.fail.unauthorized': { en: 'Unauthorized (bad key)', vi: 'Bị từ chối (sai key)' },
+  'provider.test.fail.rate-limited': { en: 'Rate-limited',        vi: 'Bị giới hạn tốc độ' },
+  'provider.test.fail.network':      { en: 'Network error',       vi: 'Lỗi mạng' },
+  'provider.test.fail.invalid-response': { en: 'Bad response',    vi: 'Phản hồi không hợp lệ' },
+  'provider.test.fail.unknown':  { en: 'Failed',                  vi: 'Thất bại' },
+
+  /* TopBar chip + fallback banner */
+  'topbar.provider.label':       { en: 'Provider',                vi: 'Provider' },
+  'topbar.provider.tooltip':     { en: 'Click to open Settings · provider', vi: 'Bấm để mở Cài đặt · provider' },
+  'provider.fallback.mock_used': {
+    en: (id) => `${id.toUpperCase()} not configured — used Mock instead`,
+    vi: (id) => `${id.toUpperCase()} chưa cấu hình — đã dùng Mock`
+  },
+
+  /* SlotCard Generate / Cancel */
+  'slot.action.generate':              { en: '⚡ Generate', vi: '⚡ Sinh' },
+  'slot.action.cancel':                { en: '✕ Cancel',    vi: '✕ Huỷ' },
+  'slot.action.generate_no_template':  { en: 'Pick a template first', vi: 'Chọn Template trước' },
+  'slot.action.generate_running':      { en: 'Generation already in flight', vi: 'Đang sinh ảnh' },
+  'slot.gen.elapsed':                  { en: (ms) => `${(ms/1000).toFixed(1)}s · saved to tmp cache`, vi: (ms) => `${(ms/1000).toFixed(1)}s · lưu vào tmp cache` },
+  'slot.gen.expires_in_days':          { en: (d) => `expires in ${d} day${d === 1 ? '' : 's'}`, vi: (d) => `hết hạn sau ${d} ngày` },
+  'slot.gen.error.unauthorized':       { en: 'API key rejected',           vi: 'API key bị từ chối' },
+  'slot.gen.error.rate-limited':       { en: 'Rate-limited — try later',   vi: 'Bị giới hạn — thử lại sau' },
+  'slot.gen.error.timeout':            { en: 'Timed out',                  vi: 'Hết thời gian' },
+  'slot.gen.error.network':            { en: 'Network error',              vi: 'Lỗi mạng' },
+  'slot.gen.error.invalid-response':   { en: 'Bad response from provider', vi: 'Phản hồi không hợp lệ từ provider' },
+  'slot.gen.error.aborted':            { en: 'Cancelled',                  vi: 'Đã huỷ' },
+  'slot.gen.error.invalid-key':        { en: 'No API key configured',      vi: 'Chưa cấu hình API key' },
+  'slot.gen.error.unknown':            { en: 'Generation failed',          vi: 'Sinh ảnh thất bại' }
 }
 
 /**

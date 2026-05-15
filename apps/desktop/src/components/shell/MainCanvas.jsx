@@ -83,6 +83,12 @@ export default function MainCanvas({
   composedPrompts,
   brandContextSource,
   onSetSlotTemplate,
+  /* Phase 3 — provider adapter */
+  slotTmpImages,
+  slotGenErrors,
+  onGenerateSlot,
+  onCancelSlotGeneration,
+  providerFallback,
   /* A+ pipeline (Phase 3) */
   aplusState,
   aplusModuleStates,
@@ -182,6 +188,11 @@ export default function MainCanvas({
             composedPrompts={composedPrompts || {}}
             brandContextSource={brandContextSource}
             onSetSlotTemplate={onSetSlotTemplate}
+            slotTmpImages={slotTmpImages || {}}
+            slotGenErrors={slotGenErrors || {}}
+            onGenerateSlot={onGenerateSlot}
+            onCancelSlotGeneration={onCancelSlotGeneration}
+            providerFallback={providerFallback}
             language={language}
           />
         )}
@@ -320,6 +331,11 @@ function ListingView({
   composedPrompts,
   brandContextSource,
   onSetSlotTemplate,
+  slotTmpImages,
+  slotGenErrors,
+  onGenerateSlot,
+  onCancelSlotGeneration,
+  providerFallback,
   language = 'en'
 }) {
   const selectionCount = selectedSlots.size
@@ -356,6 +372,9 @@ function ListingView({
           requestPath={listingState.cohesionRequestPath}
           onReveal={onRevealCohesionRequest}
         />
+      )}
+      {providerFallback && (
+        <ProviderFallbackBanner fallback={providerFallback} language={language} />
       )}
 
       <div className="panel">
@@ -484,6 +503,10 @@ function ListingView({
                   templateSelection={(templateSelections || {})[s.id]}
                   composedPrompt={(composedPrompts || {})[s.id]}
                   onSetTemplate={onSetSlotTemplate}
+                  tmpImage={(slotTmpImages || {})[s.id] || null}
+                  generationError={(slotGenErrors || {})[s.id] || null}
+                  onGenerate={onGenerateSlot}
+                  onCancelGenerate={onCancelSlotGeneration}
                 />
               )
             })}
@@ -681,6 +704,24 @@ function AplusValidatorPanel({ report, validating, onRefresh, language }) {
           )
         })()}
       </div>
+    </div>
+  )
+}
+
+function ProviderFallbackBanner({ fallback, language }) {
+  /* Shown when resolveActiveProvider() returned fellBackToMock: true.
+     Phase 3 — graceful degradation. The actual generation has already
+     run via the mock provider; this banner just makes the swap visible. */
+  if (!fallback) return null
+  const fn = t('provider.fallback.mock_used', language)
+  const requested = (fallback.requestedId || fallback.requestedProviderId || 'provider').toUpperCase()
+  const body = typeof fn === 'function'
+    ? fn(requested, fallback.reason || 'missing-key')
+    : `${requested} unavailable — using MOCK`
+  return (
+    <div className="provider-fallback-banner">
+      <span className="provider-fallback-banner__tag">MOCK</span>
+      <span className="provider-fallback-banner__body">{body}</span>
     </div>
   )
 }

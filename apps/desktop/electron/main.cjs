@@ -132,7 +132,9 @@ app.whenReady().then(() => {
       // Must live under an /output/<step>/ segment to prevent the protocol
       // becoming a generic disk reader.
       const norm = absPath.replace(/\\/g, '/')
-      if (!/\/output\/(listing|aplus)\//i.test(norm)) {
+      // Phase 3 — also allow `/output/tmp-generated/` so renderer-generated
+      // images (provider-adapter output, 7-day TTL) display via the same path.
+      if (!/\/output\/(listing|aplus|tmp-generated)\//i.test(norm)) {
         return new Response('path outside output directory', { status: 403 })
       }
       if (!fs.existsSync(absPath)) {
@@ -437,6 +439,159 @@ app.whenReady().then(() => {
     if (ws?.ok) return ws
     if (ws && !ws.ok) return ws
     return { ok: false, source: 'none' }
+  })
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Phase 3 — Temp generated-image cache (Boss-locked Q2)
+  //
+  // Path: <sku>/output/tmp-generated/slot${id}-${timestamp}.png
+  // Sidecar: <sku>/output/tmp-generated/slot${id}-${timestamp}.json
+  //
+  // Operator-reviewable preview output from provider adapters. 7-day TTL.
+  // Auto-cleaned on app startup, SKU open, and before each new generation.
+  // Approved/export remains a separate manual step (NOT auto-promoted).
+  // ──────────────────────────────────────────────────────────────────────────
+
+  const TMP_TTL_MS = 7 * 24 * 60 * 60 * 1000   // 7 days
+  const TMP_DIR_NAME = path.join('output', 'tmp-generated')
+
+  function tmpDirFor(skuPath) {
+    if (!skuPath || typeof skuPath !== 'string') return null
+    const sku = path.resolve(skuPath)
+    return path.join(sku, TMP_DIR_NAME)
+  }
+
+  // Path-safety: the resolved candidate MUST live under tmpDir; reject
+  // anything that escapes (.. traversal, symlink chicanery).
+  function isUnderTmpDir(candidate, tmpDir) {
+    const c = path.resolve(candidate)
+    const d = path.resolve(tmpDir)
+    return c === d || c.startsWith(d + path.sep)
+  }
+
+  ipcMain.handle('swtd:save-generated-image', async (_evt, args = {}) => {
+    const { skuPath, slotId, providerId, templateId, angleId, aspectRatio, mime, bytes } = args
+    if (!skuPath || typeof skuPath !== 'string') return { ok: false, error: 'skuPath required' }
+    if (!Number.isInteger(slotId) || slotId < 1 || slotId > 8) return { ok: false, error: 'slotId 1..8 required' }
+    if (mime !== 'image/png') return { ok: false, error: 'only image/png is supported in v1' }
+    if (!bytes || !(bytes instanceof Uint8Array || bytes instanceof ArrayBuffer || Array.isArray(bytes))) {
+      return { ok: false, error: 'bytes must be Uint8Array / ArrayBuffer / number[]' }
+    }
+    const tmpDir = tmpDirFor(skuPath)
+    if (!tmpDir) return { ok: false, error: 'invalid skuPath' }
+    try {
+      await fs.promises.mkdir(tmpDir, { recursive: true })
+      const generatedAt = Date.now()
+      const expiresAt = generatedAt + TMP_TTL_MS
+      const base = `slot${slotId}-${generatedAt}`
+      const pngPath = path.join(tmpDir, base + '.png')
+      const jsonPath = path.join(tmpDir, base + '.json')
+      if (!isUnderTmpDir(pngPath, tmpDir) || !isUnderTmpDir(jsonPath, tmpDir)) {
+        return { ok: false, error: 'path safety check failed' }
+      }
+      const buf = Buffer.from(bytes instanceof ArrayBuffer ? new Uint8Array(bytes) : bytes)
+      await fs.promises.writeFile(pngPath, buf)
+      const sidecar = {
+        generatedAt,
+        expiresAt,
+        providerId: providerId || null,
+        slotId,
+        templateId: templateId || null,
+        angleId: angleId || null,
+        aspectRatio: aspectRatio || null
+      }
+      await fs.promises.writeFile(jsonPath, JSON.stringify(sidecar, null, 2))
+      return { ok: true, file: pngPath, generatedAt, expiresAt, providerId: sidecar.providerId }
+    } catch (err) {
+      return { ok: false, error: err && err.message ? err.message : String(err) }
+    }
+  })
+
+  ipcMain.handle('swtd:list-tmp-generated', async (_evt, args = {}) => {
+    const { skuPath } = args
+    if (!skuPath || typeof skuPath !== 'string') return { ok: false, error: 'skuPath required' }
+    const tmpDir = tmpDirFor(skuPath)
+    if (!tmpDir || !fs.existsSync(tmpDir)) return { ok: true, entries: [] }
+    try {
+      const names = await fs.promises.readdir(tmpDir)
+      const now = Date.now()
+      const entries = []
+      for (const name of names) {
+        if (!name.endsWith('.json')) continue
+        const jsonPath = path.join(tmpDir, name)
+        if (!isUnderTmpDir(jsonPath, tmpDir)) continue
+        let meta
+        try {
+          meta = JSON.parse(await fs.promises.readFile(jsonPath, 'utf8'))
+        } catch { continue }
+        if (!meta || typeof meta.expiresAt !== 'number') continue
+        if (meta.expiresAt <= now) continue                   // skip expired; cleanup will sweep
+        const pngPath = jsonPath.replace(/\.json$/, '.png')
+        if (!fs.existsSync(pngPath)) continue
+        entries.push({
+          slotId: meta.slotId,
+          file: pngPath,
+          generatedAt: meta.generatedAt,
+          expiresAt: meta.expiresAt,
+          providerId: meta.providerId || null,
+          templateId: meta.templateId || null,
+          angleId: meta.angleId || null,
+          aspectRatio: meta.aspectRatio || null
+        })
+      }
+      // Newest first per slot so the renderer can take entries[0] per slot
+      // without extra sorting.
+      entries.sort((a, b) => b.generatedAt - a.generatedAt)
+      return { ok: true, entries }
+    } catch (err) {
+      return { ok: false, error: err && err.message ? err.message : String(err) }
+    }
+  })
+
+  ipcMain.handle('swtd:cleanup-tmp-generated', async (_evt, args = {}) => {
+    const { skuPath } = args
+    if (!skuPath || typeof skuPath !== 'string') return { ok: false, error: 'skuPath required' }
+    const tmpDir = tmpDirFor(skuPath)
+    if (!tmpDir || !fs.existsSync(tmpDir)) return { ok: true, deleted: 0, kept: 0 }
+    try {
+      const names = await fs.promises.readdir(tmpDir)
+      const now = Date.now()
+      let deleted = 0
+      let kept = 0
+      // Pass 1: find expired / orphan-png sidecars; collect both members of
+      // the pair so we delete png + json together.
+      for (const name of names) {
+        if (!name.endsWith('.json')) continue
+        const jsonPath = path.join(tmpDir, name)
+        if (!isUnderTmpDir(jsonPath, tmpDir)) continue
+        let meta = null
+        try {
+          meta = JSON.parse(await fs.promises.readFile(jsonPath, 'utf8'))
+        } catch { /* malformed sidecar — treat as expired */ }
+        const isExpired = !meta || typeof meta.expiresAt !== 'number' || meta.expiresAt <= now
+        const pngPath = jsonPath.replace(/\.json$/, '.png')
+        if (isExpired) {
+          try { await fs.promises.unlink(jsonPath) } catch {}
+          try { if (fs.existsSync(pngPath)) await fs.promises.unlink(pngPath) } catch {}
+          deleted++
+        } else {
+          kept++
+        }
+      }
+      // Pass 2: orphan PNGs (no matching json) — delete; they're inaccessible
+      // anyway because we never serve them without metadata.
+      for (const name of names) {
+        if (!name.endsWith('.png')) continue
+        const pngPath = path.join(tmpDir, name)
+        const jsonPath = pngPath.replace(/\.png$/, '.json')
+        if (!fs.existsSync(jsonPath)) {
+          try { await fs.promises.unlink(pngPath); deleted++ } catch {}
+        }
+      }
+      return { ok: true, deleted, kept }
+    } catch (err) {
+      return { ok: false, error: err && err.message ? err.message : String(err) }
+    }
   })
 
   // --- Reveal a file or folder in the OS file manager -----------------------

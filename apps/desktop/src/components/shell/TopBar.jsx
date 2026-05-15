@@ -45,7 +45,10 @@ export default function TopBar({
   onToggleTheme,
   language = 'en',
   onToggleLanguage,
-  mockMode = false
+  mockMode = false,
+  /* Phase 3 — active provider chip */
+  activeProviderId = 'mock',
+  providerKeyMissing = false
 }) {
   const chip = RUN_TO_CHIP[runStatus] || RUN_TO_CHIP.idle
   const wsLabel = workspace ? shortenPath(workspace, 44) : t('topbar.workspace_empty', language)
@@ -97,6 +100,17 @@ export default function TopBar({
             title="Mock pipeline active — synthetic events, no real API calls. Toggle with ?mock=1 or VITE_SWTD_MOCK_PIPELINE=1."
           >MOCK</span>
         )}
+        <button
+          type="button"
+          className={'topbar__provider-chip topbar__provider-chip--' + activeProviderId
+            + (providerKeyMissing ? ' topbar__provider-chip--missing' : '')}
+          onClick={onOpenSettings}
+          title={t('topbar.provider.tooltip', language)}
+        >
+          <span className="topbar__provider-key">{t('topbar.provider.label', language)}</span>
+          <span className="topbar__provider-val">{activeProviderId.toUpperCase()}</span>
+          {providerKeyMissing && <span className="topbar__provider-warn">!</span>}
+        </button>
         <StatusChip status={chip.status} size="sm">{t(chip.labelKey, language)}</StatusChip>
         {onToggleLanguage && (
           <IconButton

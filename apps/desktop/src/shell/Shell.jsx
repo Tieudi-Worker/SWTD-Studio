@@ -15,6 +15,10 @@ import { isMockActive, startMockRun } from '../lib/mock-pipeline.js'
 import { ALL_TEMPLATES, findTemplate } from '../lib/template-library.js'
 import { loadBrandContext, buildContext } from '../lib/brand-context.js'
 import { composePrompt } from '../lib/prompt-composer.js'
+import { resolveActiveProvider, getActiveProviderId } from '../lib/providers/registry.js'
+import { hasKey } from '../lib/key-store.js'
+import { saveGeneratedImage, loadLatestPerSlot, cleanupExpired } from '../lib/tmp-cache.js'
+import SettingsModal from '../components/shell/SettingsModal.jsx'
 
 const LAYOUT_KEY = 'swtd_ui_layout'
 
@@ -156,6 +160,25 @@ export default function Shell() {
     icp:   { values: {} },
     source:{ brandDna: 'none', icpCards: 'none' }
   })
+
+  // Phase 3 — provider adapter state.
+  // activeProviderId is mirrored in localStorage by key-store.js; this
+  // useState seed reads from there so the chip + picker stay in sync.
+  const [activeProviderId, setActiveProviderIdState] = useState(() => getActiveProviderId())
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  // Map<slotId, AbortController> for in-flight generations. Ref so render
+  // doesn't thrash when a slot kicks off — only the slot state in the
+  // canonical state machine causes a re-render via log events.
+  const slotGenerationControllers = useRef(new Map())
+  // Newest tmp-generated image per slot, populated from the IPC list call
+  // on SKU open + after every successful generation.
+  const [slotTmpImages, setSlotTmpImages] = useState({})
+  // Last per-slot generation failure reason (transient — cleared when the
+  // operator starts a new generate for that slot).
+  const [slotGenErrors, setSlotGenErrors] = useState({})
+  // Banner shown when a real-provider Generate falls back to Mock because
+  // the key is missing. 5s auto-clear.
+  const [providerFallback, setProviderFallback] = useState(null)
 
   useEffect(() => { saveLayout(layout) }, [layout])
 
@@ -373,6 +396,16 @@ export default function Shell() {
           source:{ brandDna: 'none', icpCards: 'none' }
         })
       })
+
+    // Phase 3 — sweep expired tmp images, then refresh the per-slot map.
+    // Order matters: cleanup BEFORE list so the list never includes
+    // entries that are about to be deleted.
+    setSlotTmpImages({})
+    setSlotGenErrors({})
+    cleanupExpired({ skuPath: target })
+      .then(() => loadLatestPerSlot({ skuPath: target }))
+      .then((tmp) => setSlotTmpImages(tmp))
+      .catch((err) => console.error('[tmp-cache] load failed', err))
     if (!api) return
     setValidating(true)
     try {
@@ -489,6 +522,8 @@ export default function Shell() {
       return { ...prev, templateSelections }
     })
   }, [])
+
+  // (Generate / Cancel dispatcher inserted below — see generateSlot.)
 
   const setSlotApproval = useCallback((slotId, value) => {
     setSlotReview(prev => {
@@ -749,6 +784,135 @@ export default function Shell() {
     return out
   }, [slotReview.templateSelections, brandContext, validation?.brief])
 
+  // ─── Phase 3: provider-driven per-slot generation ──────────────────────
+  // Flow:
+  //   1. resolveActiveProvider → falls back to mock + emits banner if no key
+  //   2. cleanup expired tmp before dispatching (TTL hook #3 from plan §4.8)
+  //   3. dispatch synthetic 'queued' + 'generating' log events through
+  //      handlePipelineEvent so the canonical state machine + run timeline
+  //      stay coherent with the rest of the app (Phase 1 reuse)
+  //   4. provider.generate() returns a Blob
+  //   5. save via saveGeneratedImage → reload slotTmpImages → emit 'done'
+
+  const refreshTmpImages = useCallback(async () => {
+    if (!skuPath) return
+    const tmp = await loadLatestPerSlot({ skuPath })
+    setSlotTmpImages(tmp)
+  }, [skuPath])
+
+  const generateSlot = useCallback(async (slotId) => {
+    if (!skuPath || !Number.isInteger(slotId) || slotId < 1 || slotId > 8) return
+    const composed = composedPrompts[slotId]
+    if (!composed?.text) return                         // Generate button is disabled when this is null
+
+    // Resolve the provider, applying Q1 graceful-degradation rule.
+    const { provider, fellBackToMock, reason } = resolveActiveProvider()
+    const requestedId = getActiveProviderId()
+    if (fellBackToMock && requestedId !== 'mock') {
+      setProviderFallback({ requestedId, reason })
+      setTimeout(() => setProviderFallback(null), 5000)
+    }
+    const providerKey = provider.requiresApiKey ? (hasKey(provider.id) ? undefined : '') : undefined
+
+    // TTL cleanup #3: before any new generation for this slot.
+    await cleanupExpired({ skuPath })
+
+    // Cancel any existing in-flight generation for this slot — operator
+    // clicked Generate while one was already running (e.g. second template
+    // pick mid-run). Safe: AbortController.abort is idempotent.
+    const existing = slotGenerationControllers.current.get(slotId)
+    if (existing) {
+      try { existing.abort() } catch {}
+      slotGenerationControllers.current.delete(slotId)
+    }
+    const controller = new AbortController()
+    slotGenerationControllers.current.set(slotId, controller)
+    setSlotGenErrors(prev => { const n = { ...prev }; delete n[slotId]; return n })
+
+    // Dispatch synthetic 'queued' + 'generating' events through the same
+    // router the real runtime + mock pipeline use. The canonical state
+    // machine reads these lines and lights up the slot.
+    const startTs = Date.now()
+    handlePipelineEvent({
+      kind: 'log',
+      stream: 'sys',
+      line: `[Slot ${slotId}] queued via ${provider.id}`,
+      ts: startTs
+    })
+    handlePipelineEvent({
+      kind: 'log',
+      stream: 'stdout',
+      line: `[Slot ${slotId}] starting generation`,
+      ts: startTs + 1
+    })
+
+    try {
+      const keyValue = provider.requiresApiKey ? (await import('../lib/key-store.js')).getKey(provider.id) : ''
+      const result = await provider.generate({
+        slotId,
+        prompt: composed.text,
+        aspectRatio: composed.aspectRatio || '1:1',
+        signal: controller.signal
+      }, keyValue)
+
+      // Persist to tmp cache (Boss Q2: 7-day TTL).
+      const sel = slotReview.templateSelections?.[slotId] || {}
+      const saved = await saveGeneratedImage({
+        skuPath,
+        slotId,
+        providerId: provider.id,
+        templateId: sel.templateId || null,
+        angleId:    sel.angleId || null,
+        aspectRatio: composed.aspectRatio || '1:1',
+        blob: result.imageBlob
+      })
+      if (!saved?.ok) {
+        throw Object.assign(new Error('save failed: ' + (saved?.error || 'unknown')), {
+          providerId: provider.id, reason: 'invalid-response'
+        })
+      }
+
+      // Synthetic 'done' so the state machine promotes the slot to success.
+      handlePipelineEvent({
+        kind: 'log',
+        stream: 'stdout',
+        line: `[Slot ${slotId}] done — saved via ${provider.id} (${result.elapsedMs}ms)`,
+        ts: Date.now()
+      })
+      await refreshTmpImages()
+    } catch (err) {
+      const reason = err?.reason || (err?.name === 'AbortError' ? 'aborted' : 'unknown')
+      // Stash the error reason for the slot card chip.
+      if (reason !== 'aborted') {
+        setSlotGenErrors(prev => ({ ...prev, [slotId]: reason }))
+      }
+      // Synthetic stderr line → canonical state derivation flips to failed.
+      handlePipelineEvent({
+        kind: 'log',
+        stream: 'stderr',
+        line: `[Slot ${slotId}] error: ${reason}`,
+        ts: Date.now()
+      })
+    } finally {
+      slotGenerationControllers.current.delete(slotId)
+    }
+  }, [skuPath, composedPrompts, slotReview.templateSelections, handlePipelineEvent, refreshTmpImages])
+
+  const cancelSlotGeneration = useCallback((slotId) => {
+    const controller = slotGenerationControllers.current.get(slotId)
+    if (!controller) return
+    try { controller.abort() } catch {}
+    slotGenerationControllers.current.delete(slotId)
+  }, [])
+
+  // TTL cleanup #1: app startup. Runs once when Shell mounts; sweeps the
+  // current SKU if one is already loaded from localStorage state.
+  useEffect(() => {
+    if (skuPath) cleanupExpired({ skuPath }).catch(() => {})
+    // intentionally empty deps — startup only
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const lastLine = useMemo(() => {
     const lines = listingState.lines
     return lines.length ? lines[lines.length - 1] : null
@@ -886,6 +1050,14 @@ export default function Shell() {
           language={lang}
           onToggleLanguage={toggleLanguage}
           mockMode={isMockActive()}
+          activeProviderId={activeProviderId}
+          providerKeyMissing={(() => {
+            // Show the warn dot on the chip when a real provider is active
+            // but no key is saved (so Generate would fall back to mock).
+            if (activeProviderId === 'mock') return false
+            return !hasKey(activeProviderId)
+          })()}
+          onOpenSettings={() => setSettingsOpen(true)}
         />
       </header>
 
@@ -944,6 +1116,11 @@ export default function Shell() {
             composedPrompts={composedPrompts}
             brandContextSource={brandContext.source}
             onSetSlotTemplate={setSlotTemplate}
+            slotTmpImages={slotTmpImages}
+            slotGenErrors={slotGenErrors}
+            onGenerateSlot={generateSlot}
+            onCancelSlotGeneration={cancelSlotGeneration}
+            providerFallback={providerFallback}
             onRevealSlotFile={revealSlotFile}
             onRevealListingFolder={revealListingFolder}
             onExportApprovedSlots={exportApprovedSlots}
@@ -1053,6 +1230,13 @@ export default function Shell() {
           stepStates={stepStatesMap}
         />
       )}
+
+      <SettingsModal
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        onActiveProviderChange={(id) => setActiveProviderIdState(id)}
+        language={lang}
+      />
     </div>
   )
 }

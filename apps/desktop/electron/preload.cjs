@@ -36,6 +36,18 @@ contextBridge.exposeInMainWorld('swtd', {
   //   { ok: false, source: 'none' }                                 // file absent
   //   { ok: false, error: '<reason>' }                              // path rejected
   readBrandFile: (args) => ipcRenderer.invoke('swtd:read-brand-file', args),
+  // Phase 3 — temp generated-image cache under <sku>/output/tmp-generated/
+  // with 7-day TTL. Write-then-list-then-cleanup is the v1 lifecycle.
+  //   saveGeneratedImage({ skuPath, slotId, providerId, templateId, angleId,
+  //                        aspectRatio, mime: 'image/png', bytes: Uint8Array })
+  //     → { ok, file, generatedAt, expiresAt, providerId }
+  //   listTmpGenerated({ skuPath })
+  //     → { ok, entries: [{ slotId, file, generatedAt, expiresAt, ... }] }
+  //   cleanupTmpGenerated({ skuPath })
+  //     → { ok, deleted, kept }
+  saveGeneratedImage:  (args) => ipcRenderer.invoke('swtd:save-generated-image',  args),
+  listTmpGenerated:    (args) => ipcRenderer.invoke('swtd:list-tmp-generated',    args),
+  cleanupTmpGenerated: (args) => ipcRenderer.invoke('swtd:cleanup-tmp-generated', args),
   onPipelineEvent: (handler) => {
     listeners.add(handler)
     return () => listeners.delete(handler)
