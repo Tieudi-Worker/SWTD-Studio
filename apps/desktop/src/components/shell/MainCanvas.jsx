@@ -609,6 +609,16 @@ function shortenPath(p, max) {
 function SlotCard({ slot, state, selected, validator, disabled, onToggle }) {
   const stateClass = 'slot slot--' + state + (selected ? ' slot--selected' : '')
   const validatorBadge = validatorBadgeFor(state, validator)
+  // Cache-bust on file change. Validator gives us width/height/dimensionsReason
+  // which change when the underlying file is replaced by regen — using the
+  // (width × height) tuple as a key forces the <img> to re-fetch when a slot
+  // is regenerated. Same path, new pixels.
+  const previewSrc = validator?.exists && validator.file && typeof window !== 'undefined' && window.swtd?.assetUrl
+    ? window.swtd.assetUrl(validator.file)
+    : null
+  const previewKey = previewSrc && validator
+    ? `${validator.width}x${validator.height}`
+    : ''
   return (
     <button
       type="button"
@@ -624,6 +634,12 @@ function SlotCard({ slot, state, selected, validator, disabled, onToggle }) {
           {selected ? '✓' : ''}
         </span>
       </div>
+      <SlotPreview
+        previewSrc={previewSrc}
+        previewKey={previewKey}
+        state={state}
+        validator={validator}
+      />
       <div className="slot__label">{slot.label}</div>
       <div className="slot__role">{slot.role}</div>
       <div className="slot__footer">
@@ -635,6 +651,40 @@ function SlotCard({ slot, state, selected, validator, disabled, onToggle }) {
         )}
       </div>
     </button>
+  )
+}
+
+function SlotPreview({ previewSrc, previewKey, state, validator }) {
+  // running → skeleton shimmer (no image even if a stale file exists,
+  // because regen will replace the bytes any moment)
+  // has file → <img>
+  // has file ref but missing → placeholder
+  // idle/no validator → empty placeholder
+  if (state === 'running') {
+    return (
+      <div className="slot__preview slot__preview--running" aria-hidden="true">
+        <div className="slot__preview-shimmer" />
+      </div>
+    )
+  }
+  if (previewSrc) {
+    return (
+      <div className="slot__preview">
+        <img
+          src={`${previewSrc}?k=${encodeURIComponent(previewKey)}`}
+          alt=""
+          className="slot__preview-img"
+          loading="lazy"
+          decoding="async"
+        />
+      </div>
+    )
+  }
+  const isError = state === 'error' || (validator && !validator.exists)
+  return (
+    <div className={'slot__preview slot__preview--empty' + (isError ? ' slot__preview--missing' : '')} aria-hidden="true">
+      <span className="slot__preview-hint">{isError ? 'missing' : 'no preview'}</span>
+    </div>
   )
 }
 
