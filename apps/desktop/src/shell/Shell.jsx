@@ -9,6 +9,7 @@ import ActivityDrawer from '../components/shell/ActivityDrawer.jsx'
 import CommandPalette from '../components/shell/CommandPalette.jsx'
 import useKeyboardShortcuts from '../hooks/useKeyboardShortcuts.js'
 import { deriveSlotStates, regenSlotsToArg } from '../lib/slot-progress.js'
+import { deriveAplusStates, regenModulesToArg } from '../lib/aplus-progress.js'
 
 const LAYOUT_KEY = 'swtd_ui_layout'
 
@@ -82,6 +83,21 @@ export default function Shell() {
   const [validatorReport, setValidatorReport] = useState(null)
   const [validatingOutput, setValidatingOutput] = useState(false)
 
+  // Phase 3 — A+ run state. Parallel to listingState but for the A+
+  // (5-module) pipeline. Event stream is routed by `bin` so the two
+  // pipelines never cross-contaminate.
+  const [aplusState, setAplusState] = useState({
+    runId: null,
+    status: 'idle',
+    lines: [],
+    pauseReason: null,
+    cohesionRequestPath: null
+  })
+  const [selectedModules, setSelectedModules] = useState(() => new Set())
+  const [pendingAplusRegen, setPendingAplusRegen] = useState(() => new Set())
+  const [aplusValidatorReport, setAplusValidatorReport] = useState(null)
+  const [aplusValidating, setAplusValidating] = useState(false)
+
   useEffect(() => { saveLayout(layout) }, [layout])
 
   // C4 — Sync density to <html data-density="..."> so the
@@ -143,10 +159,16 @@ export default function Shell() {
     }
   }, [skuPath])
 
+  // Pipeline-event routing. The `start` event carries `bin: 'listing'` or
+  // `bin: 'aplus'`; subsequent events for the same run only carry `runId`,
+  // so we map runId → bin at start and use it to route log/end/error to
+  // the correct state slice.
+  const runBinByIdRef = useRef(new Map())
+
   useEffect(() => {
     if (!api?.onPipelineEvent) return
     return api.onPipelineEvent((evt) => {
-      setListingState(prev => {
+      const reducer = (prev) => {
         if (evt.kind === 'start') {
           return {
             runId: evt.runId,
@@ -165,8 +187,6 @@ export default function Shell() {
           return { ...prev, lines: [...trimmed, { stream: evt.stream, line: evt.line, ts: evt.ts }] }
         }
         if (evt.kind === 'end') {
-          // A paused end is not a failure: master.js exited with code 2 to ask
-          // the operator to run cohesion review and write _cohesion_report.json.
           const status = evt.aborted
             ? 'cancelled'
             : (evt.paused ? 'paused' : (evt.ok ? 'ok' : 'err'))
@@ -189,7 +209,26 @@ export default function Shell() {
           }
         }
         return prev
-      })
+      }
+
+      // Resolve which pipeline this event belongs to.
+      let bin = evt.bin
+      if (evt.kind === 'start') {
+        if (evt.runId) runBinByIdRef.current.set(evt.runId, evt.bin)
+      } else if (evt.runId && !bin) {
+        bin = runBinByIdRef.current.get(evt.runId)
+      }
+      if ((evt.kind === 'end' || evt.kind === 'error') && evt.runId) {
+        runBinByIdRef.current.delete(evt.runId)
+      }
+
+      if (bin === 'aplus') {
+        setAplusState(reducer)
+      } else {
+        // Default + back-compat: anything not explicitly tagged aplus routes
+        // to listing, which preserves the Phase 2 contract exactly.
+        setListingState(reducer)
+      }
     })
   }, [])
 
@@ -238,6 +277,9 @@ export default function Shell() {
     setSelectedSlots(new Set())
     setPendingRegen(new Set())
     setValidatorReport(null)
+    setSelectedModules(new Set())
+    setPendingAplusRegen(new Set())
+    setAplusValidatorReport(null)
     if (!api) return
     setValidating(true)
     try {
@@ -251,6 +293,12 @@ export default function Shell() {
     api.validateListingOutput(target).then((r) => {
       if (r?.ok && r.report) setValidatorReport(r.report)
     }).catch(() => {})
+    // Same best-effort probe for A+ output.
+    if (api.validateAplusOutput) {
+      api.validateAplusOutput(target).then((r) => {
+        if (r?.ok && r.report) setAplusValidatorReport(r.report)
+      }).catch(() => {})
+    }
   }, [])
 
   const revalidate = useCallback(async () => {
@@ -322,6 +370,70 @@ export default function Shell() {
     }
   }, [skuPath])
 
+  // ── A+ run callbacks (mirror runListing / refreshValidator etc.) ──
+  const runAplus = useCallback(async (regenModules) => {
+    if (!api?.runAplus || !skuPath || !validation?.ok || aplusState.status === 'running') return
+    const regenList = Array.isArray(regenModules)
+      ? regenModules.filter(n => Number.isInteger(n) && n >= 1 && n <= 5)
+      : []
+    setAplusState({ runId: null, status: 'running', lines: [] })
+    setStep('aplus')
+    setLayout(prev => ({ ...prev, activityDrawerMode: 'expanded' }))
+    setPendingAplusRegen(new Set(regenList))
+    const payload = { skuPath }
+    if (regenList.length > 0) {
+      payload.skipModules = regenModulesToArg(regenList)
+    }
+    const res = await api.runAplus(payload)
+    if (!res?.ok) {
+      setAplusState({
+        runId: null,
+        status: 'err',
+        lines: [{ stream: 'stderr', line: `[start failed] ${res?.error || 'unknown'}`, ts: Date.now() }]
+      })
+      setPendingAplusRegen(new Set())
+    }
+  }, [skuPath, validation, aplusState.status])
+
+  const runAplusFull = useCallback(() => runAplus(), [runAplus])
+  const runAplusRegen = useCallback(() => {
+    const ids = Array.from(selectedModules)
+    if (ids.length === 0) return runAplus()
+    return runAplus(ids)
+  }, [runAplus, selectedModules])
+
+  const toggleModuleSelection = useCallback((moduleId) => {
+    setSelectedModules(prev => {
+      const next = new Set(prev)
+      if (next.has(moduleId)) next.delete(moduleId); else next.add(moduleId)
+      return next
+    })
+  }, [])
+  const clearModuleSelection = useCallback(() => setSelectedModules(new Set()), [])
+  const selectAllModules = useCallback(() => {
+    setSelectedModules(new Set([1, 2, 3, 4, 5]))
+  }, [])
+
+  const refreshAplusValidator = useCallback(async () => {
+    if (!api?.validateAplusOutput || !skuPath) return
+    setAplusValidating(true)
+    try {
+      const res = await api.validateAplusOutput(skuPath)
+      if (res?.ok && res.report) {
+        setAplusValidatorReport(res.report)
+      } else {
+        setAplusValidatorReport({ ok: false, error: res?.error || 'validation failed', modules: [], summary: null })
+      }
+    } finally {
+      setAplusValidating(false)
+    }
+  }, [skuPath])
+
+  const cancelAplus = useCallback(async () => {
+    if (!api || !aplusState.runId) return
+    await api.cancelPipeline(aplusState.runId)
+  }, [aplusState.runId])
+
   const cancelListing = useCallback(async () => {
     if (!api || !listingState.runId) return
     await api.cancelPipeline(listingState.runId)
@@ -348,12 +460,33 @@ export default function Shell() {
     }
   }, [listingState.status, skuPath, refreshValidator])
 
+  // Same post-terminal refresh for the A+ pipeline.
+  useEffect(() => {
+    if (
+      aplusState.status === 'ok'
+      || aplusState.status === 'err'
+      || aplusState.status === 'cancelled'
+      || aplusState.status === 'paused'
+    ) {
+      setPendingAplusRegen(new Set())
+      if (skuPath) refreshAplusValidator()
+    }
+  }, [aplusState.status, skuPath, refreshAplusValidator])
+
   const slotStates = useMemo(
     () => deriveSlotStates(listingState.lines, {
       pendingRegen: Array.from(pendingRegen),
       runStatus: listingState.status
     }),
     [listingState.lines, listingState.status, pendingRegen]
+  )
+
+  const aplusModuleStates = useMemo(
+    () => deriveAplusStates(aplusState.lines, {
+      pendingRegen: Array.from(pendingAplusRegen),
+      runStatus: aplusState.status
+    }),
+    [aplusState.lines, aplusState.status, pendingAplusRegen]
   )
 
   const lastLine = useMemo(() => {
@@ -363,12 +496,14 @@ export default function Shell() {
 
   const ready = !!(skuPath && validation?.ok)
   const running = listingState.status === 'running'
+  const aplusRunning = aplusState.status === 'running'
+  const anyRunning = running || aplusRunning
 
   const runDisabledReason = !skuPath
     ? 'Select a SKU first'
     : !validation?.ok
       ? (validation?.error || 'Brief is invalid — re-validate first')
-      : running
+      : anyRunning
         ? 'A run is already in progress'
         : undefined
 
@@ -378,6 +513,24 @@ export default function Shell() {
     : validating
       ? 'Validation in progress'
       : undefined
+
+  // A+ unlocks once Listing finishes successfully (ok) or paused-for-review.
+  // The pipeline doctrine is sequential: A+ assembles around the listing
+  // imagery, so we don't expose Run A+ before listing has produced output.
+  const listingDone = listingState.status === 'ok' || listingState.status === 'paused'
+  const aplusReady = ready && listingDone
+
+  const runAplusDisabledReason = !skuPath
+    ? 'Select a SKU first'
+    : !validation?.ok
+      ? (validation?.error || 'Brief is invalid — re-validate first')
+      : !listingDone
+        ? 'Run Listing first — A+ assembles around the 8 listing slots'
+        : anyRunning
+          ? 'A run is already in progress'
+          : undefined
+
+  const cancelAplusDisabledReason = !aplusRunning ? 'No A+ run in progress' : undefined
 
   const lockedReason = ready
     ? 'This step ships in a later phase.'
@@ -395,11 +548,19 @@ export default function Shell() {
       if (listingState.status === 'cancelled') return 'error'
       return ready ? 'idle' : 'locked'
     })()
-    const states = { intake, listing, aplus: 'locked', video: 'locked', qc: 'locked' }
+    const aplus = (() => {
+      if (aplusState.status === 'running')   return 'running'
+      if (aplusState.status === 'ok')        return 'done'
+      if (aplusState.status === 'paused')    return 'paused'
+      if (aplusState.status === 'err')       return 'error'
+      if (aplusState.status === 'cancelled') return 'error'
+      return aplusReady ? 'idle' : 'locked'
+    })()
+    const states = { intake, listing, aplus, video: 'locked', qc: 'locked' }
     const reasons = {
       intake:  skuPath ? (validation?.error || undefined) : 'Pick a SKU to load its brief',
       listing: ready ? undefined : 'Validate the brief before running listing',
-      aplus:   'A+ ships in a later phase',
+      aplus:   aplusReady ? undefined : 'Run Listing first — A+ assembles around the 8 listing slots',
       video:   'Video ships in a later phase',
       qc:      'QC ships in a later phase'
     }
@@ -413,7 +574,7 @@ export default function Shell() {
         reason: reasons[s.id]
       }
     })
-  }, [step, validation, validating, skuPath, listingState.status, ready])
+  }, [step, validation, validating, skuPath, listingState.status, aplusState.status, ready, aplusReady])
 
   const handleStepChange = useCallback((id) => setStep(id), [])
 
