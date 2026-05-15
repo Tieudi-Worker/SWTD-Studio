@@ -1,5 +1,6 @@
 import React from 'react'
 import StatusDot from '../atoms/StatusDot.jsx'
+import { t } from '../../lib/i18n.js'
 
 /**
  * Pipeline steps presented as a horizontal progress strip.
@@ -32,18 +33,18 @@ const STATE_DOT = {
   idle:    'idle'
 }
 
-const STATE_WORD = {
-  done:    'done',
-  active:  'active',
-  running: 'running',
-  locked:  'locked',
-  error:   'error',
-  paused:  'review',
-  idle:    'idle'
+const STATE_KEY = {
+  done:    'stepstate.done',
+  active:  'stepstate.active',
+  running: 'stepstate.running',
+  locked:  'stepstate.locked',
+  error:   'stepstate.error',
+  paused:  'stepstate.review',
+  idle:    'stepstate.idle'
 }
 
 /** @param {StepperProps} props */
-export default function Stepper({ steps, activeId, onChange }) {
+export default function Stepper({ steps, activeId, onChange, language = 'en' }) {
   return (
     <ol className="stepper" role="list" aria-label="Pipeline steps">
       {steps.map((entry, i) => {
@@ -71,9 +72,9 @@ export default function Stepper({ steps, activeId, onChange }) {
               >
                 <span className="stepper__index">{String(i + 1).padStart(2, '0')}</span>
                 <span className="stepper__dot"><StatusDot status={STATE_DOT[state]} size="sm" /></span>
-                <span className="stepper__label">{step.label}</span>
+                <span className="stepper__label">{t('step.' + step.id, language) || step.label}</span>
                 {step.detail && <span className="stepper__detail">{step.detail}</span>}
-                <span className="stepper__state">{STATE_WORD[state]}</span>
+                <span className="stepper__state">{t(STATE_KEY[state] || 'stepstate.idle', language)}</span>
               </button>
             </li>
             {i < steps.length - 1 && (

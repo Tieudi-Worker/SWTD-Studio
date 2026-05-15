@@ -1,5 +1,6 @@
 import React from 'react'
 import StatusDot from '../atoms/StatusDot.jsx'
+import { t } from '../../lib/i18n.js'
 
 const STATUS_TO_DOT = {
   idle:      'idle',
@@ -10,22 +11,22 @@ const STATUS_TO_DOT = {
   cancelled: 'warning'
 }
 
-const STATUS_WORD = {
-  idle:      'idle',
-  running:   'running',
-  ok:        'complete',
-  paused:    'awaiting review',
-  err:       'failed',
-  cancelled: 'cancelled'
+const STATUS_KEY = {
+  idle:      'run.idle',
+  running:   'run.running',
+  ok:        'run.complete',
+  paused:    'run.awaiting',
+  err:       'run.failed',
+  cancelled: 'run.cancelled'
 }
 
 const SHORTCUTS = [
-  { keys: '⌘K', label: 'Command' },
-  { keys: '⌘R', label: 'Run' },
-  { keys: '⌘.', label: 'Cancel' },
-  { keys: '⌘B', label: 'Sidebar' },
-  { keys: '⌘\\', label: 'Inspector' },
-  { keys: '⌘J', label: 'Drawer' }
+  { keys: '⌘K', labelKey: 'kbd.command' },
+  { keys: '⌘R', labelKey: 'kbd.run' },
+  { keys: '⌘.', labelKey: 'kbd.cancel' },
+  { keys: '⌘B', labelKey: 'kbd.sidebar' },
+  { keys: '⌘\\', labelKey: 'kbd.inspector' },
+  { keys: '⌘J', labelKey: 'kbd.drawer' }
 ]
 
 /**
@@ -36,12 +37,12 @@ const SHORTCUTS = [
  */
 
 /** @param {StatusBarProps} props */
-export default function StatusBar({ runStatus, lastLine, onOpenShortcuts }) {
+export default function StatusBar({ runStatus, lastLine, onOpenShortcuts, language = 'en' }) {
   return (
     <div className="statusbar">
       <div className="statusbar__left">
         <StatusDot status={STATUS_TO_DOT[runStatus] || 'idle'} size="sm" />
-        <span className="statusbar__runner">{STATUS_WORD[runStatus] || 'idle'}</span>
+        <span className="statusbar__runner">{t(STATUS_KEY[runStatus] || 'run.idle', language)}</span>
       </div>
 
       <div className="statusbar__log" aria-live="polite">
@@ -66,7 +67,7 @@ export default function StatusBar({ runStatus, lastLine, onOpenShortcuts }) {
         {SHORTCUTS.map(s => (
           <span className="statusbar__kbd-pair" key={s.keys}>
             <kbd className="statusbar__kbd">{s.keys}</kbd>
-            <span className="statusbar__kbd-label">{s.label}</span>
+            <span className="statusbar__kbd-label">{t(s.labelKey, language)}</span>
           </span>
         ))}
       </button>

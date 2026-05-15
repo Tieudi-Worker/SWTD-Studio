@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { t } from '../../lib/i18n.js'
 
 /**
  * CommandPalette
@@ -35,6 +36,12 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
  */
 
 const GROUPS = ['Navigation', 'Actions', 'SKUs', 'Settings']
+const GROUP_LABEL_KEY = {
+  Navigation: 'cmdk.group.navigation',
+  Actions:    'cmdk.group.actions',
+  SKUs:       'cmdk.group.skus',
+  Settings:   'cmdk.group.settings'
+}
 
 /** @param {CommandPaletteProps} props */
 export default function CommandPalette({
@@ -54,11 +61,14 @@ export default function CommandPalette({
   density,
   onToggleTheme,
   theme,
+  onToggleLanguage,
+  language = 'en',
   runDisabledReason,
   cancelDisabledReason,
   revalidateDisabledReason,
   stepStates = {}
 }) {
+  const lang = language
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState(0)
   const inputRef = useRef(null)
@@ -70,22 +80,24 @@ export default function CommandPalette({
     /** @type {CommandItem[]} */
     const base = []
 
+    const goToFn = t('cmdk.action.go_to', lang)
     for (const s of steps) {
       const state = stepStates[s.id]
       const locked = state === 'locked'
+      const stepLabel = t('step.' + s.id, lang) || s.label
       base.push({
         id: 'nav:' + s.id,
         group: 'Navigation',
-        label: `Go to ${s.label}`,
+        label: typeof goToFn === 'function' ? goToFn(stepLabel) : `Go to ${stepLabel}`,
         run: () => onNavigateStep(s.id),
-        disabledReason: locked ? 'Step is locked — complete earlier steps first.' : undefined
+        disabledReason: locked ? t('cmdk.reason.step_locked', lang) : undefined
       })
     }
 
     base.push({
       id: 'action:run',
       group: 'Actions',
-      label: 'Run listing',
+      label: t('cmdk.action.run_listing', lang),
       shortcut: '⌘R',
       run: () => { onRunListing() },
       disabledReason: runDisabledReason
@@ -93,7 +105,7 @@ export default function CommandPalette({
     base.push({
       id: 'action:cancel',
       group: 'Actions',
-      label: 'Cancel current run',
+      label: t('cmdk.action.cancel_run', lang),
       shortcut: '⌘.',
       run: () => { onCancelListing() },
       disabledReason: cancelDisabledReason
@@ -101,7 +113,7 @@ export default function CommandPalette({
     base.push({
       id: 'action:revalidate',
       group: 'Actions',
-      label: 'Re-validate brief',
+      label: t('cmdk.action.revalidate', lang),
       shortcut: '⌘I',
       run: () => { onRevalidate() },
       disabledReason: revalidateDisabledReason
@@ -109,7 +121,7 @@ export default function CommandPalette({
     base.push({
       id: 'action:pick',
       group: 'Actions',
-      label: 'Pick workspace…',
+      label: t('cmdk.action.pick_workspace', lang),
       shortcut: '⌘O',
       run: () => { onPickWorkspace() }
     })
@@ -120,28 +132,28 @@ export default function CommandPalette({
         group: 'SKUs',
         label: sku.name,
         run: () => onChooseSku(sku.path),
-        disabledReason: sku.hasBrief ? undefined : 'No brief.json in this SKU folder.'
+        disabledReason: sku.hasBrief ? undefined : t('cmdk.reason.no_brief', lang)
       })
     }
 
     base.push({
       id: 'set:leftrail',
       group: 'Settings',
-      label: 'Toggle sidebar',
+      label: t('cmdk.action.toggle_sidebar', lang),
       shortcut: '⌘B',
       run: () => { onToggleLeftRail() }
     })
     base.push({
       id: 'set:inspector',
       group: 'Settings',
-      label: 'Toggle inspector',
+      label: t('cmdk.action.toggle_inspector', lang),
       shortcut: '⌘\\',
       run: () => { onToggleInspector() }
     })
     base.push({
       id: 'set:drawer',
       group: 'Settings',
-      label: 'Toggle activity drawer',
+      label: t('cmdk.action.toggle_drawer', lang),
       shortcut: '⌘J',
       run: () => { onToggleDrawer() }
     })
@@ -149,7 +161,9 @@ export default function CommandPalette({
       base.push({
         id: 'set:density',
         group: 'Settings',
-        label: density === 'compact' ? 'Density: switch to comfortable' : 'Density: switch to compact',
+        label: density === 'compact'
+          ? t('cmdk.action.density_to_comfortable', lang)
+          : t('cmdk.action.density_to_compact', lang),
         run: () => { onToggleDensity() }
       })
     }
@@ -157,20 +171,33 @@ export default function CommandPalette({
       base.push({
         id: 'set:theme',
         group: 'Settings',
-        label: theme === 'light' ? 'Theme: switch to Dark' : 'Theme: switch to Light',
+        label: theme === 'light'
+          ? t('cmdk.action.theme_to_dark', lang)
+          : t('cmdk.action.theme_to_light', lang),
         run: () => { onToggleTheme() }
+      })
+    }
+    if (onToggleLanguage) {
+      base.push({
+        id: 'set:language',
+        group: 'Settings',
+        label: lang === 'vi'
+          ? t('cmdk.action.lang_to_en', lang)
+          : t('cmdk.action.lang_to_vi', lang),
+        run: () => { onToggleLanguage() }
       })
     }
 
     return base
   }, [
-    skus, steps, stepStates,
+    skus, steps, stepStates, lang,
     runDisabledReason, cancelDisabledReason, revalidateDisabledReason,
     onNavigateStep, onChooseSku, onPickWorkspace,
     onRunListing, onCancelListing, onRevalidate,
     onToggleLeftRail, onToggleInspector, onToggleDrawer,
     onToggleDensity, density,
-    onToggleTheme, theme
+    onToggleTheme, theme,
+    onToggleLanguage
   ])
 
   const filtered = useMemo(() => {
@@ -217,26 +244,30 @@ export default function CommandPalette({
             ref={inputRef}
             className="cmdk__input"
             type="text"
-            placeholder="Type a command, navigate steps, jump to a SKU…"
+            placeholder={t('cmdk.placeholder', lang)}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
         </div>
 
         <div className="cmdk__list" ref={listRef} role="listbox">
-          {filtered.length === 0 && (
-            <div className="cmdk__empty">
-              <span className="cmdk__empty-title">No matches for &ldquo;{query.trim()}&rdquo;</span>
-              <span className="cmdk__empty-hint">Try a SKU name, step name, or action verb</span>
-            </div>
-          )}
+          {filtered.length === 0 && (() => {
+            const emptyFn = t('cmdk.empty.title', lang)
+            const title = typeof emptyFn === 'function' ? emptyFn(query.trim()) : `No matches for "${query.trim()}"`
+            return (
+              <div className="cmdk__empty">
+                <span className="cmdk__empty-title">{title}</span>
+                <span className="cmdk__empty-hint">{t('cmdk.empty.hint', lang)}</span>
+              </div>
+            )
+          })()}
           {GROUPS.map(g => {
             const list = grouped[g]
             if (!list || list.length === 0) return null
             return (
               <div className="cmdk__group" key={g}>
                 <div className="cmdk__group-head">
-                  <span>{g}</span>
+                  <span>{t(GROUP_LABEL_KEY[g] || 'cmdk.group.actions', lang)}</span>
                   <span className="cmdk__group-count">{list.length}</span>
                 </div>
                 {list.map(it => {
@@ -274,13 +305,13 @@ export default function CommandPalette({
 
         <div className="cmdk__footer">
           <span className="cmdk__footer-hint">
-            <kbd>↑</kbd><kbd>↓</kbd> Navigate
+            <kbd>↑</kbd><kbd>↓</kbd> {t('cmdk.footer.navigate', lang)}
           </span>
           <span className="cmdk__footer-hint">
-            <kbd>↵</kbd> Select
+            <kbd>↵</kbd> {t('cmdk.footer.select', lang)}
           </span>
           <span className="cmdk__footer-hint">
-            <kbd>esc</kbd> Close
+            <kbd>esc</kbd> {t('cmdk.footer.close', lang)}
           </span>
         </div>
       </div>

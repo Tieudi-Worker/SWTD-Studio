@@ -3,13 +3,21 @@ import EmptyState from '../atoms/EmptyState.jsx'
 import StatusChip from '../atoms/StatusChip.jsx'
 import Button from '../atoms/Button.jsx'
 import { LISTING_SLOT_META } from '../../lib/slot-progress.js'
+import { t } from '../../lib/i18n.js'
 
-const STEP_HEADERS = {
-  intake:  { kicker: '01 · INTAKE',  title: 'Project & brief' },
-  listing: { kicker: '02 · LISTING', title: '8-slot listing pipeline' },
-  aplus:   { kicker: '03 · A+',      title: 'A+ premium modules' },
-  video:   { kicker: '04 · VIDEO',   title: 'Product video' },
-  qc:      { kicker: '05 · QC',      title: 'QC & export bundle' }
+const STEP_KICKER = {
+  intake:  '01 · INTAKE',
+  listing: '02 · LISTING',
+  aplus:   '03 · A+',
+  video:   '04 · VIDEO',
+  qc:      '05 · QC'
+}
+const STEP_TITLE_KEY = {
+  intake:  'canvas.title.intake',
+  listing: 'canvas.title.listing',
+  aplus:   'canvas.title.aplus',
+  video:   'canvas.title.video',
+  qc:      'canvas.title.qc'
 }
 
 const STEP_PLACEHOLDER = {
@@ -60,9 +68,11 @@ export default function MainCanvas({
   validatorReport,
   validatingOutput,
   onRefreshValidator,
-  onRevealCohesionRequest
+  onRevealCohesionRequest,
+  language = 'en'
 }) {
-  const header = STEP_HEADERS[step] || STEP_HEADERS.intake
+  const kicker = STEP_KICKER[step] || STEP_KICKER.intake
+  const title = t(STEP_TITLE_KEY[step] || 'canvas.title.intake', language)
   const skuName = skuPath ? lastSegment(skuPath) : null
   const breadcrumb = workspace ? lastSegment(workspace) : '—'
   const meta = skuName
@@ -81,8 +91,8 @@ export default function MainCanvas({
         </div>
         <div className="canvas__title-row">
           <div className="canvas__title-block">
-            <span className="canvas__kicker">{header.kicker}</span>
-            <h1 className="canvas__title">{header.title}</h1>
+            <span className="canvas__kicker">{kicker}</span>
+            <h1 className="canvas__title">{title}</h1>
           </div>
           <div className="canvas__meta">{meta}</div>
         </div>
@@ -93,22 +103,24 @@ export default function MainCanvas({
           <EmptyState
             size="lg"
             icon={<FolderIcon />}
-            title="Pick a workspace to begin"
-            description="Select the parent folder containing your SKU subdirectories. Each SKU should have a brief.json."
-            primaryAction={{ label: 'Pick workspace', onClick: onPickWorkspace, shortcut: '⌘O' }}
+            title={t('canvas.empty.no_workspace', language)}
+            description={t('canvas.empty.no_workspace_hint', language)}
+            primaryAction={{ label: t('leftrail.action.pick_workspace', language), onClick: onPickWorkspace, shortcut: '⌘O' }}
           />
         )}
 
-        {workspace && !skuPath && (
-          <EmptyState
-            size="lg"
-            icon={<SkuIcon />}
-            title="Select a SKU"
-            description={skuCount > 0
-              ? `${skuCount} SKU${skuCount === 1 ? '' : 's'} discovered. Click one in the left rail to load its brief.`
-              : 'No SKUs discovered. Add SKU folders (each with brief.json) inside the workspace.'}
-          />
-        )}
+        {workspace && !skuPath && (() => {
+          const hintFn = t('canvas.empty.no_sku_hint', language)
+          const hint = typeof hintFn === 'function' ? hintFn(skuCount) : ''
+          return (
+            <EmptyState
+              size="lg"
+              icon={<SkuIcon />}
+              title={t('canvas.empty.no_sku', language)}
+              description={hint}
+            />
+          )
+        })()}
 
         {workspace && skuPath && step === 'intake' && (
           <IntakeView validation={validation} validating={validating} workspace={workspace} skuPath={skuPath} />

@@ -17,7 +17,8 @@ const DEFAULT_LAYOUT = {
   rightInspectorCollapsed: false,
   activityDrawerMode: 'collapsed',  /* 'collapsed' | 'summary' | 'expanded' */
   density: 'comfortable',           /* 'comfortable' | 'compact' */
-  theme: 'dark'                     /* 'dark' | 'light' */
+  theme: 'dark',                    /* 'dark' | 'light' */
+  language: 'en'                    /* 'en' | 'vi' */
 }
 
 function loadLayout() {
@@ -111,6 +112,23 @@ export default function Shell() {
       theme: prev.theme === 'light' ? 'dark' : 'light'
     }))
   }, [])
+
+  // Sync language to <html lang="..."> and data-language for CSS/UA hooks.
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    const lang = layout.language || 'en'
+    document.documentElement.setAttribute('lang', lang)
+    document.documentElement.setAttribute('data-language', lang)
+  }, [layout.language])
+
+  const toggleLanguage = useCallback(() => {
+    setLayout(prev => ({
+      ...prev,
+      language: prev.language === 'vi' ? 'en' : 'vi'
+    }))
+  }, [])
+
+  const lang = layout.language || 'en'
 
   // B1 — auto-toggle inspector on SKU-presence transition.
   // Opens when a SKU is loaded, closes when returning to an empty
@@ -444,6 +462,8 @@ export default function Shell() {
           onToggleDensity={toggleDensity}
           theme={layout.theme}
           onToggleTheme={toggleTheme}
+          language={lang}
+          onToggleLanguage={toggleLanguage}
         />
       </header>
 
@@ -461,12 +481,13 @@ export default function Shell() {
           onChooseSku={chooseSku}
           validation={validation}
           runStatus={listingState.status}
+          language={lang}
         />
       </aside>
 
       <section className="shell__main">
         <div className="shell__stepper">
-          <Stepper steps={stepEntries} activeId={step} onChange={handleStepChange} />
+          <Stepper steps={stepEntries} activeId={step} onChange={handleStepChange} language={lang} />
         </div>
         <div className="shell__canvas">
           <MainCanvas
@@ -490,6 +511,7 @@ export default function Shell() {
             validatingOutput={validatingOutput}
             onRefreshValidator={refreshValidator}
             onRevealCohesionRequest={revealCohesionRequest}
+            language={lang}
           />
         </div>
         <div className="shell__drawer">
@@ -499,6 +521,7 @@ export default function Shell() {
             onClear={clearActivity}
             lines={listingState.lines}
             runStatus={listingState.status}
+            language={lang}
           />
         </div>
       </section>
@@ -527,6 +550,7 @@ export default function Shell() {
           validatingOutput={validatingOutput}
           onRefreshValidator={refreshValidator}
           onRevealCohesionRequest={revealCohesionRequest}
+          language={lang}
         />
       </aside>
 
@@ -535,6 +559,7 @@ export default function Shell() {
           runStatus={listingState.status}
           lastLine={lastLine}
           onOpenShortcuts={openPalette}
+          language={lang}
         />
       </footer>
 
@@ -556,6 +581,8 @@ export default function Shell() {
           density={layout.density}
           onToggleTheme={toggleTheme}
           theme={layout.theme}
+          onToggleLanguage={toggleLanguage}
+          language={lang}
           runDisabledReason={runDisabledReason}
           cancelDisabledReason={cancelDisabledReason}
           revalidateDisabledReason={revalidateDisabledReason}

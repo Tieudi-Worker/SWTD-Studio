@@ -3,6 +3,7 @@ import Input from '../atoms/Input.jsx'
 import IconButton from '../atoms/IconButton.jsx'
 import EmptyState from '../atoms/EmptyState.jsx'
 import StatusDot from '../atoms/StatusDot.jsx'
+import { t } from '../../lib/i18n.js'
 
 /**
  * @typedef {Object} SkuItem
@@ -26,11 +27,11 @@ import StatusDot from '../atoms/StatusDot.jsx'
  */
 
 const COLLECTIONS = [
-  { id: 'all',       label: 'All',       dot: 'idle' },
-  { id: 'draft',     label: 'Draft',     dot: 'warning' },
-  { id: 'ready',     label: 'Ready',     dot: 'done' },
-  { id: 'needs-fix', label: 'Needs Fix', dot: 'error' },
-  { id: 'complete',  label: 'Complete',  dot: 'done' }
+  { id: 'all',       labelKey: 'leftrail.collection.all',       dot: 'idle' },
+  { id: 'draft',     labelKey: 'leftrail.collection.draft',     dot: 'warning' },
+  { id: 'ready',     labelKey: 'leftrail.collection.ready',     dot: 'done' },
+  { id: 'needs-fix', labelKey: 'leftrail.collection.needs_fix', dot: 'error' },
+  { id: 'complete',  labelKey: 'leftrail.collection.complete',  dot: 'done' }
 ]
 
 function bucketize(skus, skuPath, validation, runStatus) {
@@ -64,7 +65,8 @@ export default function LeftRail({
   skuPath,
   onChooseSku,
   validation,
-  runStatus
+  runStatus,
+  language = 'en'
 }) {
   const [collection, setCollection] = useState('all')
 
@@ -87,26 +89,26 @@ export default function LeftRail({
         <div className="leftrail__collapsed-stack">
           <IconButton
             icon={<ChevronRightIcon />}
-            label="Expand sidebar"
+            label={t('leftrail.tip.expand', language)}
             size="md"
             variant="ghost"
             onClick={onToggleCollapsed}
           />
           <IconButton
             icon={<FolderIcon />}
-            label="Pick workspace"
+            label={t('leftrail.action.pick_workspace', language)}
             size="md"
             variant="ghost"
             onClick={onPickWorkspace}
           />
           <IconButton
             icon={<RefreshIcon />}
-            label="Refresh SKUs"
+            label={t('leftrail.tip.refresh', language)}
             size="md"
             variant="ghost"
             onClick={onRefreshSkus}
             disabled={!workspace}
-            disabledReason="Pick a workspace first"
+            disabledReason={t('topbar.workspace_pick', language)}
           />
         </div>
         <div className="leftrail__collapsed-count" aria-label={`${skus.length} SKUs`}>
@@ -119,27 +121,27 @@ export default function LeftRail({
   return (
     <div className="leftrail" role="navigation" aria-label="SKU navigator">
       <div className="leftrail__head">
-        <span className="leftrail__title">Workspace</span>
+        <span className="leftrail__title">{t('leftrail.workspace', language)}</span>
         <IconButton
           icon={<ChevronLeftIcon />}
-          label="Collapse sidebar"
+          label={t('leftrail.tip.collapse', language)}
           size="sm"
           variant="ghost"
           onClick={onToggleCollapsed}
         />
       </div>
 
-      <button type="button" className="leftrail__workspace" onClick={onPickWorkspace} title={workspace || 'Pick a workspace'}>
+      <button type="button" className="leftrail__workspace" onClick={onPickWorkspace} title={workspace || t('topbar.workspace_pick', language)}>
         <FolderIcon />
         <span className="leftrail__workspace-text">
           {workspace
             ? <span className="leftrail__workspace-path">{shortPath(workspace, 30)}</span>
-            : <span className="leftrail__workspace-empty">Select folder…</span>}
+            : <span className="leftrail__workspace-empty">{t('topbar.workspace_empty', language)}</span>}
         </span>
       </button>
 
       <div className="leftrail__section-head">
-        <span className="leftrail__section-title">Collections</span>
+        <span className="leftrail__section-title">{t('leftrail.section.collections', language)}</span>
       </div>
       <ul className="leftrail__collections" role="list" aria-label="Collections">
         {COLLECTIONS.map(c => {
@@ -154,7 +156,7 @@ export default function LeftRail({
                 aria-pressed={active}
               >
                 <StatusDot status={c.dot} size="sm" />
-                <span className="leftrail__collection-label">{c.label}</span>
+                <span className="leftrail__collection-label">{t(c.labelKey, language)}</span>
                 <span className="leftrail__collection-count">{count}</span>
               </button>
             </li>
@@ -163,7 +165,7 @@ export default function LeftRail({
       </ul>
 
       <div className="leftrail__section-head">
-        <span className="leftrail__section-title">SKUs</span>
+        <span className="leftrail__section-title">{t('leftrail.section.skus', language)}</span>
         <span className="leftrail__section-count">
           {filtered.length}{filter || collection !== 'all' ? `/${skus.length}` : ''}
         </span>
@@ -173,7 +175,7 @@ export default function LeftRail({
         <Input
           type="search"
           size="sm"
-          placeholder="Filter…"
+          placeholder={t('leftrail.filter_placeholder', language)}
           value={filter}
           onChange={onFilterChange}
           disabled={!workspace}
@@ -182,12 +184,12 @@ export default function LeftRail({
         />
         <IconButton
           icon={<RefreshIcon />}
-          label="Refresh"
+          label={t('leftrail.tip.refresh', language)}
           size="sm"
           variant="ghost"
           onClick={onRefreshSkus}
           disabled={!workspace}
-          disabledReason="Pick a workspace first"
+          disabledReason={t('topbar.workspace_pick', language)}
         />
       </div>
 
@@ -196,18 +198,18 @@ export default function LeftRail({
           <EmptyState
             size="sm"
             icon={<FolderIcon />}
-            title="No workspace"
-            description="Pick a folder containing SKU subdirectories."
-            primaryAction={{ label: 'Pick workspace', onClick: onPickWorkspace }}
+            title={t('leftrail.empty.no_workspace', language)}
+            description={t('leftrail.empty.no_workspace_hint', language)}
+            primaryAction={{ label: t('leftrail.action.pick_workspace', language), onClick: onPickWorkspace }}
           />
         )}
         {workspace && filtered.length === 0 && (
           <EmptyState
             size="sm"
             icon={<SearchIcon />}
-            title={filter ? 'No matches' : 'No SKUs'}
-            description={filter ? 'Adjust the filter to find a SKU.' : 'This folder has no SKU subdirectories.'}
-            primaryAction={filter ? { label: 'Clear filter', onClick: () => onFilterChange('') } : undefined}
+            title={filter ? t('leftrail.empty.no_matches', language) : t('leftrail.empty.no_skus', language)}
+            description={filter ? t('leftrail.empty.no_matches_hint', language) : t('leftrail.empty.no_skus_hint', language)}
+            primaryAction={filter ? { label: t('leftrail.action.clear_filter', language), onClick: () => onFilterChange('') } : undefined}
           />
         )}
         {filtered.map(s => {
@@ -222,7 +224,7 @@ export default function LeftRail({
             >
               <StatusDot status={s.hasBrief ? 'done' : 'warning'} size="sm" />
               <span className="leftrail__sku-name">{s.name}</span>
-              <span className="leftrail__sku-flag">{s.hasBrief ? 'brief' : 'no brief'}</span>
+              <span className="leftrail__sku-flag">{s.hasBrief ? t('leftrail.flag.has_brief', language) : t('leftrail.flag.no_brief', language)}</span>
             </button>
           )
         })}
