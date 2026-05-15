@@ -75,6 +75,12 @@ export default function SettingsModal({ open, onClose, onActiveProviderChange, l
     if (r?.ok) setRouteConfig(r.route)
   }
 
+  async function handleSetFallbackChain(next) {
+    if (!swtdProvider?.setRouteConfig) return
+    const r = await swtdProvider.setRouteConfig({ fallbackChain: next }).catch(() => null)
+    if (r?.ok) setRouteConfig(r.route)
+  }
+
   return (
     <div className="modal-backdrop" onClick={onClose} role="dialog" aria-modal="true">
       <div
@@ -97,13 +103,15 @@ export default function SettingsModal({ open, onClose, onActiveProviderChange, l
             </h3>
             <div className="provider-picker__warning" role="note">⚠ {warningText}</div>
 
-            <div className="provider-tabs" role="tablist" aria-label="Provider tabs">
+            <div className="provider-tabs" role="tablist" aria-label={t('settings.provider.heading', language) || 'Provider tabs'}>
               {tabProviders.map((p) => (
                 <button
                   key={p.id}
                   type="button"
                   role="tab"
                   aria-selected={activeTab === p.id}
+                  aria-controls={`provider-tab-panel-${p.id}`}
+                  id={`provider-tab-${p.id}`}
                   className={'provider-tabs__tab' + (activeTab === p.id ? ' provider-tabs__tab--active' : '')}
                   onClick={() => setActiveTab(p.id)}
                 >
@@ -119,7 +127,12 @@ export default function SettingsModal({ open, onClose, onActiveProviderChange, l
               ))}
             </div>
 
-            <div className="provider-tabs__panel" role="tabpanel">
+            <div
+              className="provider-tabs__panel"
+              role="tabpanel"
+              id={activeProvider ? `provider-tab-panel-${activeProvider.id}` : undefined}
+              aria-labelledby={activeProvider ? `provider-tab-${activeProvider.id}` : undefined}
+            >
               {activeProvider ? (
                 <ProviderSettingsTab
                   provider={activeProvider}
@@ -150,6 +163,7 @@ export default function SettingsModal({ open, onClose, onActiveProviderChange, l
                 handleSetPrimary(id)
               }}
               onToggleMockFallback={handleAllowMockFallback}
+              onSetFallbackChain={handleSetFallbackChain}
             />
           </section>
         </div>

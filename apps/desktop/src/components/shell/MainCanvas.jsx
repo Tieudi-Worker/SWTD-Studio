@@ -394,7 +394,7 @@ function BriefStep({
             || 'Paste a product URL + keywords. The pipeline extracts product / customer / market facts and feeds them straight into every slot’s composed prompt.'}
         </p>
 
-        <form className="brief-step__form" onSubmit={submit}>
+        <form className="brief-step__form" onSubmit={submit} aria-busy={inFlight}>
           <label className="brief-step__row">
             <span className="brief-step__label">{t('research.input.urls', language) || 'URLs (one per line)'}</span>
             <textarea
@@ -497,12 +497,12 @@ function BriefStep({
               >{cancelLabel}</button>
             )}
             {inFlight && (
-              <span className="brief-step__pending">
+              <span className="brief-step__pending" role="status" aria-live="polite">
                 {t('research.pending', language) || 'Running research pipeline…'}
               </span>
             )}
             {error && (
-              <span className="brief-step__error" role="alert">
+              <span className="brief-step__error" role="alert" aria-live="polite">
                 {t('research.error.' + error, language) || t('research.error.unknown', language) || error}
               </span>
             )}

@@ -2708,6 +2708,105 @@
   color: var(--text-secondary);
   cursor: pointer;
 }
+.provider-route__sub-heading {
+  margin: var(--space-3) 0 var(--space-1) 0;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+}
+.provider-route__chain-hint {
+  margin: 0 0 var(--space-2) 0;
+  font-size: var(--text-body-sm);
+  color: var(--text-secondary);
+}
+.provider-route__chain-empty {
+  padding: var(--space-2);
+  color: var(--text-tertiary);
+  font-style: italic;
+  font-size: var(--text-body-sm);
+}
+.provider-route__chain {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.provider-route__chain-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+}
+.provider-route__chain-row--unknown {
+  border-color: var(--warning);
+}
+.provider-route__chain-pos {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-tertiary);
+  min-width: 20px;
+}
+.provider-route__chain-label {
+  flex: 1;
+  color: var(--text-primary);
+}
+.provider-route__chain-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+.provider-route__chain-btn {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-base);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 120ms ease, color 120ms ease;
+}
+.provider-route__chain-btn:hover:not(:disabled) {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+}
+.provider-route__chain-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.provider-route__chain-btn--danger { color: var(--danger); }
+.provider-route__chain-btn--danger:hover:not(:disabled) {
+  background: var(--danger);
+  color: var(--bg-base);
+}
+.provider-route__chain-add {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+.provider-route__chain-add-label {
+  font-size: var(--text-body-sm);
+  color: var(--text-secondary);
+}
+.provider-route__chain-add-select {
+  height: 28px;
+  padding: 0 var(--space-2);
+  background: var(--bg-base);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: var(--text-body-sm);
+}
 
 /* ─── Phase 4.4 — Brief Step + Insight Brief viewer ───────────────── */
 .brief-step__hint {

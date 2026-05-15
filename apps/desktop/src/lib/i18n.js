@@ -408,6 +408,13 @@ const UI_TEXT = {
   'provider.route.hint':                 { en: 'Pick the provider that the per-slot Generate button calls first. Fallback chain ordering is operator-managed below.', vi: 'Chọn provider mà Generate gọi đầu tiên. Thứ tự fallback chain do operator quản lý phía dưới.' },
   'provider.route.primary':              { en: 'Primary',               vi: 'Chính' },
   'provider.route.fallback_chain':       { en: 'Fallback chain',        vi: 'Fallback chain' },
+  'provider.route.fallback_chain_hint':  {
+    en: 'Tried top-to-bottom when the primary fails. Skipped silently for providers that don’t support the requested mode (e.g. edit).',
+    vi: 'Thử từ trên xuống khi primary lỗi. Bỏ qua provider không hỗ trợ mode hiện tại (vd edit).'
+  },
+  'provider.route.fallback_chain_empty': { en: 'No fallback configured.', vi: 'Chưa cấu hình fallback.' },
+  'provider.route.unknown_chain_entry':  { en: 'unknown provider',      vi: 'provider không xác định' },
+  'provider.route.add_to_chain':         { en: 'Add to chain:',         vi: 'Thêm vào chain:' },
   'provider.route.allow_mock_fallback':  { en: 'Use Mock fallback when no real provider is configured', vi: 'Dùng Mock khi không có provider thật' },
 
   /* SlotCard `via <provider>` badge + fallback substitution */
