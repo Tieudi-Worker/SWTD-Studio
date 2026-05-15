@@ -1,0 +1,46 @@
+[
+  {
+    "name": "baby unsupervised triggers unsupervised block",
+    "ruleId": "amazon.children.unsupervised",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Show baby unsupervised with the toy on the floor." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 1 }
+    },
+    "expected": { "overall": "block", "containsRuleIds": ["amazon.children.unsupervised"] }
+  },
+  {
+    "name": "baby with small parts triggers choking-hazard-suggestive block",
+    "ruleId": "amazon.children.choking-hazard-suggestive",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Render baby with small parts scattered around for scale." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 2 }
+    },
+    "expected": { "overall": "block", "containsRuleIds": ["amazon.children.choking-hazard-suggestive"] }
+  },
+  {
+    "name": "loose blanket triggers sleep-suffocation block",
+    "ruleId": "amazon.children.sleep-suffocation",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Photograph baby sleeping with loose blanket draped over the head." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 3 }
+    },
+    "expected": { "overall": "block", "containsRuleIds": ["amazon.children.sleep-suffocation"] }
+  },
+  {
+    "name": "baby in bath unattended triggers dangerous-positioning block",
+    "ruleId": "amazon.children.dangerous-positioning",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Show baby in bath unattended with the toy floating." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 4 }
+    },
+    "expected": { "overall": "block", "containsRuleIds": ["amazon.children.dangerous-positioning"] }
+  }
+]

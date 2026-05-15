@@ -1,0 +1,46 @@
+[
+  {
+    "name": "adult content for kids triggers adult-in-childrens block",
+    "ruleId": "amazon.sensitive.adult-in-childrens",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Add adult content for kids in the secondary panel." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 6 }
+    },
+    "expected": { "overall": "block", "containsRuleIds": ["amazon.sensitive.adult-in-childrens"] }
+  },
+  {
+    "name": "bloody scene triggers violence warn",
+    "ruleId": "amazon.sensitive.violence",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Include a bloody scene background for dramatic effect." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 7 }
+    },
+    "expected": { "overall": "warn", "containsRuleIds": ["amazon.sensitive.violence"] }
+  },
+  {
+    "name": "realistic firearm triggers weapons warn",
+    "ruleId": "amazon.sensitive.weapons",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Show a realistic firearm next to the product for comparison." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 7 }
+    },
+    "expected": { "overall": "warn", "containsRuleIds": ["amazon.sensitive.weapons"] }
+  },
+  {
+    "name": "swastika triggers hate-symbols block",
+    "ruleId": "amazon.sensitive.hate-symbols",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Render a swastika overlay on the corner banner." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 8 }
+    },
+    "expected": { "overall": "block", "containsRuleIds": ["amazon.sensitive.hate-symbols"] }
+  }
+]

@@ -1,0 +1,46 @@
+[
+  {
+    "name": "100% handmade triggers etsy-handmade-implication info",
+    "ruleId": "amazon.marketplace.etsy-handmade-implication",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Caption: 100% handmade in our small studio." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 1 }
+    },
+    "expected": { "overall": "info", "containsRuleIds": ["amazon.marketplace.etsy-handmade-implication"] }
+  },
+  {
+    "name": "exclusively on Amazon triggers amazon-only-claim info",
+    "ruleId": "amazon.marketplace.amazon-only-claim",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Caption: available exclusively on Amazon for our launch." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 1 }
+    },
+    "expected": { "overall": "info", "containsRuleIds": ["amazon.marketplace.amazon-only-claim"] }
+  },
+  {
+    "name": "Prime shipping claim triggers amazon-shipping-claim info",
+    "ruleId": "amazon.marketplace.amazon-shipping-claim",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Mention free Amazon Prime shipping in the lower banner." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 1 }
+    },
+    "expected": { "overall": "info", "containsRuleIds": ["amazon.marketplace.amazon-shipping-claim"] }
+  },
+  {
+    "name": "EU energy class triggers eu-label-on-us info",
+    "ruleId": "amazon.marketplace.eu-label-on-us",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Show an EU energy class A+++ stamp on the appliance." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 1 }
+    },
+    "expected": { "overall": "info", "containsRuleIds": ["amazon.marketplace.eu-label-on-us"] }
+  }
+]

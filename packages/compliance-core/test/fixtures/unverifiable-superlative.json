@@ -1,0 +1,49 @@
+[
+  {
+    "name": "#1 product triggers number-one warn",
+    "ruleId": "amazon.superlative.number-one",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Highlight that we are the #1 product on the market." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 1 }
+    },
+    "expected": { "overall": "warn", "containsRuleIds": ["amazon.superlative.number-one"] }
+  },
+  {
+    "name": "world's leading triggers world-leading warn",
+    "ruleId": "amazon.superlative.world-leading",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Show our world's leading hair gel in a hero composition." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 1 }
+    },
+    "expected": { "overall": "warn", "containsRuleIds": ["amazon.superlative.world-leading"] }
+  },
+  {
+    "name": "highest rated triggers highest-rated warn",
+    "ruleId": "amazon.superlative.highest-rated",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Show the highest rated towel in 2024." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 1 }
+    },
+    "expected": { "overall": "warn", "containsRuleIds": ["amazon.superlative.highest-rated"] }
+  },
+  {
+    "name": "market leader in Insight Brief triggers market-leader warn",
+    "ruleId": "amazon.superlative.market-leader",
+    "subject": {
+      "kind": "brief",
+      "stage": "insight-brief",
+      "payload": {
+        "product": { "name": "Stroller X" },
+        "market": { "marketplace": "amazon-us", "claims": ["We are the market leader in baby strollers."] }
+      },
+      "source": { "skuPath": "/tmp/fake-sku" }
+    },
+    "expected": { "overall": "warn", "containsRuleIds": ["amazon.superlative.market-leader"] }
+  }
+]

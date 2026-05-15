@@ -1,0 +1,50 @@
+[
+  {
+    "name": "guaranteed results triggers false-claim block",
+    "ruleId": "amazon.false-claim.guaranteed-results",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Our hair growth serum offers guaranteed results in 3 days." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 2 }
+    },
+    "expected": { "overall": "block", "containsRuleIds": ["amazon.false-claim.guaranteed-results"] }
+  },
+  {
+    "name": "eliminates wrinkles permanently triggers always-eliminates block",
+    "ruleId": "amazon.false-claim.always-eliminates",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Apply once and the cream eliminates wrinkles forever." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 2 }
+    },
+    "expected": { "overall": "block", "containsRuleIds": ["amazon.false-claim.always-eliminates"] }
+  },
+  {
+    "name": "permanent results triggers permanent-results block",
+    "ruleId": "amazon.false-claim.permanent-results",
+    "subject": {
+      "kind": "creative-brief",
+      "stage": "creative-brief",
+      "payload": {
+        "style": "modern",
+        "mustShow": ["permanent results banner"],
+        "mustAvoid": []
+      },
+      "source": { "skuPath": "/tmp/fake-sku" }
+    },
+    "expected": { "overall": "block", "containsRuleIds": ["amazon.false-claim.permanent-results"] }
+  },
+  {
+    "name": "100% effective triggers 100-effective block",
+    "ruleId": "amazon.false-claim.100-effective",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Our cleaner is 100% effective on grease and grime." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 4 }
+    },
+    "expected": { "overall": "block", "containsRuleIds": ["amazon.false-claim.100-effective"] }
+  }
+]

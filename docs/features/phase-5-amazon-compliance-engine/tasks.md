@@ -26,37 +26,37 @@
 
 ## Phase 5.0 — Setup
 
-- [ ] T001 Cut new branch `phase-5-amazon-compliance-engine` from Phase 4 HEAD `3a21b19`; record the HEAD sha in `docs/dev/TASK_RUNBOOK_PHASE_5.md`
-- [ ] T002 [P] Update implementation runbook `docs/dev/TASK_RUNBOOK_PHASE_5.md` with: skills-read list (speckit-specify, speckit-plan, speckit-tasks, tinbeta-coding-guardrail, matt-git-guardrails-claude-code), branch sha, checklist mirroring this `tasks.md`, sub-phase commit cadence (P5.1 → P5.2 → P5.3 → P5.4 → P5.5)
-- [ ] T003 [P] Snapshot current renderer bundle sizes (`apps/desktop/dist/assets/`) and Electron main bundle size before any changes; record in runbook for regression comparison (or note deferral if no prior build exists on the worktree, matching Phase 4 T003 posture)
-- [ ] T004 Boss decisions D1–D8 LOCKED in `spec.md` §7: D1 three-tier verdict ; D2 six hooks ; D3 deterministic-first, vision-second ; D4 per-finding override with 7-day expiry ; D5 per-SKU persistence at `<sku>/compliance/**` ; D6 peer subsystem to Provider Core ; D7 untrusted-content sentinel preserved ; D8 no `runtime/**` edits
-- [ ] T005 Verify Phase 4 baseline is mergeable into this branch: `packages/provider-core/` exists; `swtd:provider:*` IPC namespace is the renderer's only provider surface; `<sku>/research/` + `<sku>/output/tmp-generated/` sidecars are Phase-4-shaped. Record baseline sha + audit in runbook
-- [ ] T006 Read-only audit: list every renderer file that mounts a SlotCard, Insight/Creative Brief Viewer, or the promote/export action. Record list in runbook (used by P5.3 to know what to touch)
+- [x] T001 Cut new branch `phase-5-amazon-compliance-engine` from Phase 4 HEAD — branch was already cut from `50c15ce` (`3a21b19` + Phase 5 planning commit); worktree at `.claude/worktrees/phase-5-compliance` (runbook §P5.1)
+- [x] T002 [P] Update implementation runbook with skills-read list + branch sha + sub-phase cadence — runbook §P5.1
+- [x] T003 [P] Snapshot current renderer bundle sizes — **deferred**: `apps/desktop/dist/` absent on this worktree; moves to P5.5 T102 (mirrors Phase 4 T003 / T101 posture)
+- [x] T004 Boss decisions D1–D8 LOCKED — Boss approved continuation in the P5.1 invocation
+- [x] T005 Phase 4 baseline mergeable — confirmed; `packages/provider-core/` + `swtd:provider:*` IPC surface intact (runbook §P5.1 setup table)
+- [x] T006 Renderer-side mounting audit — catalogued in `plan.md` §3 Modified files
 
 ## Phase 5.1 — Foundational: Extract Compliance Core Package + v1 Rule Pack + Smoke Harness
 
 **Goal:** stand up `packages/compliance-core` with the public surface, the v1 rule pack, and a Node-only smoke harness. No IPC yet. App keeps running on Phase 4 paths.
 
-- [ ] T010 Create `packages/compliance-core/package.json` (`type: "module"`, no dependencies, entry `src/index.js`)
-- [ ] T011 [P] Author `packages/compliance-core/src/types.js` — JSDoc typedefs for `ComplianceRule`, `ComplianceRulePack`, `ComplianceSubject`, `ComplianceFinding`, `ComplianceVerdict`, `ComplianceOverride`, `ComplianceExtension` (per plan §4.3 / spec §2 US1)
-- [ ] T012 [P] Author `packages/compliance-core/src/error.js` — `ComplianceError` factory: `pack-invalid`, `rule-invalid`, `subject-invalid`, `predicate-error`, `override-invalid`, `fix-not-applicable`, `unknown` (plan §4.10)
-- [ ] T013 [P] Author `packages/compliance-core/src/logger.js` — tiny wrapper inherited from Provider Core's logging shape; scrubs `apiKey`/`key`/`token`/`bearer`/`authorization`
-- [ ] T014 [P] Author `packages/compliance-core/src/severity.js` — severity ordering (`info < warn < block`) + `worstOf(findings)` to compute `overall`
-- [ ] T015 [P] Author `packages/compliance-core/src/excerpt.js` — passage extraction (≤ 200 chars; uses word-boundary expansion around the matched token)
-- [ ] T016 Author `packages/compliance-core/src/predicates/index.js` — predicate registry exposing `containsAnyTokens`, `containsRegex`, `mustShowIncludes`, `tokenLooksLikeTrademark`, `compositeAnyOf`, `compositeAllOf`. Each predicate is a small pure function over `(subject, ruleConfig) → Finding | null`
-- [ ] T017 Author `packages/compliance-core/src/subjects.js` — typed subject constructors `makeBriefSubject(insightBrief, ctx)`, `makeCreativeBriefSubject(creativeBrief, ctx)`, `makePromptSubject({ prompt, slotId, templateId, angleId, skuPath })`, `makeMetadataSubject(sidecar)`, `makeExportSubject({ skuPath, slots, overrides })`
-- [ ] T018 Author `packages/compliance-core/src/rule-loader.js` — `loadRulePack(jsonOrPath, { fs, logger })` validates pack shape, freezes the result (deep `Object.freeze`), throws `ComplianceError{ reason: 'pack-invalid' }` on shape failure
-- [ ] T019 Author `packages/compliance-core/src/rule-engine.js` — `evaluate(subject, ctx)`; pure function; walks rules filtered by `appliesTo`, runs predicates, builds `findings[]`, computes `overall` via `severity.worstOf(...)`, returns `ComplianceVerdict` with `engineVersion` + `rulePackVersions`
-- [ ] T020 Author `packages/compliance-core/src/extensions.js` — `registerExtension(extension)` seam (US8); v1 keeps the extension list empty; calls return text-stage findings only
-- [ ] T021 Author `packages/compliance-core/src/index.js` — `createComplianceEngine({ rulePacks, logger })` factory; re-exports the public surface (`evaluate`, `listRules`, `listRulePacks`, `registerExtension`, plus the subject constructors and the predicate registry id-map)
-- [ ] T022 [US2] Author `packages/compliance-core/rules/amazon/amazon-listing-v1.json` — 12 categories, ~40–60 rules; each entry has `id`, `category`, `severity`, `appliesTo[]`, `predicate`, `messageKey`, `suggestedFixKey`, `references[]` (per plan §4.3 example)
-- [ ] T023 [P] Author `packages/compliance-core/rules/_schema.md` — operator-readable schema reference (not a code file)
-- [ ] T024 [US7] [P] Author `packages/compliance-core/test/fixtures/*.json` — one fixture per rule category at minimum (preferably one per rule). Each fixture: `{ subject, expected: { overall, ruleIds[] } }`
-- [ ] T025 [US7] Author `packages/compliance-core/test/run-rules.mjs` — Node-only smoke harness; loads the pack, runs every fixture, exits non-zero on mismatch, prints `N rules · M fixtures · 0 failures`
-- [ ] T026 Cloud-portability lint: `grep -rE "require\(['\"]electron['\"]\)\|from ['\"]electron['\"]" packages/compliance-core/` MUST return zero hits. Record evidence in runbook
-- [ ] T027 React-free lint: `grep -rE "from ['\"]react['\"]\|require\(['\"]react['\"]\)" packages/compliance-core/` MUST return zero hits. Record evidence in runbook
-- [ ] T028 Run the v1 smoke harness (`node packages/compliance-core/test/run-rules.mjs`); record output in runbook. ALL fixtures must pass before P5.1 commit
-- [ ] T029 Sub-phase commit P5.1: package extracted, rule pack authored, smoke green; no IPC change; app still runs on Phase 4 paths. Commit message references plan §3 and §4.1. **No `git push`.**
+- [x] T010 Create `packages/compliance-core/package.json` — `type: "module"`, no deps, entry `src/index.js`
+- [x] T011 [P] `packages/compliance-core/src/types.js` — JSDoc typedefs (plan §4.3 / §4.5 / §4.7 / §4.10)
+- [x] T012 [P] `packages/compliance-core/src/error.js` — `complianceError(...)` + `isComplianceError(...)`; reason vocabulary as planned
+- [x] T013 [P] `packages/compliance-core/src/logger.js` — scrubs `apiKey`/`key`/`token`/`bearer`/`authorization`; mirrors `provider-core/src/logger.js`
+- [x] T014 [P] `packages/compliance-core/src/severity.js` — `compareSeverity` + `worstOf(findings)`; respects `overridden:true` from the Electron main wrapper
+- [x] T015 [P] `packages/compliance-core/src/excerpt.js` — ≤ 200-char excerpt extractor with word-boundary snapping
+- [x] T016 `packages/compliance-core/src/predicates/index.js` — six predicate kinds (`containsAnyTokens`, `containsRegex`, `mustShowIncludes`, `tokenLooksLikeTrademark`, `compositeAnyOf`, `compositeAllOf`)
+- [x] T017 `packages/compliance-core/src/subjects.js` — five subject constructors + `normalizeSubject(...)` (text-passage walker + mustShow/competitors extraction)
+- [x] T018 `packages/compliance-core/src/rule-loader.js` — pack + rule validation; deep-freezes the result; rejects on shape failure
+- [x] T019 `packages/compliance-core/src/rule-engine.js` — pure `evaluate(subject, ctx)`; runs predicates, builds findings, computes `overall` via `worstOf(...)`; returns the verdict shape with `engineVersion` + `rulePackVersions`
+- [x] T020 `packages/compliance-core/src/extensions.js` — `createExtensionRegistry()` seam for US8 (empty in v1)
+- [x] T021 `packages/compliance-core/src/index.js` — `createComplianceEngine({ rulePacks, logger, messageKeyCheck })` factory; re-exports the public surface
+- [x] T022 [US2] `packages/compliance-core/rules/amazon/amazon-listing-v1.json` — **51 rules across 12 categories** (slightly above the spec target of 40–60)
+- [x] T023 [P] `packages/compliance-core/rules/_schema.md` — operator-readable schema reference
+- [x] T024 [US7] [P] `packages/compliance-core/test/fixtures/*.json` — 13 files (12 category-trigger files + 1 clean-pass file); 55 cases total covering every rule
+- [x] T025 [US7] `packages/compliance-core/test/run-rules.mjs` — Node-only smoke harness with coverage gate; runs without `apps/desktop/node_modules`
+- [x] T026 Cloud-portability lint — `grep -rE "require\(['\"]electron['\"]\)\|from ['\"]electron['\"]" packages/compliance-core/` returns **zero hits**
+- [x] T027 React-free lint — `grep -rE "from ['\"]react['\"]\|require\(['\"]react['\"]\)" packages/compliance-core/` returns **zero hits**
+- [x] T028 Smoke harness — `51 rules · 55 fixtures · 0 failures` + coverage gate clean; sidecar perf smoke: 100 evaluations in 29.17 ms total (avg 0.292 ms · SC7 ✅)
+- [ ] T029 Sub-phase commit P5.1 — pending the final `git add` + commit at the end of this run. **No `git push`.**
 
 ## Phase 5.2 — IPC + hooks + persistence
 

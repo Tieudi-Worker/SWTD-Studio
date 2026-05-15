@@ -1,0 +1,8 @@
+{
+  "name": "@swtd-studio/compliance-core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.js",
+  "description": "SWTD-Studio Compliance Core — deterministic Amazon listing compliance engine. Pure JS, zero Electron / React imports. Loads versioned JSON rule packs, evaluates typed subjects (briefs, prompts, image metadata, export bundles), returns PASS / WARN / BLOCK verdicts. Peer subsystem to provider-core; never fetches the web at runtime."
+}

@@ -1,0 +1,76 @@
+[
+  {
+    "name": "Disney mention triggers competitor-brand-in-prompt block",
+    "ruleId": "amazon.trademark.competitor-brand-in-prompt",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Render the frame in the style of a Disney mascot photo." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 6 }
+    },
+    "expected": { "overall": "block", "containsRuleIds": ["amazon.trademark.competitor-brand-in-prompt"] }
+  },
+  {
+    "name": "Spider-Man logo overlay triggers licensed-character-implied block",
+    "ruleId": "amazon.trademark.licensed-character-implied",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Add a small Spider-Man logo overlay in the corner." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 7 }
+    },
+    "expected": {
+      "overall": "block",
+      "containsRuleIds": ["amazon.trademark.licensed-character-implied"]
+    }
+  },
+  {
+    "name": "officially licensed by Disney triggers fake-license block",
+    "ruleId": "amazon.trademark.fake-license",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Add small text: officially licensed by Disney across the frame." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 6 }
+    },
+    "expected": {
+      "overall": "block",
+      "containsRuleIds": [
+        "amazon.trademark.fake-license",
+        "amazon.trademark.competitor-brand-in-prompt"
+      ]
+    }
+  },
+  {
+    "name": "mustShow includes Disney triggers must-show-includes-competitor block",
+    "ruleId": "amazon.trademark.must-show-includes-competitor",
+    "subject": {
+      "kind": "creative-brief",
+      "stage": "creative-brief",
+      "payload": {
+        "style": "playful",
+        "mustShow": ["Disney"],
+        "mustAvoid": []
+      },
+      "source": { "skuPath": "/tmp/fake-sku" }
+    },
+    "expected": {
+      "overall": "block",
+      "containsRuleIds": [
+        "amazon.trademark.must-show-includes-competitor",
+        "amazon.trademark.competitor-brand-in-prompt"
+      ]
+    }
+  },
+  {
+    "name": "competitor list from Insight Brief triggers tokenLooksLikeTrademark",
+    "ruleId": "amazon.trademark.competitor-brand-in-prompt",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Hero shot of our product next to a Nike sneaker for comparison." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 4 }
+    },
+    "expected": { "overall": "block", "containsRuleIds": ["amazon.trademark.competitor-brand-in-prompt"] }
+  }
+]

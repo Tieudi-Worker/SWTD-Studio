@@ -1,0 +1,57 @@
+[
+  {
+    "name": "Amazon's Choice triggers amazons-choice block",
+    "ruleId": "amazon.badge.amazons-choice",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Add an Amazon's Choice badge in the top-left corner." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 2 }
+    },
+    "expected": { "overall": "block", "containsRuleIds": ["amazon.badge.amazons-choice"] }
+  },
+  {
+    "name": "Best Seller badge triggers best-seller block",
+    "ruleId": "amazon.badge.best-seller",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Render a small Best Seller badge top-right." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 2 }
+    },
+    "expected": { "overall": "block", "containsRuleIds": ["amazon.badge.best-seller"] }
+  },
+  {
+    "name": "Prime logo triggers prime-logo block",
+    "ruleId": "amazon.badge.prime-logo",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Place the Prime logo near the product." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 2 }
+    },
+    "expected": { "overall": "block", "containsRuleIds": ["amazon.badge.prime-logo"] }
+  },
+  {
+    "name": "Editor's Pick badge triggers editors-pick block",
+    "ruleId": "amazon.badge.editors-pick",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Stick an Editor's Pick badge on the side." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 2 }
+    },
+    "expected": { "overall": "block", "containsRuleIds": ["amazon.badge.editors-pick"] }
+  },
+  {
+    "name": "Amazon wordmark triggers amazon-wordmark block",
+    "ruleId": "amazon.badge.amazon-wordmark",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Add the Amazon.com wordmark across the bottom banner." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 2 }
+    },
+    "expected": { "overall": "block", "containsRuleIds": ["amazon.badge.amazon-wordmark"] }
+  }
+]

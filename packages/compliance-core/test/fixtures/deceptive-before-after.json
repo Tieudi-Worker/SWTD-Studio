@@ -1,0 +1,61 @@
+[
+  {
+    "name": "before and after weight loss triggers weight-loss block (+ composite + transformation)",
+    "ruleId": "amazon.before-after.weight-loss",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Show before and after weight loss photos side by side." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 1 }
+    },
+    "expected": {
+      "overall": "block",
+      "containsRuleIds": [
+        "amazon.before-after.weight-loss",
+        "amazon.before-after.with-medical-overlap"
+      ]
+    }
+  },
+  {
+    "name": "before and after wrinkle triggers wrinkle-removal warn",
+    "ruleId": "amazon.before-after.wrinkle-removal",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Capture before and after wrinkle comparison shots." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 2 }
+    },
+    "expected": {
+      "overall": "warn",
+      "containsRuleIds": ["amazon.before-after.wrinkle-removal"]
+    }
+  },
+  {
+    "name": "dramatic transformation triggers transformation-claim warn",
+    "ruleId": "amazon.before-after.transformation-claim",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Promise a dramatic transformation in 7 days on the banner." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 3 }
+    },
+    "expected": {
+      "overall": "warn",
+      "containsRuleIds": ["amazon.before-after.transformation-claim"]
+    }
+  },
+  {
+    "name": "before/after with treatment triggers with-medical-overlap block",
+    "ruleId": "amazon.before-after.with-medical-overlap",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Show before and after treatment shots of the user's skin." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 4 }
+    },
+    "expected": {
+      "overall": "block",
+      "containsRuleIds": ["amazon.before-after.with-medical-overlap"]
+    }
+  }
+]

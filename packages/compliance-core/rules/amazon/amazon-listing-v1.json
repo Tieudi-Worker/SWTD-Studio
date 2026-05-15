@@ -1,0 +1,846 @@
+{
+  "id": "amazon-listing-v1",
+  "version": "1.0.0",
+  "publishedAt": "2026-05-15",
+  "marketplaces": ["amazon-us"],
+  "engineMinVersion": "0.1.0",
+  "rules": [
+    {
+      "id": "amazon.false-claim.guaranteed-results",
+      "category": "false-claim",
+      "severity": "block",
+      "appliesTo": ["insight-brief", "creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["guaranteed results", "100% guaranteed", "guaranteed to work", "guaranteed effective", "we guarantee results"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.false-claim.guaranteed-results.message",
+      "suggestedFixKey": "compliance.rule.amazon.false-claim.guaranteed-results.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G201842690"
+      ]
+    },
+    {
+      "id": "amazon.false-claim.always-eliminates",
+      "category": "false-claim",
+      "severity": "block",
+      "appliesTo": ["insight-brief", "creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["eliminates pain", "eliminates wrinkles", "completely eliminates", "permanently eliminates", "eliminates odor forever"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.false-claim.always-eliminates.message",
+      "suggestedFixKey": "compliance.rule.amazon.false-claim.always-eliminates.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G201842690"
+      ]
+    },
+    {
+      "id": "amazon.false-claim.permanent-results",
+      "category": "false-claim",
+      "severity": "block",
+      "appliesTo": ["insight-brief", "creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["permanent results", "permanent solution", "lasts forever", "results last a lifetime"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.false-claim.permanent-results.message",
+      "suggestedFixKey": "compliance.rule.amazon.false-claim.permanent-results.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G201842690"
+      ]
+    },
+    {
+      "id": "amazon.false-claim.100-effective",
+      "category": "false-claim",
+      "severity": "block",
+      "appliesTo": ["insight-brief", "creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["100% effective", "100 percent effective", "totally effective", "completely effective"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.false-claim.100-effective.message",
+      "suggestedFixKey": "compliance.rule.amazon.false-claim.100-effective.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G201842690"
+      ]
+    },
+
+    {
+      "id": "amazon.superlative.number-one",
+      "category": "unverifiable-superlative",
+      "severity": "warn",
+      "appliesTo": ["insight-brief", "creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["#1 product", "#1 selling", "#1 rated", "#1 best-seller", "number one product"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.superlative.number-one.message",
+      "suggestedFixKey": "compliance.rule.amazon.superlative.number-one.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G201842690"
+      ]
+    },
+    {
+      "id": "amazon.superlative.world-leading",
+      "category": "unverifiable-superlative",
+      "severity": "warn",
+      "appliesTo": ["insight-brief", "creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["world's leading", "worlds leading", "world leading", "world's best", "worlds best", "best in the world"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.superlative.world-leading.message",
+      "suggestedFixKey": "compliance.rule.amazon.superlative.world-leading.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G201842690"
+      ]
+    },
+    {
+      "id": "amazon.superlative.highest-rated",
+      "category": "unverifiable-superlative",
+      "severity": "warn",
+      "appliesTo": ["insight-brief", "creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["highest rated", "top rated of all time", "the very best", "top rated product"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.superlative.highest-rated.message",
+      "suggestedFixKey": "compliance.rule.amazon.superlative.highest-rated.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G201842690"
+      ]
+    },
+    {
+      "id": "amazon.superlative.market-leader",
+      "category": "unverifiable-superlative",
+      "severity": "warn",
+      "appliesTo": ["insight-brief", "creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["market leader", "industry leader", "global leader", "category leader"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.superlative.market-leader.message",
+      "suggestedFixKey": "compliance.rule.amazon.superlative.market-leader.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G201842690"
+      ]
+    },
+
+    {
+      "id": "amazon.medical.cures-or-treats",
+      "category": "medical-health-claim",
+      "severity": "block",
+      "appliesTo": ["insight-brief", "creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["cures", "treats disease", "heals disease", "medically proven", "clinically proven", "doctor recommended", "doctor approved", "physician recommended", "physician approved"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.medical.cures-or-treats.message",
+      "suggestedFixKey": "compliance.rule.amazon.medical.cures-or-treats.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G201842690",
+        "https://sellercentral.amazon.com/help/hub/reference/external/G201738380"
+      ]
+    },
+    {
+      "id": "amazon.medical.fda-claims",
+      "category": "medical-health-claim",
+      "severity": "block",
+      "appliesTo": ["insight-brief", "creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["FDA approved", "FDA-approved", "FDA cleared", "FDA-cleared", "approved by the FDA"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.medical.fda-claims.message",
+      "suggestedFixKey": "compliance.rule.amazon.medical.fda-claims.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/external/G201738380"
+      ]
+    },
+    {
+      "id": "amazon.medical.prevents-disease",
+      "category": "medical-health-claim",
+      "severity": "block",
+      "appliesTo": ["insight-brief", "creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["prevents cancer", "prevents COVID", "prevents diabetes", "prevents alzheimer", "prevents disease", "anti-cancer", "anti-tumor", "cancer prevention"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.medical.prevents-disease.message",
+      "suggestedFixKey": "compliance.rule.amazon.medical.prevents-disease.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/external/G201738380"
+      ]
+    },
+    {
+      "id": "amazon.medical.weight-loss-claim",
+      "category": "medical-health-claim",
+      "severity": "block",
+      "appliesTo": ["insight-brief", "creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["lose weight fast", "fat burner", "burn fat instantly", "shed pounds fast", "miracle weight loss", "guaranteed weight loss"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.medical.weight-loss-claim.message",
+      "suggestedFixKey": "compliance.rule.amazon.medical.weight-loss-claim.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G201842690"
+      ]
+    },
+    {
+      "id": "amazon.medical.therapeutic-grade",
+      "category": "medical-health-claim",
+      "severity": "block",
+      "appliesTo": ["insight-brief", "creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["medical grade", "pharmaceutical grade", "therapeutic grade", "hospital grade"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.medical.therapeutic-grade.message",
+      "suggestedFixKey": "compliance.rule.amazon.medical.therapeutic-grade.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/external/G201738380"
+      ]
+    },
+
+    {
+      "id": "amazon.trademark.competitor-brand-in-prompt",
+      "category": "competitor-trademark",
+      "severity": "block",
+      "appliesTo": ["creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "tokenLooksLikeTrademark",
+        "seedBrands": ["Disney", "Pixar", "Marvel", "Lucasfilm", "Nintendo", "PlayStation", "Xbox", "Nike", "Adidas", "Lululemon", "Apple", "iPhone", "Samsung", "Google", "Coca-Cola", "Pepsi", "Starbucks", "LEGO", "Hello Kitty", "Sanrio", "Pokemon", "Pokémon"]
+      },
+      "messageKey": "compliance.rule.amazon.trademark.competitor-brand-in-prompt.message",
+      "suggestedFixKey": "compliance.rule.amazon.trademark.competitor-brand-in-prompt.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G201361070"
+      ]
+    },
+    {
+      "id": "amazon.trademark.licensed-character-implied",
+      "category": "competitor-trademark",
+      "severity": "block",
+      "appliesTo": ["creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["Disney character", "Mickey Mouse logo", "Frozen movie poster", "Star Wars logo", "Marvel character", "Spider-Man logo", "Avengers logo", "Iron Man suit", "Batman logo", "Superman logo"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.trademark.licensed-character-implied.message",
+      "suggestedFixKey": "compliance.rule.amazon.trademark.licensed-character-implied.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G201361070"
+      ]
+    },
+    {
+      "id": "amazon.trademark.fake-license",
+      "category": "competitor-trademark",
+      "severity": "block",
+      "appliesTo": ["creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["officially licensed by Disney", "officially licensed by Marvel", "authorized retailer of Apple", "official partner of Nike", "official partner of Disney"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.trademark.fake-license.message",
+      "suggestedFixKey": "compliance.rule.amazon.trademark.fake-license.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G201361070"
+      ]
+    },
+    {
+      "id": "amazon.trademark.must-show-includes-competitor",
+      "category": "competitor-trademark",
+      "severity": "block",
+      "appliesTo": ["creative-brief", "export"],
+      "predicate": {
+        "kind": "mustShowIncludes",
+        "tokens": ["Disney", "Marvel", "Pixar", "Nike", "Adidas", "Apple", "iPhone", "Samsung", "Coca-Cola", "LEGO"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.trademark.must-show-includes-competitor.message",
+      "suggestedFixKey": "compliance.rule.amazon.trademark.must-show-includes-competitor.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G201361070"
+      ]
+    },
+
+    {
+      "id": "amazon.badge.amazons-choice",
+      "category": "misleading-badge",
+      "severity": "block",
+      "appliesTo": ["creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["Amazon's Choice", "Amazons Choice", "Amazon Choice badge"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.badge.amazons-choice.message",
+      "suggestedFixKey": "compliance.rule.amazon.badge.amazons-choice.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G201842690"
+      ]
+    },
+    {
+      "id": "amazon.badge.best-seller",
+      "category": "misleading-badge",
+      "severity": "block",
+      "appliesTo": ["creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["Best Seller badge", "Best-Seller badge", "#1 Best Seller logo", "Bestseller badge", "Best Seller stamp"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.badge.best-seller.message",
+      "suggestedFixKey": "compliance.rule.amazon.badge.best-seller.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G201842690"
+      ]
+    },
+    {
+      "id": "amazon.badge.prime-logo",
+      "category": "misleading-badge",
+      "severity": "block",
+      "appliesTo": ["creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["Prime logo", "Amazon Prime logo", "Prime eligible logo", "Prime badge overlay"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.badge.prime-logo.message",
+      "suggestedFixKey": "compliance.rule.amazon.badge.prime-logo.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G201842690"
+      ]
+    },
+    {
+      "id": "amazon.badge.editors-pick",
+      "category": "misleading-badge",
+      "severity": "block",
+      "appliesTo": ["creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["Editor's Pick badge", "Editors Pick badge", "Editor's Choice badge", "Critic's Pick badge"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.badge.editors-pick.message",
+      "suggestedFixKey": "compliance.rule.amazon.badge.editors-pick.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G201842690"
+      ]
+    },
+    {
+      "id": "amazon.badge.amazon-wordmark",
+      "category": "misleading-badge",
+      "severity": "block",
+      "appliesTo": ["creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["Amazon.com wordmark", "Amazon logo overlay", "Amazon brand mark", "Amazon smile logo overlay"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.badge.amazon-wordmark.message",
+      "suggestedFixKey": "compliance.rule.amazon.badge.amazon-wordmark.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G201842690"
+      ]
+    },
+
+    {
+      "id": "amazon.overlay.review-stars",
+      "category": "prohibited-overlay-text",
+      "severity": "block",
+      "appliesTo": ["creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["5-star rating overlay", "5 star rating graphic", "review stars overlay", "star rating graphic", "five-star rating overlay"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.overlay.review-stars.message",
+      "suggestedFixKey": "compliance.rule.amazon.overlay.review-stars.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G2OD75JEHQHKZARW"
+      ]
+    },
+    {
+      "id": "amazon.overlay.price-stamp",
+      "category": "prohibited-overlay-text",
+      "severity": "block",
+      "appliesTo": ["creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsRegex",
+        "pattern": "\\$\\d+(?:\\.\\d{2})?\\s+(?:stamp|graphic|overlay|tag|sticker)",
+        "flags": "i"
+      },
+      "messageKey": "compliance.rule.amazon.overlay.price-stamp.message",
+      "suggestedFixKey": "compliance.rule.amazon.overlay.price-stamp.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G2OD75JEHQHKZARW"
+      ]
+    },
+    {
+      "id": "amazon.overlay.sale-discount",
+      "category": "prohibited-overlay-text",
+      "severity": "block",
+      "appliesTo": ["creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["Sale price overlay", "Discount stamp", "On Sale graphic", "% off overlay", "percent off graphic", "Limited offer banner"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.overlay.sale-discount.message",
+      "suggestedFixKey": "compliance.rule.amazon.overlay.sale-discount.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G2OD75JEHQHKZARW"
+      ]
+    },
+    {
+      "id": "amazon.overlay.as-seen-on-tv",
+      "category": "prohibited-overlay-text",
+      "severity": "block",
+      "appliesTo": ["creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["As Seen on TV", "As-Seen-On-TV badge", "TV advertised badge"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.overlay.as-seen-on-tv.message",
+      "suggestedFixKey": "compliance.rule.amazon.overlay.as-seen-on-tv.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G2OD75JEHQHKZARW"
+      ]
+    },
+    {
+      "id": "amazon.overlay.qr-code-sticker",
+      "category": "prohibited-overlay-text",
+      "severity": "block",
+      "appliesTo": ["creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["QR code sticker", "scannable QR code overlay", "scan this QR"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.overlay.qr-code-sticker.message",
+      "suggestedFixKey": "compliance.rule.amazon.overlay.qr-code-sticker.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G2OD75JEHQHKZARW"
+      ]
+    },
+
+    {
+      "id": "amazon.before-after.weight-loss",
+      "category": "deceptive-before-after",
+      "severity": "block",
+      "appliesTo": ["creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["before and after weight loss", "before/after weight loss", "before & after weight loss", "weight loss transformation photo"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.before-after.weight-loss.message",
+      "suggestedFixKey": "compliance.rule.amazon.before-after.weight-loss.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G201842690"
+      ]
+    },
+    {
+      "id": "amazon.before-after.wrinkle-removal",
+      "category": "deceptive-before-after",
+      "severity": "warn",
+      "appliesTo": ["creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["before and after wrinkle", "wrinkle removal before after", "before/after anti-aging"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.before-after.wrinkle-removal.message",
+      "suggestedFixKey": "compliance.rule.amazon.before-after.wrinkle-removal.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G201842690"
+      ]
+    },
+    {
+      "id": "amazon.before-after.transformation-claim",
+      "category": "deceptive-before-after",
+      "severity": "warn",
+      "appliesTo": ["insight-brief", "creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["dramatic transformation", "miraculous transformation", "instant transformation", "life-changing transformation"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.before-after.transformation-claim.message",
+      "suggestedFixKey": "compliance.rule.amazon.before-after.transformation-claim.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G201842690"
+      ]
+    },
+    {
+      "id": "amazon.before-after.with-medical-overlap",
+      "category": "deceptive-before-after",
+      "severity": "block",
+      "appliesTo": ["prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "compositeAllOf",
+        "predicates": [
+          {
+            "kind": "containsAnyTokens",
+            "tokens": ["before and after", "before / after", "before/after"],
+            "tokenMode": "case-insensitive-word-boundary"
+          },
+          {
+            "kind": "containsAnyTokens",
+            "tokens": ["treatment", "therapy", "medical", "weight loss", "skin treatment", "hair regrowth", "fat reduction"],
+            "tokenMode": "case-insensitive-word-boundary"
+          }
+        ]
+      },
+      "messageKey": "compliance.rule.amazon.before-after.with-medical-overlap.message",
+      "suggestedFixKey": "compliance.rule.amazon.before-after.with-medical-overlap.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/external/G201738380"
+      ]
+    },
+
+    {
+      "id": "amazon.children.unsupervised",
+      "category": "unsafe-children-baby",
+      "severity": "block",
+      "appliesTo": ["creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["baby unsupervised", "infant alone", "unattended toddler", "child without parent", "baby alone with product", "toddler unattended"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.children.unsupervised.message",
+      "suggestedFixKey": "compliance.rule.amazon.children.unsupervised.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G201842690"
+      ]
+    },
+    {
+      "id": "amazon.children.choking-hazard-suggestive",
+      "category": "unsafe-children-baby",
+      "severity": "block",
+      "appliesTo": ["creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["small parts for baby", "baby with small parts", "infant with detached pieces", "child with marble in mouth"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.children.choking-hazard-suggestive.message",
+      "suggestedFixKey": "compliance.rule.amazon.children.choking-hazard-suggestive.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G201842690"
+      ]
+    },
+    {
+      "id": "amazon.children.sleep-suffocation",
+      "category": "unsafe-children-baby",
+      "severity": "block",
+      "appliesTo": ["creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["baby sleeping with loose blanket", "infant face down sleeping", "baby in crib with pillow", "newborn covered by blanket"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.children.sleep-suffocation.message",
+      "suggestedFixKey": "compliance.rule.amazon.children.sleep-suffocation.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G201842690"
+      ]
+    },
+    {
+      "id": "amazon.children.dangerous-positioning",
+      "category": "unsafe-children-baby",
+      "severity": "block",
+      "appliesTo": ["creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["baby in car seat unbuckled", "infant on edge of bed", "toddler on countertop", "child near open flame", "baby in bath unattended"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.children.dangerous-positioning.message",
+      "suggestedFixKey": "compliance.rule.amazon.children.dangerous-positioning.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G201842690"
+      ]
+    },
+
+    {
+      "id": "amazon.review.ask-for-stars",
+      "category": "review-rating-manipulation",
+      "severity": "block",
+      "appliesTo": ["creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["ask for 5 stars", "leave a 5-star review", "give us 5 stars", "rate us 5 stars", "leave 5 stars"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.review.ask-for-stars.message",
+      "suggestedFixKey": "compliance.rule.amazon.review.ask-for-stars.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G201972140"
+      ]
+    },
+    {
+      "id": "amazon.review.review-incentive",
+      "category": "review-rating-manipulation",
+      "severity": "block",
+      "appliesTo": ["creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["review incentive", "free product for review", "in exchange for review", "discount for review", "gift for review", "free gift in exchange for"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.review.review-incentive.message",
+      "suggestedFixKey": "compliance.rule.amazon.review.review-incentive.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G201972140"
+      ]
+    },
+    {
+      "id": "amazon.review.fake-review-token",
+      "category": "review-rating-manipulation",
+      "severity": "block",
+      "appliesTo": ["creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["leave a positive review", "post a positive review", "verified positive review", "scan to leave review", "leave 5-star review here"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.review.fake-review-token.message",
+      "suggestedFixKey": "compliance.rule.amazon.review.fake-review-token.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G201972140"
+      ]
+    },
+    {
+      "id": "amazon.review.self-rating-overlay",
+      "category": "review-rating-manipulation",
+      "severity": "block",
+      "appliesTo": ["creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["our customers rated us 5 stars overlay", "5-star rated graphic", "rated 4.9/5 overlay", "rated 5/5 overlay"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.review.self-rating-overlay.message",
+      "suggestedFixKey": "compliance.rule.amazon.review.self-rating-overlay.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G201972140"
+      ]
+    },
+
+    {
+      "id": "amazon.ip.character-style-reference",
+      "category": "intellectual-property",
+      "severity": "warn",
+      "appliesTo": ["insight-brief", "creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["Mickey Mouse style", "Star Wars style", "Frozen-style design", "Marvel-style hero", "Pixar-style render", "Studio Ghibli style"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.ip.character-style-reference.message",
+      "suggestedFixKey": "compliance.rule.amazon.ip.character-style-reference.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G201361070"
+      ]
+    },
+    {
+      "id": "amazon.ip.sports-league",
+      "category": "intellectual-property",
+      "severity": "warn",
+      "appliesTo": ["insight-brief", "creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["NBA logo", "NFL team logo", "FIFA logo", "Premier League badge", "MLB logo", "NHL crest", "UEFA logo"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.ip.sports-league.message",
+      "suggestedFixKey": "compliance.rule.amazon.ip.sports-league.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G201361070"
+      ]
+    },
+    {
+      "id": "amazon.ip.movie-title",
+      "category": "intellectual-property",
+      "severity": "warn",
+      "appliesTo": ["insight-brief", "creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["The Avengers movie poster", "Frozen movie poster", "Star Wars saga poster", "Harry Potter movie", "Lord of the Rings film"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.ip.movie-title.message",
+      "suggestedFixKey": "compliance.rule.amazon.ip.movie-title.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G201361070"
+      ]
+    },
+    {
+      "id": "amazon.ip.celebrity-endorsement",
+      "category": "intellectual-property",
+      "severity": "warn",
+      "appliesTo": ["insight-brief", "creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["endorsed by Taylor Swift", "Elon Musk approved", "endorsed by Beyonce", "as used by Oprah", "as featured by Kim Kardashian"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.ip.celebrity-endorsement.message",
+      "suggestedFixKey": "compliance.rule.amazon.ip.celebrity-endorsement.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G201361070"
+      ]
+    },
+
+    {
+      "id": "amazon.sensitive.adult-in-childrens",
+      "category": "sensitive-content",
+      "severity": "block",
+      "appliesTo": ["creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["adult content for kids", "for adults only baby product", "nude figure in childrens", "sexualized child imagery"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.sensitive.adult-in-childrens.message",
+      "suggestedFixKey": "compliance.rule.amazon.sensitive.adult-in-childrens.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G201361070"
+      ]
+    },
+    {
+      "id": "amazon.sensitive.violence",
+      "category": "sensitive-content",
+      "severity": "warn",
+      "appliesTo": ["creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["bloody scene", "violent imagery", "graphic gore", "dismembered body", "open wound"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.sensitive.violence.message",
+      "suggestedFixKey": "compliance.rule.amazon.sensitive.violence.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G201361070"
+      ]
+    },
+    {
+      "id": "amazon.sensitive.weapons",
+      "category": "sensitive-content",
+      "severity": "warn",
+      "appliesTo": ["creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["realistic firearm", "real gun depicted", "knife to skin", "loaded weapon", "pointed at person"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.sensitive.weapons.message",
+      "suggestedFixKey": "compliance.rule.amazon.sensitive.weapons.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G201361070"
+      ]
+    },
+    {
+      "id": "amazon.sensitive.hate-symbols",
+      "category": "sensitive-content",
+      "severity": "block",
+      "appliesTo": ["creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["swastika", "hate symbol depicted", "iron cross hate symbol", "SS rune"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.sensitive.hate-symbols.message",
+      "suggestedFixKey": "compliance.rule.amazon.sensitive.hate-symbols.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G201361070"
+      ]
+    },
+
+    {
+      "id": "amazon.marketplace.etsy-handmade-implication",
+      "category": "marketplace-specific",
+      "severity": "info",
+      "appliesTo": ["insight-brief", "creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["100% handmade", "fully handcrafted in our studio", "made-to-order by a single artisan"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.marketplace.etsy-handmade-implication.message",
+      "suggestedFixKey": "compliance.rule.amazon.marketplace.etsy-handmade-implication.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G201842690"
+      ]
+    },
+    {
+      "id": "amazon.marketplace.amazon-only-claim",
+      "category": "marketplace-specific",
+      "severity": "info",
+      "appliesTo": ["insight-brief", "creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["available exclusively on Amazon", "only on Amazon.com", "Amazon-exclusive product"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.marketplace.amazon-only-claim.message",
+      "suggestedFixKey": "compliance.rule.amazon.marketplace.amazon-only-claim.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G201842690"
+      ]
+    },
+    {
+      "id": "amazon.marketplace.amazon-shipping-claim",
+      "category": "marketplace-specific",
+      "severity": "info",
+      "appliesTo": ["insight-brief", "creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["free Amazon Prime shipping", "guaranteed 2-day shipping", "Prime shipping guarantee"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.marketplace.amazon-shipping-claim.message",
+      "suggestedFixKey": "compliance.rule.amazon.marketplace.amazon-shipping-claim.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G201842690"
+      ]
+    },
+    {
+      "id": "amazon.marketplace.eu-label-on-us",
+      "category": "marketplace-specific",
+      "severity": "info",
+      "appliesTo": ["insight-brief", "creative-brief", "prompt", "image-generate", "image-metadata", "export"],
+      "predicate": {
+        "kind": "containsAnyTokens",
+        "tokens": ["EU energy class A+++", "CE marked overlay", "EU energy label graphic"],
+        "tokenMode": "case-insensitive-word-boundary"
+      },
+      "messageKey": "compliance.rule.amazon.marketplace.eu-label-on-us.message",
+      "suggestedFixKey": "compliance.rule.amazon.marketplace.eu-label-on-us.suggested_fix",
+      "references": [
+        "https://sellercentral.amazon.com/help/hub/reference/G201842690"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+[
+  {
+    "name": "clean prompt — no findings",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": {
+        "prompt": "A clean studio photo of a wooden ultrasound picture frame on a marble surface, soft daylight, no text overlay."
+      },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 1 }
+    },
+    "expected": { "overall": "pass", "containsRuleIds": [] }
+  },
+  {
+    "name": "clean creative brief — no findings",
+    "subject": {
+      "kind": "creative-brief",
+      "stage": "creative-brief",
+      "payload": {
+        "style": "modern minimal",
+        "mood": "warm and gentle",
+        "mustShow": ["material: oak", "warm daylight"],
+        "mustAvoid": ["any text overlay", "any logo"]
+      },
+      "source": { "skuPath": "/tmp/fake-sku" }
+    },
+    "expected": { "overall": "pass", "containsRuleIds": [] }
+  },
+  {
+    "name": "clean image metadata — no findings",
+    "subject": {
+      "kind": "image-metadata",
+      "stage": "image-metadata",
+      "payload": {
+        "slotId": 1,
+        "providerId": "openai",
+        "model": "gpt-image-2",
+        "mode": "generate",
+        "prompt": "Photograph of a wooden frame on marble."
+      }
+    },
+    "expected": { "overall": "pass", "containsRuleIds": [] }
+  }
+]

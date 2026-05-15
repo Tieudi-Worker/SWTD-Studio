@@ -1,0 +1,57 @@
+[
+  {
+    "name": "5-star rating overlay triggers review-stars block",
+    "ruleId": "amazon.overlay.review-stars",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Add a 5-star rating overlay on top of the hero." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 1 }
+    },
+    "expected": { "overall": "block", "containsRuleIds": ["amazon.overlay.review-stars"] }
+  },
+  {
+    "name": "price stamp regex triggers price-stamp block",
+    "ruleId": "amazon.overlay.price-stamp",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Apply a $19.99 stamp in the top corner of the image." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 1 }
+    },
+    "expected": { "overall": "block", "containsRuleIds": ["amazon.overlay.price-stamp"] }
+  },
+  {
+    "name": "sale price overlay triggers sale-discount block",
+    "ruleId": "amazon.overlay.sale-discount",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Render a Sale price overlay on the corner." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 1 }
+    },
+    "expected": { "overall": "block", "containsRuleIds": ["amazon.overlay.sale-discount"] }
+  },
+  {
+    "name": "As Seen on TV triggers as-seen-on-tv block",
+    "ruleId": "amazon.overlay.as-seen-on-tv",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Place an As Seen on TV badge on the bottom." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 1 }
+    },
+    "expected": { "overall": "block", "containsRuleIds": ["amazon.overlay.as-seen-on-tv"] }
+  },
+  {
+    "name": "QR code sticker triggers qr-code-sticker block",
+    "ruleId": "amazon.overlay.qr-code-sticker",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Add a QR code sticker on the packaging." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 1 }
+    },
+    "expected": { "overall": "block", "containsRuleIds": ["amazon.overlay.qr-code-sticker"] }
+  }
+]

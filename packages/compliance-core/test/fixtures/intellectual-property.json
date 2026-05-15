@@ -1,0 +1,50 @@
+[
+  {
+    "name": "Studio Ghibli style triggers character-style-reference warn",
+    "ruleId": "amazon.ip.character-style-reference",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Render the scene in a Studio Ghibli style with soft palette." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 5 }
+    },
+    "expected": { "overall": "warn", "containsRuleIds": ["amazon.ip.character-style-reference"] }
+  },
+  {
+    "name": "NBA logo triggers sports-league warn",
+    "ruleId": "amazon.ip.sports-league",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Show an NBA logo printed on the towel." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 5 }
+    },
+    "expected": { "overall": "warn", "containsRuleIds": ["amazon.ip.sports-league"] }
+  },
+  {
+    "name": "Harry Potter movie triggers movie-title warn",
+    "ruleId": "amazon.ip.movie-title",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Style the layout like a Harry Potter movie scene." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 5 }
+    },
+    "expected": { "overall": "warn", "containsRuleIds": ["amazon.ip.movie-title"] }
+  },
+  {
+    "name": "endorsed by Beyonce triggers celebrity-endorsement warn",
+    "ruleId": "amazon.ip.celebrity-endorsement",
+    "subject": {
+      "kind": "creative-brief",
+      "stage": "creative-brief",
+      "payload": {
+        "style": "premium",
+        "mustShow": ["endorsed by Beyonce caption"],
+        "mustAvoid": []
+      },
+      "source": { "skuPath": "/tmp/fake-sku" }
+    },
+    "expected": { "overall": "warn", "containsRuleIds": ["amazon.ip.celebrity-endorsement"] }
+  }
+]

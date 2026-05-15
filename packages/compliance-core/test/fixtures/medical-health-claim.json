@@ -1,0 +1,61 @@
+[
+  {
+    "name": "doctor recommended triggers cures-or-treats block",
+    "ruleId": "amazon.medical.cures-or-treats",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Hero shot of our doctor recommended skin cream on marble." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 1 }
+    },
+    "expected": { "overall": "block", "containsRuleIds": ["amazon.medical.cures-or-treats"] }
+  },
+  {
+    "name": "FDA approved triggers fda-claims block",
+    "ruleId": "amazon.medical.fda-claims",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Showcase that the device is FDA approved with a small badge." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 3 }
+    },
+    "expected": { "overall": "block", "containsRuleIds": ["amazon.medical.fda-claims"] }
+  },
+  {
+    "name": "prevents cancer triggers prevents-disease block",
+    "ruleId": "amazon.medical.prevents-disease",
+    "subject": {
+      "kind": "creative-brief",
+      "stage": "creative-brief",
+      "payload": {
+        "style": "warm",
+        "mustShow": ["prevents cancer naturally"],
+        "mustAvoid": []
+      },
+      "source": { "skuPath": "/tmp/fake-sku" }
+    },
+    "expected": { "overall": "block", "containsRuleIds": ["amazon.medical.prevents-disease"] }
+  },
+  {
+    "name": "fat burner triggers weight-loss-claim block",
+    "ruleId": "amazon.medical.weight-loss-claim",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Show our fat burner capsules for fast results." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 5 }
+    },
+    "expected": { "overall": "block", "containsRuleIds": ["amazon.medical.weight-loss-claim"] }
+  },
+  {
+    "name": "medical grade triggers therapeutic-grade block",
+    "ruleId": "amazon.medical.therapeutic-grade",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Show the medical grade silicone wristband on a wrist." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 5 }
+    },
+    "expected": { "overall": "block", "containsRuleIds": ["amazon.medical.therapeutic-grade"] }
+  }
+]

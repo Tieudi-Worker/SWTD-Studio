@@ -1,0 +1,50 @@
+[
+  {
+    "name": "leave 5 stars triggers ask-for-stars block",
+    "ruleId": "amazon.review.ask-for-stars",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Add small text: please leave 5 stars on our listing." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 1 }
+    },
+    "expected": { "overall": "block", "containsRuleIds": ["amazon.review.ask-for-stars"] }
+  },
+  {
+    "name": "free product for review triggers review-incentive block",
+    "ruleId": "amazon.review.review-incentive",
+    "subject": {
+      "kind": "creative-brief",
+      "stage": "creative-brief",
+      "payload": {
+        "style": "playful",
+        "mustShow": ["free product for review offer"],
+        "mustAvoid": []
+      },
+      "source": { "skuPath": "/tmp/fake-sku" }
+    },
+    "expected": { "overall": "block", "containsRuleIds": ["amazon.review.review-incentive"] }
+  },
+  {
+    "name": "scan to leave review triggers fake-review-token block",
+    "ruleId": "amazon.review.fake-review-token",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Show a tag that says scan to leave review on the package." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 2 }
+    },
+    "expected": { "overall": "block", "containsRuleIds": ["amazon.review.fake-review-token"] }
+  },
+  {
+    "name": "5-star rated graphic triggers self-rating-overlay block",
+    "ruleId": "amazon.review.self-rating-overlay",
+    "subject": {
+      "kind": "prompt",
+      "stage": "prompt",
+      "payload": { "prompt": "Add a 5-star rated graphic in the corner." },
+      "source": { "skuPath": "/tmp/fake-sku", "slotId": 3 }
+    },
+    "expected": { "overall": "block", "containsRuleIds": ["amazon.review.self-rating-overlay"] }
+  }
+]
