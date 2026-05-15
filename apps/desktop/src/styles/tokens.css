@@ -90,10 +90,24 @@
   --drawer-summary-height: 96px;
   --drawer-max-height: 280px;
 
-  /* Transitions */
-  --transition-fast: 100ms ease-out;
-  --transition-base: 150ms ease-out;
-  --transition-slow: 200ms ease-out;
+  /* Motion — durations and easings are separate primitives.
+     Transitions below are pre-composed pairs for existing call sites
+     so Phase A/B code keeps working untouched. New code should prefer
+     duration + ease composition for clarity. */
+  --duration-instant: 75ms;
+  --duration-fast: 100ms;
+  --duration-base: 150ms;
+  --duration-slow: 200ms;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  /* Soft spring — slight overshoot for tactile feedback on hover lifts.
+     Restrained on purpose: calm-enterprise, not bouncy. */
+  --ease-spring-soft: cubic-bezier(0.34, 1.2, 0.64, 1);
+
+  --transition-fast: var(--duration-fast) var(--ease-out);
+  --transition-base: var(--duration-base) var(--ease-out);
+  --transition-slow: var(--duration-slow) var(--ease-out);
 }
 
 /* B7 — Density modes (foundation only; no UI toggle wired yet).
@@ -117,4 +131,51 @@
   --drawer-summary-height: 104px;
   --leftrail-width: 256px;
   --inspector-width: 340px;
+}
+
+/* ── Theme: light ────────────────────────────────────────────────
+   Phase C add-on. Overrides only the source colour tokens; the
+   semantic aliases (--bg, --surface, --text-1, ...) re-resolve
+   automatically because they reference these source vars.
+*/
+:root[data-theme="light"] {
+  --bg-base:        #FAFAFA;
+  --bg-surface:     #FFFFFF;
+  --bg-elevated:    #F4F4F5;
+  --bg-hover:       #ECECEE;
+
+  --border-subtle:  #E4E4E7;
+  --border-default: #D4D4D8;
+  --border-strong:  #A1A1AA;
+  --border-focus:   #B8861E;
+
+  --text-primary:   #18181B;
+  --text-secondary: #52525B;
+  --text-tertiary:  #71717A;
+  --text-disabled:  #D4D4D8;
+
+  /* Accent darkened ~1 step for AA contrast on white. */
+  --accent:         #B8861E;
+  --accent-hover:   #A67719;
+  --accent-active:  #8C621A;
+  --accent-muted:   rgba(184, 134, 30, 0.10);
+  --accent-glow:    rgba(184, 134, 30, 0.20);
+
+  /* State colours nudged darker for readable contrast on light bg. */
+  --success:        #16A34A;
+  --success-muted:  rgba(22, 163, 74, 0.10);
+  --warning:        #B45309;
+  --warning-muted:  rgba(180, 83, 9, 0.10);
+  --danger:         #DC2626;
+  --danger-muted:   rgba(220, 38, 38, 0.08);
+  --info:           #2563EB;
+  --info-muted:     rgba(37, 99, 235, 0.10);
+
+  /* Shadows lighter on light bg — heavy dark shadows look unnatural. */
+  --shadow:         0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-lg:      0 12px 32px rgba(0, 0, 0, 0.12);
+
+  /* Focus ring stays accent-tinted; recomposed for light. */
+  --focus-ring:        0 0 0 2px var(--accent-glow);
+  --focus-ring-inset:  inset 0 0 0 2px var(--accent-glow);
 }

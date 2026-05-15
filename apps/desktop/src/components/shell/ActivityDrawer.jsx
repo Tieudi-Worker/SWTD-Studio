@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react'
 import IconButton from '../atoms/IconButton.jsx'
+import { t } from '../../lib/i18n.js'
 
 /**
  * @typedef {Object} LogLine
@@ -20,7 +21,7 @@ import IconButton from '../atoms/IconButton.jsx'
 const SUMMARY_TAIL = 2
 
 /** @param {ActivityDrawerProps} props */
-export default function ActivityDrawer({ mode, onToggle, onClear, lines, runStatus }) {
+export default function ActivityDrawer({ mode, onToggle, onClear, lines, runStatus, language = 'en' }) {
   const bodyRef = useRef(null)
   const expanded = mode === 'expanded'
   const summaryMode = mode === 'summary'
@@ -32,9 +33,10 @@ export default function ActivityDrawer({ mode, onToggle, onClear, lines, runStat
   }, [lines, expanded])
 
   const count = (lines || []).length
+  const linesFn = t('drawer.lines', language)
   const summary = count === 0
-    ? 'no activity yet'
-    : `${count} line${count === 1 ? '' : 's'}`
+    ? t('drawer.no_activity', language)
+    : (typeof linesFn === 'function' ? linesFn(count) : `${count}`)
 
   // Summary mode: peek the most-recent N lines without giving the
   // drawer a scrollable body. Keeps the canvas dominant while still
@@ -44,8 +46,8 @@ export default function ActivityDrawer({ mode, onToggle, onClear, lines, runStat
     : (lines || [])
 
   const nextLabel = mode === 'collapsed'
-    ? 'Peek activity'
-    : (mode === 'summary' ? 'Expand activity' : 'Collapse activity')
+    ? t('drawer.tip.peek', language)
+    : (mode === 'summary' ? t('drawer.tip.expand', language) : t('drawer.tip.collapse', language))
 
   const chevron = mode === 'collapsed' ? '▸' : (mode === 'summary' ? '▹' : '▾')
 
@@ -61,7 +63,7 @@ export default function ActivityDrawer({ mode, onToggle, onClear, lines, runStat
           title={nextLabel}
         >
           <span className="drawer__chevron" aria-hidden="true">{chevron}</span>
-          <span className="drawer__title">Activity</span>
+          <span className="drawer__title">{t('drawer.title', language)}</span>
           <span className="drawer__summary">{summary}</span>
           {runStatus === 'running' && <span className="drawer__pulse" aria-hidden="true" />}
         </button>
@@ -71,16 +73,16 @@ export default function ActivityDrawer({ mode, onToggle, onClear, lines, runStat
               icon={<TrashIcon />}
               size="sm"
               variant="ghost"
-              label="Clear log"
+              label={t('drawer.clear', language)}
               onClick={onClear}
               disabled={count === 0}
-              disabledReason="No log lines to clear"
+              disabledReason={t('drawer.clear', language)}
             />
             <IconButton
               icon={<MinusIcon />}
               size="sm"
               variant="ghost"
-              label="Collapse"
+              label={t('drawer.collapse', language)}
               onClick={onToggle}
             />
           </div>
@@ -90,7 +92,7 @@ export default function ActivityDrawer({ mode, onToggle, onClear, lines, runStat
       {bodyVisible && (
         <div className="drawer__body" id="drawer-body" ref={bodyRef}>
           {count === 0 && (
-            <div className="drawer__empty">No log lines yet — run the pipeline to stream output.</div>
+            <div className="drawer__empty">{t('drawer.empty_hint', language)}</div>
           )}
           {visibleLines.map((l, i) => (
             <div key={i} className={'drawer__line drawer__line--' + (l.stream || 'sys')}>

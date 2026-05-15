@@ -702,7 +702,7 @@
     border-color var(--transition-base),
     color var(--transition-base),
     box-shadow var(--transition-base),
-    transform var(--transition-base);
+    transform var(--duration-base) var(--ease-spring-soft);
 }
 .slot:hover:not(:disabled) {
   background: var(--bg-hover);
@@ -784,8 +784,15 @@
 .slot__qc--missing { color: var(--danger); border-color: rgba(239, 68, 68, 0.35); }
 .slot__qc--unknown { color: var(--warning); border-color: rgba(251, 191, 36, 0.35); }
 
-.slot--done    { border-color: rgba(74, 222, 128, 0.35); }
+.slot--done    {
+  border-color: rgba(74, 222, 128, 0.35);
+  animation: slot-flash-done var(--duration-slow) var(--ease-out);
+}
 .slot--done    .slot__state { color: var(--success); }
+@keyframes slot-flash-done {
+  0%   { background: var(--success-muted); }
+  100% { background: var(--bg-elevated); }
+}
 .slot--running { border-color: rgba(212, 168, 87, 0.45); }
 .slot--running .slot__state { color: var(--accent); }
 .slot--error   { border-color: rgba(239, 68, 68, 0.35); }
@@ -1303,7 +1310,8 @@
 .statusbar__kbd-pair {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 0;
+  transition: gap var(--transition-base);
 }
 .statusbar__kbd {
   font-family: var(--font-mono);
@@ -1315,12 +1323,29 @@
   color: var(--text-secondary);
   letter-spacing: 0.04em;
 }
+/* Progressive disclosure: labels hide at rest so the statusbar reads
+   as a compact kbd hint row. Hovering or keyboard-focusing the row
+   reveals the labels with a smooth max-width transition. */
 .statusbar__kbd-label {
   font-family: var(--font-mono);
   font-size: var(--text-caps-sm);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-tertiary);
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  transition:
+    max-width var(--transition-base),
+    opacity var(--transition-base);
+}
+.statusbar__shortcuts:hover .statusbar__kbd-pair,
+.statusbar__shortcuts:focus-visible .statusbar__kbd-pair { gap: 4px; }
+.statusbar__shortcuts:hover .statusbar__kbd-label,
+.statusbar__shortcuts:focus-visible .statusbar__kbd-label {
+  max-width: 80px;
+  opacity: 1;
 }
 
 /* ── ActivityDrawer ──────────────────────────────────────────── */
@@ -1449,7 +1474,7 @@
     var(--bg-elevated) 100%
   );
   background-size: 200% 100%;
-  animation: atom-skeleton 1.4s ease-in-out infinite;
+  animation: atom-skeleton 1.4s var(--ease-in-out) infinite;
   border-radius: var(--radius-sm);
 }
 .skeleton--row { height: 22px; }
@@ -1514,12 +1539,20 @@
 
 .cmdk__group { padding: var(--space-1) 0; }
 .cmdk__group-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
   font-family: var(--font-mono);
   font-size: var(--text-caps-sm);
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--text-tertiary);
   padding: var(--space-2) var(--space-4);
+}
+.cmdk__group-count {
+  font-size: var(--text-caps-sm);
+  color: var(--text-disabled);
+  letter-spacing: 0.08em;
 }
 
 .cmdk__item {
@@ -1538,10 +1571,17 @@
   font-size: var(--text-body-sm);
   transition: background var(--transition-base), color var(--transition-base);
 }
-.cmdk__item:hover,
-.cmdk__item--selected {
+.cmdk__item:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+/* Keyboard-selected row reads stronger than mouse-hover: accent
+   bg tint + left edge accent stripe. Scan-friendly at a glance. */
+.cmdk__item--selected,
+.cmdk__item--selected:hover {
   background: var(--accent-muted);
   color: var(--text-primary);
+  box-shadow: inset 3px 0 0 var(--accent);
 }
 .cmdk__item:disabled,
 .cmdk__item[aria-disabled="true"] {
@@ -1568,10 +1608,24 @@
 }
 
 .cmdk__empty {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
   padding: var(--space-6);
   text-align: center;
   color: var(--text-tertiary);
   font-size: var(--text-meta-md);
+}
+.cmdk__empty-title {
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--text-body-sm);
+}
+.cmdk__empty-hint {
+  font-family: var(--font-mono);
+  font-size: var(--text-caps-sm);
+  letter-spacing: 0.08em;
+  color: var(--text-disabled);
 }
 
 .cmdk__footer {
@@ -1677,4 +1731,71 @@
   border-top: 1px solid var(--border-subtle);
   background: var(--bg-elevated);
   flex-shrink: 0;
+}
+
+/* ── Density: compact overrides ──────────────────────────────────
+   Phase C · C5 — scan-friendly tightening for the SKU list, slot
+   grid, panel bodies, canvas, and inspector. Comfortable (default)
+   keeps the original Phase A/B values; only specific gap/padding
+   pairs shrink in compact. Spacing scale + typography unchanged.
+*/
+
+[data-density="compact"] .leftrail__sku {
+  padding: var(--space-1) var(--space-3);
+}
+[data-density="compact"] .leftrail__list { gap: 1px; }
+[data-density="compact"] .leftrail__collection {
+  padding: var(--space-1) var(--space-3);
+}
+
+[data-density="compact"] .canvas__header {
+  padding: var(--space-4) var(--space-6) var(--space-3);
+}
+[data-density="compact"] .canvas__body {
+  padding: var(--space-4) var(--space-6);
+}
+
+[data-density="compact"] .panel__head {
+  padding: var(--space-2) var(--space-3);
+}
+[data-density="compact"] .panel__body {
+  padding: var(--space-3);
+}
+[data-density="compact"] .panel-stack { gap: var(--space-3); }
+
+[data-density="compact"] .slot-grid {
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: var(--space-2);
+}
+[data-density="compact"] .slot { padding: var(--space-3); gap: var(--space-1); }
+
+[data-density="compact"] .inspector__scroll { padding: var(--space-4); }
+[data-density="compact"] .inspector__section + .inspector__section {
+  margin-top: var(--space-4);
+}
+[data-density="compact"] .deflist { gap: 2px; }
+[data-density="compact"] .history { gap: 2px; }
+[data-density="compact"] .qc-checklist { gap: 2px; }
+[data-density="compact"] .qc-row { padding: var(--space-1) var(--space-2); }
+
+/* ── Theme: light overrides for hardcoded rgba() bits ────────────
+   The hardcoded rgba(255, 255, 255, 0.04…0.06) backgrounds on kbd
+   badges, QC chips, and modal backdrops are invisible (or overly
+   heavy in the backdrops' case) on a light surface. Recolour just
+   those few sites; everything else picks up the new colour tokens
+   via the [data-theme="light"] block in tokens.css.
+*/
+[data-theme="light"] .atom-btn__kbd,
+[data-theme="light"] .atom-input__kbd,
+[data-theme="light"] .slot__qc,
+[data-theme="light"] .slot-list__qc,
+[data-theme="light"] .statusbar__kbd,
+[data-theme="light"] .cmdk__item-shortcut,
+[data-theme="light"] .cmdk__footer-hint kbd {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .cmdk-backdrop,
+[data-theme="light"] .modal-backdrop {
+  background: rgba(0, 0, 0, 0.35);
 }

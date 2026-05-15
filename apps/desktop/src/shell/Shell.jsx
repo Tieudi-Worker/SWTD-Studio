@@ -15,7 +15,10 @@ const LAYOUT_KEY = 'swtd_ui_layout'
 const DEFAULT_LAYOUT = {
   leftRailCollapsed: false,
   rightInspectorCollapsed: false,
-  activityDrawerMode: 'collapsed'  /* 'collapsed' | 'summary' | 'expanded' */
+  activityDrawerMode: 'collapsed',  /* 'collapsed' | 'summary' | 'expanded' */
+  density: 'comfortable',           /* 'comfortable' | 'compact' */
+  theme: 'dark',                    /* 'dark' | 'light' */
+  language: 'en'                    /* 'en' | 'vi' */
 }
 
 function loadLayout() {
@@ -80,6 +83,52 @@ export default function Shell() {
   const [validatingOutput, setValidatingOutput] = useState(false)
 
   useEffect(() => { saveLayout(layout) }, [layout])
+
+  // C4 — Sync density to <html data-density="..."> so the
+  // [data-density="compact"] CSS overrides defined in tokens.css
+  // take effect across the whole renderer.
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    document.documentElement.setAttribute('data-density', layout.density || 'comfortable')
+  }, [layout.density])
+
+  const toggleDensity = useCallback(() => {
+    setLayout(prev => ({
+      ...prev,
+      density: prev.density === 'compact' ? 'comfortable' : 'compact'
+    }))
+  }, [])
+
+  // Sync theme to <html data-theme="..."> so [data-theme="light"]
+  // token overrides in tokens.css take effect.
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    document.documentElement.setAttribute('data-theme', layout.theme || 'dark')
+  }, [layout.theme])
+
+  const toggleTheme = useCallback(() => {
+    setLayout(prev => ({
+      ...prev,
+      theme: prev.theme === 'light' ? 'dark' : 'light'
+    }))
+  }, [])
+
+  // Sync language to <html lang="..."> and data-language for CSS/UA hooks.
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    const lang = layout.language || 'en'
+    document.documentElement.setAttribute('lang', lang)
+    document.documentElement.setAttribute('data-language', lang)
+  }, [layout.language])
+
+  const toggleLanguage = useCallback(() => {
+    setLayout(prev => ({
+      ...prev,
+      language: prev.language === 'vi' ? 'en' : 'vi'
+    }))
+  }, [])
+
+  const lang = layout.language || 'en'
 
   // B1 — auto-toggle inspector on SKU-presence transition.
   // Opens when a SKU is loaded, closes when returning to an empty
@@ -409,6 +458,12 @@ export default function Shell() {
           commandQuery={commandQuery}
           onCommandQueryChange={setCommandQuery}
           onOpenCommandPalette={openPalette}
+          density={layout.density}
+          onToggleDensity={toggleDensity}
+          theme={layout.theme}
+          onToggleTheme={toggleTheme}
+          language={lang}
+          onToggleLanguage={toggleLanguage}
         />
       </header>
 
@@ -426,12 +481,13 @@ export default function Shell() {
           onChooseSku={chooseSku}
           validation={validation}
           runStatus={listingState.status}
+          language={lang}
         />
       </aside>
 
       <section className="shell__main">
         <div className="shell__stepper">
-          <Stepper steps={stepEntries} activeId={step} onChange={handleStepChange} />
+          <Stepper steps={stepEntries} activeId={step} onChange={handleStepChange} language={lang} />
         </div>
         <div className="shell__canvas">
           <MainCanvas
@@ -455,6 +511,7 @@ export default function Shell() {
             validatingOutput={validatingOutput}
             onRefreshValidator={refreshValidator}
             onRevealCohesionRequest={revealCohesionRequest}
+            language={lang}
           />
         </div>
         <div className="shell__drawer">
@@ -464,6 +521,7 @@ export default function Shell() {
             onClear={clearActivity}
             lines={listingState.lines}
             runStatus={listingState.status}
+            language={lang}
           />
         </div>
       </section>
@@ -492,6 +550,7 @@ export default function Shell() {
           validatingOutput={validatingOutput}
           onRefreshValidator={refreshValidator}
           onRevealCohesionRequest={revealCohesionRequest}
+          language={lang}
         />
       </aside>
 
@@ -500,6 +559,7 @@ export default function Shell() {
           runStatus={listingState.status}
           lastLine={lastLine}
           onOpenShortcuts={openPalette}
+          language={lang}
         />
       </footer>
 
@@ -517,6 +577,12 @@ export default function Shell() {
           onToggleLeftRail={toggleLeftRail}
           onToggleInspector={toggleRightInspector}
           onToggleDrawer={toggleActivityDrawer}
+          onToggleDensity={toggleDensity}
+          density={layout.density}
+          onToggleTheme={toggleTheme}
+          theme={layout.theme}
+          onToggleLanguage={toggleLanguage}
+          language={lang}
           runDisabledReason={runDisabledReason}
           cancelDisabledReason={cancelDisabledReason}
           revalidateDisabledReason={revalidateDisabledReason}

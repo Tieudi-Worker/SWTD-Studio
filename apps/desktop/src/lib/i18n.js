@@ -1,0 +1,211 @@
+/**
+ * Lightweight i18n for SWTD Studio renderer.
+ *
+ * Two languages: 'en' (default) and 'vi'. No dependencies — small
+ * dictionary keyed by dotted paths.
+ *
+ * Vietnamese translation rule (per Boss): translate normal UI copy,
+ * but keep specialist/product terms in English — SKU, ASIN, Listing,
+ * A+, Brief, Validation, Export, Pipeline, Slot, Inspector, QC, PPC,
+ * ROI, CTR, CVR, Workspace.
+ *
+ * Values are either a string (static) or a function (interpolated/
+ * pluralised — e.g. `(n) => \`${n} dòng\``). The `t()` helper resolves
+ * either form; for the function form, call site appends `(args)`.
+ */
+
+export const LANGUAGES = ['en', 'vi']
+
+const UI_TEXT = {
+  /* TopBar ─────────────────────────────────────── */
+  'topbar.brand_sub':         { en: 'Operator Console',         vi: 'Bảng điều khiển vận hành' },
+  'topbar.workspace_key':     { en: 'WORKSPACE',                vi: 'WORKSPACE' },
+  'topbar.workspace_empty':   { en: 'No workspace',             vi: 'Chưa chọn Workspace' },
+  'topbar.workspace_pick':    { en: 'Pick a workspace folder',  vi: 'Chọn thư mục Workspace' },
+  'topbar.search_placeholder':{ en: 'Search SKUs, commands…',   vi: 'Tìm SKU, lệnh…' },
+  'topbar.tip.settings':      { en: 'Settings',                 vi: 'Cài đặt' },
+  'topbar.tip.account':       { en: 'Account',                  vi: 'Tài khoản' },
+  'topbar.tip.theme_light':   { en: 'Theme: light (switch to dark)',         vi: 'Giao diện: sáng (chuyển sang tối)' },
+  'topbar.tip.theme_dark':    { en: 'Theme: dark (switch to light)',         vi: 'Giao diện: tối (chuyển sang sáng)' },
+  'topbar.tip.density_compact':     { en: 'Density: compact (switch to comfortable)', vi: 'Mật độ: gọn (chuyển sang thoải mái)' },
+  'topbar.tip.density_comfortable': { en: 'Density: comfortable (switch to compact)', vi: 'Mật độ: thoải mái (chuyển sang gọn)' },
+  'topbar.tip.lang_en':       { en: 'Language: English (switch to Vietnamese)', vi: 'Ngôn ngữ: English (chuyển sang Tiếng Việt)' },
+  'topbar.tip.lang_vi':       { en: 'Language: Vietnamese (switch to English)', vi: 'Ngôn ngữ: Tiếng Việt (chuyển sang English)' },
+
+  /* Run status (chip / statusbar word) ──────────── */
+  'run.idle':       { en: 'Idle',             vi: 'Chờ' },
+  'run.running':    { en: 'Running',          vi: 'Đang chạy' },
+  'run.complete':   { en: 'Complete',         vi: 'Hoàn tất' },
+  'run.failed':     { en: 'Failed',           vi: 'Thất bại' },
+  'run.cancelled':  { en: 'Cancelled',        vi: 'Đã huỷ' },
+  'run.review':     { en: 'Review',           vi: 'Chờ duyệt' },
+  'run.awaiting':   { en: 'awaiting review',  vi: 'chờ duyệt' },
+
+  /* Stepper step labels — operator terms stay English (Listing, A+, QC) */
+  'step.intake':    { en: 'Intake',   vi: 'Đầu vào' },
+  'step.listing':   { en: 'Listing',  vi: 'Listing' },
+  'step.aplus':     { en: 'A+',       vi: 'A+' },
+  'step.video':     { en: 'Video',    vi: 'Video' },
+  'step.qc':        { en: 'QC',       vi: 'QC' },
+
+  /* Stepper state words */
+  'stepstate.done':    { en: 'done',    vi: 'xong' },
+  'stepstate.active':  { en: 'active',  vi: 'đang xem' },
+  'stepstate.running': { en: 'running', vi: 'đang chạy' },
+  'stepstate.locked':  { en: 'locked',  vi: 'khoá' },
+  'stepstate.error':   { en: 'error',   vi: 'lỗi' },
+  'stepstate.review':  { en: 'review',  vi: 'duyệt' },
+  'stepstate.idle':    { en: 'idle',    vi: 'chờ' },
+
+  /* StatusBar shortcut labels */
+  'kbd.command':    { en: 'Command',   vi: 'Lệnh' },
+  'kbd.run':        { en: 'Run',       vi: 'Chạy' },
+  'kbd.cancel':     { en: 'Cancel',    vi: 'Huỷ' },
+  'kbd.sidebar':    { en: 'Sidebar',   vi: 'Sidebar' },
+  'kbd.inspector':  { en: 'Inspector', vi: 'Inspector' },
+  'kbd.drawer':     { en: 'Drawer',    vi: 'Drawer' },
+
+  /* ActivityDrawer */
+  'drawer.title':            { en: 'Activity',          vi: 'Hoạt động' },
+  'drawer.no_activity':      { en: 'no activity yet',   vi: 'chưa có hoạt động' },
+  'drawer.lines':            {
+    en: (n) => `${n} line${n === 1 ? '' : 's'}`,
+    vi: (n) => `${n} dòng`
+  },
+  'drawer.tip.peek':         { en: 'Peek activity',     vi: 'Xem nhanh hoạt động' },
+  'drawer.tip.expand':       { en: 'Expand activity',   vi: 'Mở rộng hoạt động' },
+  'drawer.tip.collapse':     { en: 'Collapse activity', vi: 'Thu gọn hoạt động' },
+  'drawer.clear':            { en: 'Clear log',         vi: 'Xoá log' },
+  'drawer.collapse':         { en: 'Collapse',          vi: 'Thu gọn' },
+  'drawer.empty_hint':       { en: 'No log lines yet — run the pipeline to stream output.',
+                               vi: 'Chưa có dòng log nào — chạy Pipeline để xem output trực tiếp.' },
+
+  /* LeftRail */
+  'leftrail.workspace':            { en: 'Workspace',            vi: 'Workspace' },
+  'leftrail.section.collections':  { en: 'Collections',          vi: 'Bộ sưu tập' },
+  'leftrail.section.skus':         { en: 'SKUs',                 vi: 'SKUs' },
+  'leftrail.collection.all':       { en: 'All',                  vi: 'Tất cả' },
+  'leftrail.collection.draft':     { en: 'Draft',                vi: 'Bản nháp' },
+  'leftrail.collection.ready':     { en: 'Ready',                vi: 'Sẵn sàng' },
+  'leftrail.collection.needs_fix': { en: 'Needs Fix',            vi: 'Cần sửa' },
+  'leftrail.collection.complete':  { en: 'Complete',             vi: 'Hoàn tất' },
+  'leftrail.filter_placeholder':   { en: 'Filter…',              vi: 'Lọc…' },
+  'leftrail.empty.no_workspace':         { en: 'No workspace',          vi: 'Chưa chọn Workspace' },
+  'leftrail.empty.no_workspace_hint':    { en: 'Pick a folder containing SKU subdirectories.',
+                                            vi: 'Chọn thư mục chứa các SKU.' },
+  'leftrail.empty.no_matches':           { en: 'No matches',            vi: 'Không có kết quả' },
+  'leftrail.empty.no_matches_hint':      { en: 'Adjust the filter to find a SKU.',
+                                            vi: 'Đổi bộ lọc để tìm SKU.' },
+  'leftrail.empty.no_skus':              { en: 'No SKUs',               vi: 'Không có SKU' },
+  'leftrail.empty.no_skus_hint':         { en: 'This folder has no SKU subdirectories.',
+                                            vi: 'Thư mục này chưa có SKU nào.' },
+  'leftrail.action.pick_workspace':      { en: 'Pick workspace',        vi: 'Chọn Workspace' },
+  'leftrail.action.clear_filter':        { en: 'Clear filter',          vi: 'Xoá bộ lọc' },
+  'leftrail.flag.has_brief':             { en: 'brief',                 vi: 'brief' },
+  'leftrail.flag.no_brief':              { en: 'no brief',              vi: 'thiếu brief' },
+  'leftrail.tip.collapse':               { en: 'Collapse sidebar',      vi: 'Thu gọn sidebar' },
+  'leftrail.tip.expand':                 { en: 'Expand sidebar',        vi: 'Mở rộng sidebar' },
+  'leftrail.tip.refresh':                { en: 'Refresh SKUs',          vi: 'Tải lại danh sách SKU' },
+
+  /* MainCanvas — empty states + step headers */
+  'canvas.empty.no_workspace':       { en: 'Pick a workspace to begin', vi: 'Chọn Workspace để bắt đầu' },
+  'canvas.empty.no_workspace_hint':  { en: 'Select the parent folder containing your SKU subdirectories. Each SKU should have a brief.json.',
+                                       vi: 'Chọn thư mục cha chứa các SKU. Mỗi SKU cần có file brief.json.' },
+  'canvas.empty.no_sku':             { en: 'Select a SKU',              vi: 'Chọn một SKU' },
+  'canvas.empty.no_sku_hint': {
+    en: (n) => n > 0
+      ? `${n} SKU${n === 1 ? '' : 's'} discovered. Click one in the left rail to load its brief.`
+      : 'No SKUs discovered. Add SKU folders (each with brief.json) inside the workspace.',
+    vi: (n) => n > 0
+      ? `Đã thấy ${n} SKU. Bấm một SKU ở thanh trái để mở Brief.`
+      : 'Chưa thấy SKU nào. Thêm thư mục SKU (có brief.json) trong Workspace.'
+  },
+  'canvas.title.intake':   { en: 'Project & brief',           vi: 'Dự án & Brief' },
+  'canvas.title.listing':  { en: '8-slot listing pipeline',   vi: 'Pipeline 8 Slot Listing' },
+  'canvas.title.aplus':    { en: 'A+ premium modules',        vi: 'A+ premium modules' },
+  'canvas.title.video':    { en: 'Product video',             vi: 'Product video' },
+  'canvas.title.qc':       { en: 'QC & export bundle',        vi: 'QC & gói Export' },
+
+  /* RightInspector tabs (kept short, ops terms in English where read better) */
+  'tab.brief':       { en: 'Brief',      vi: 'Brief' },
+  'tab.validation':  { en: 'Validation', vi: 'Validation' },
+  'tab.history':     { en: 'History',    vi: 'Lịch sử' },
+  'tab.run':         { en: 'Run',        vi: 'Chạy' },
+  'tab.slots':       { en: 'Slots',      vi: 'Slots' },
+  'tab.qc':          { en: 'QC',         vi: 'QC' },
+  'tab.plan':        { en: 'Plan',       vi: 'Kế hoạch' },
+
+  /* RightInspector actions + section heads */
+  'inspector.section.current_sku':     { en: 'Current SKU',      vi: 'SKU hiện tại' },
+  'inspector.section.brief_fields':    { en: 'Brief fields',     vi: 'Trường Brief' },
+  'inspector.section.brief_health':    { en: 'Brief health',     vi: 'Tình trạng Brief' },
+  'inspector.section.recent_changes':  { en: 'Recent changes',   vi: 'Thay đổi gần đây' },
+  'inspector.section.listing_run':     { en: 'Listing run',      vi: 'Lượt chạy Listing' },
+  'inspector.section.slot_progress':   { en: 'Slot progress',    vi: 'Tiến độ Slot' },
+  'inspector.section.output_validator':{ en: 'Output validator', vi: 'Validator output' },
+  'inspector.section.step_locked':     { en: 'Step locked',      vi: 'Bước bị khoá' },
+  'inspector.action.run_listing':      { en: 'Run listing',      vi: 'Chạy Listing' },
+  'inspector.action.run_all_8':        { en: 'Run all 8 slots',  vi: 'Chạy cả 8 Slot' },
+  'inspector.action.revalidate':       { en: 'Re-validate brief',vi: 'Kiểm tra lại Brief' },
+  'inspector.action.cancel':           { en: 'Cancel run',       vi: 'Huỷ lượt chạy' },
+  'inspector.action.regen_selected':   { en: 'Regenerate selected', vi: 'Regenerate đã chọn' },
+  'inspector.action.regen_n': {
+    en: (n) => `Regenerate ${n} slot${n === 1 ? '' : 's'}`,
+    vi: (n) => `Regenerate ${n} Slot`
+  },
+  'inspector.action.locked':           { en: 'Locked',           vi: 'Đã khoá' },
+  'inspector.action.open_cohesion':    { en: 'Open Cohesion Request', vi: 'Mở Cohesion Request' },
+
+  /* CommandPalette */
+  'cmdk.placeholder':           { en: 'Type a command, navigate steps, jump to a SKU…',
+                                  vi: 'Gõ lệnh, đi bước, hoặc nhảy đến SKU…' },
+  'cmdk.group.navigation':      { en: 'Navigation', vi: 'Điều hướng' },
+  'cmdk.group.actions':         { en: 'Actions',    vi: 'Hành động' },
+  'cmdk.group.skus':            { en: 'SKUs',       vi: 'SKUs' },
+  'cmdk.group.settings':        { en: 'Settings',   vi: 'Cài đặt' },
+  'cmdk.empty.title': {
+    en: (q) => `No matches for "${q}"`,
+    vi: (q) => `Không có kết quả cho "${q}"`
+  },
+  'cmdk.empty.hint':            { en: 'Try a SKU name, step name, or action verb',
+                                  vi: 'Thử tên SKU, tên bước, hoặc động từ hành động' },
+  'cmdk.footer.navigate':       { en: 'Navigate', vi: 'Di chuyển' },
+  'cmdk.footer.select':         { en: 'Select',   vi: 'Chọn' },
+  'cmdk.footer.close':          { en: 'Close',    vi: 'Đóng' },
+  'cmdk.action.run_listing':    { en: 'Run listing',           vi: 'Chạy Listing' },
+  'cmdk.action.cancel_run':     { en: 'Cancel current run',    vi: 'Huỷ lượt chạy hiện tại' },
+  'cmdk.action.revalidate':     { en: 'Re-validate brief',     vi: 'Kiểm tra lại Brief' },
+  'cmdk.action.pick_workspace': { en: 'Pick workspace…',       vi: 'Chọn Workspace…' },
+  'cmdk.action.toggle_sidebar': { en: 'Toggle sidebar',        vi: 'Bật/tắt sidebar' },
+  'cmdk.action.toggle_inspector': { en: 'Toggle inspector',    vi: 'Bật/tắt Inspector' },
+  'cmdk.action.toggle_drawer':  { en: 'Toggle activity drawer',vi: 'Bật/tắt Activity Drawer' },
+  'cmdk.action.go_to':          {
+    en: (label) => `Go to ${label}`,
+    vi: (label) => `Đi tới ${label}`
+  },
+  'cmdk.action.density_to_compact':     { en: 'Density: switch to compact',     vi: 'Mật độ: chuyển sang gọn' },
+  'cmdk.action.density_to_comfortable': { en: 'Density: switch to comfortable', vi: 'Mật độ: chuyển sang thoải mái' },
+  'cmdk.action.theme_to_light': { en: 'Theme: switch to Light', vi: 'Giao diện: chuyển sang Sáng' },
+  'cmdk.action.theme_to_dark':  { en: 'Theme: switch to Dark',  vi: 'Giao diện: chuyển sang Tối' },
+  'cmdk.action.lang_to_vi':     { en: 'Language: switch to Vietnamese', vi: 'Ngôn ngữ: chuyển sang Tiếng Việt' },
+  'cmdk.action.lang_to_en':     { en: 'Language: switch to English',    vi: 'Ngôn ngữ: chuyển sang English' },
+  'cmdk.reason.step_locked':    { en: 'Step is locked — complete earlier steps first.',
+                                  vi: 'Bước này đang khoá — hoàn thành các bước trước trước.' },
+  'cmdk.reason.no_brief':       { en: 'No brief.json in this SKU folder.',
+                                  vi: 'Thư mục SKU này chưa có brief.json.' }
+}
+
+/**
+ * Resolve a key for a language. Returns the entry value if it's a
+ * string, or the function for templated entries. Falls back to en,
+ * then the raw key, if a translation is missing.
+ *
+ * @param {string} key
+ * @param {'en'|'vi'} [lang]
+ * @returns {string|Function}
+ */
+export function t(key, lang = 'en') {
+  const entry = UI_TEXT[key]
+  if (!entry) return key
+  return entry[lang] ?? entry.en ?? key
+}

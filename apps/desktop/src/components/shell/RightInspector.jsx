@@ -3,13 +3,18 @@ import Button from '../atoms/Button.jsx'
 import StatusChip from '../atoms/StatusChip.jsx'
 import StatusDot from '../atoms/StatusDot.jsx'
 import { LISTING_SLOT_META } from '../../lib/slot-progress.js'
+import { t } from '../../lib/i18n.js'
 
 const TABS_BY_STEP = {
-  intake:  ['Brief', 'Validation', 'History'],
-  listing: ['Run', 'Slots', 'QC'],
-  aplus:   ['Plan'],
-  video:   ['Plan'],
-  qc:      ['Plan']
+  intake:  [{ id: 'Brief',      key: 'tab.brief' },
+            { id: 'Validation', key: 'tab.validation' },
+            { id: 'History',    key: 'tab.history' }],
+  listing: [{ id: 'Run',   key: 'tab.run' },
+            { id: 'Slots', key: 'tab.slots' },
+            { id: 'QC',    key: 'tab.qc' }],
+  aplus:   [{ id: 'Plan',  key: 'tab.plan' }],
+  video:   [{ id: 'Plan',  key: 'tab.plan' }],
+  qc:      [{ id: 'Plan',  key: 'tab.plan' }]
 }
 
 /**
@@ -51,34 +56,35 @@ export default function RightInspector({
   validatorReport,
   validatingOutput,
   onRefreshValidator,
-  onRevealCohesionRequest
+  onRevealCohesionRequest,
+  language = 'en'
 }) {
-  const tabs = TABS_BY_STEP[step] || ['Detail']
-  const [active, setActive] = React.useState(tabs[0])
-  React.useEffect(() => { setActive(tabs[0]) }, [step]) // eslint-disable-line react-hooks/exhaustive-deps
+  const tabs = TABS_BY_STEP[step] || [{ id: 'Detail', key: 'tab.plan' }]
+  const [active, setActive] = React.useState(tabs[0].id)
+  React.useEffect(() => { setActive(tabs[0].id) }, [step]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const skuName = skuPath ? lastSegment(skuPath) : null
 
   return (
     <div className="inspector">
       <div className="inspector__tabs" role="tablist">
-        {tabs.map(t => (
+        {tabs.map(tab => (
           <button
             type="button"
-            key={t}
+            key={tab.id}
             role="tab"
-            aria-selected={active === t}
-            className={'inspector__tab' + (active === t ? ' inspector__tab--active' : '')}
-            onClick={() => setActive(t)}
+            aria-selected={active === tab.id}
+            className={'inspector__tab' + (active === tab.id ? ' inspector__tab--active' : '')}
+            onClick={() => setActive(tab.id)}
           >
-            {t}
+            {t(tab.key, language)}
           </button>
         ))}
       </div>
 
       <div className="inspector__scroll">
         <section className="inspector__section">
-          <div className="inspector__section-head">Current SKU</div>
+          <div className="inspector__section-head">{t('inspector.section.current_sku', language)}</div>
           <div className="inspector__sku">
             <span className="inspector__sku-name">{skuName || <span className="muted">none</span>}</span>
             <StatusChip
@@ -91,21 +97,21 @@ export default function RightInspector({
 
         {step === 'intake' && active === 'Brief' && (
           <section className="inspector__section">
-            <div className="inspector__section-head">Brief fields</div>
+            <div className="inspector__section-head">{t('inspector.section.brief_fields', language)}</div>
             <DefList items={briefFields(validation)} />
           </section>
         )}
 
         {step === 'intake' && active === 'Validation' && (
           <section className="inspector__section">
-            <div className="inspector__section-head">Brief health</div>
+            <div className="inspector__section-head">{t('inspector.section.brief_health', language)}</div>
             <BriefHealth validation={validation} />
           </section>
         )}
 
         {step === 'intake' && active === 'History' && (
           <section className="inspector__section">
-            <div className="inspector__section-head">Recent changes</div>
+            <div className="inspector__section-head">{t('inspector.section.recent_changes', language)}</div>
             <History
               skuPath={skuPath}
               validation={validation}
@@ -117,7 +123,7 @@ export default function RightInspector({
 
         {step === 'listing' && active === 'Run' && (
           <section className="inspector__section">
-            <div className="inspector__section-head">Listing run</div>
+            <div className="inspector__section-head">{t('inspector.section.listing_run', language)}</div>
             <DefList items={[
               { k: 'status', v: listingState.status },
               { k: 'runId',  v: listingState.runId ? shortPath(listingState.runId, 24) : '—' },
@@ -141,7 +147,7 @@ export default function RightInspector({
                       : undefined
                   }
                 >
-                  Open Cohesion Request
+                  {t('inspector.action.open_cohesion', language)}
                 </Button>
               </div>
             )}
@@ -150,7 +156,7 @@ export default function RightInspector({
 
         {step === 'listing' && active === 'Slots' && (
           <section className="inspector__section">
-            <div className="inspector__section-head">Slot progress</div>
+            <div className="inspector__section-head">{t('inspector.section.slot_progress', language)}</div>
             <SlotList
               slotStates={slotStates || {}}
               selectedSlots={selectedSlots || new Set()}
@@ -168,7 +174,7 @@ export default function RightInspector({
 
         {step === 'listing' && active === 'QC' && (
           <section className="inspector__section">
-            <div className="inspector__section-head">Output validator</div>
+            <div className="inspector__section-head">{t('inspector.section.output_validator', language)}</div>
             <ValidatorSummary
               report={validatorReport}
               validating={!!validatingOutput}
@@ -179,7 +185,7 @@ export default function RightInspector({
 
         {(step === 'aplus' || step === 'video' || step === 'qc') && (
           <section className="inspector__section">
-            <div className="inspector__section-head">Step locked</div>
+            <div className="inspector__section-head">{t('inspector.section.step_locked', language)}</div>
             <p className="inspector__locked-copy">
               {lockedReason || 'This step ships in a later phase. Complete Intake and Listing first.'}
             </p>
@@ -200,7 +206,7 @@ export default function RightInspector({
               disabled={!!runDisabledReason}
               disabledReason={runDisabledReason}
             >
-              Run listing
+              {t('inspector.action.run_listing', language)}
             </Button>
             <Button
               variant="secondary"
@@ -211,59 +217,64 @@ export default function RightInspector({
               disabled={!!revalidateDisabledReason}
               disabledReason={revalidateDisabledReason}
             >
-              Re-validate brief
+              {t('inspector.action.revalidate', language)}
             </Button>
           </>
         )}
 
-        {step === 'listing' && (
-          <>
-            <Button
-              variant="primary"
-              size="md"
-              fullWidth
-              leftIcon={<PlayIcon />}
-              shortcut="⌘R"
-              onClick={onRunListing}
-              disabled={!!runDisabledReason}
-              disabledReason={runDisabledReason}
-            >
-              Run all 8 slots
-            </Button>
-            <Button
-              variant="secondary"
-              size="md"
-              fullWidth
-              leftIcon={<RefreshIcon />}
-              onClick={onRunListingRegen}
-              disabled={
-                !!runDisabledReason || !selectedSlots || selectedSlots.size === 0
-              }
-              disabledReason={
-                runDisabledReason
-                  || (!selectedSlots || selectedSlots.size === 0
-                      ? 'Select one or more slots to regenerate'
-                      : undefined)
-              }
-            >
-              {selectedSlots && selectedSlots.size > 0
-                ? `Regenerate ${selectedSlots.size} slot${selectedSlots.size === 1 ? '' : 's'}`
-                : 'Regenerate selected'}
-            </Button>
-            <Button
-              variant="danger"
-              size="md"
-              fullWidth
-              leftIcon={<StopIcon />}
-              shortcut="⌘."
-              onClick={onCancelListing}
-              disabled={!!cancelDisabledReason}
-              disabledReason={cancelDisabledReason}
-            >
-              Cancel run
-            </Button>
-          </>
-        )}
+        {step === 'listing' && (() => {
+          const regenFn = t('inspector.action.regen_n', language)
+          const selCount = selectedSlots ? selectedSlots.size : 0
+          const regenLabel = selCount > 0 && typeof regenFn === 'function'
+            ? regenFn(selCount)
+            : t('inspector.action.regen_selected', language)
+          return (
+            <>
+              <Button
+                variant="primary"
+                size="md"
+                fullWidth
+                leftIcon={<PlayIcon />}
+                shortcut="⌘R"
+                onClick={onRunListing}
+                disabled={!!runDisabledReason}
+                disabledReason={runDisabledReason}
+              >
+                {t('inspector.action.run_all_8', language)}
+              </Button>
+              <Button
+                variant="secondary"
+                size="md"
+                fullWidth
+                leftIcon={<RefreshIcon />}
+                onClick={onRunListingRegen}
+                disabled={
+                  !!runDisabledReason || !selectedSlots || selectedSlots.size === 0
+                }
+                disabledReason={
+                  runDisabledReason
+                    || (!selectedSlots || selectedSlots.size === 0
+                        ? 'Select one or more slots to regenerate'
+                        : undefined)
+                }
+              >
+                {regenLabel}
+              </Button>
+              <Button
+                variant="danger"
+                size="md"
+                fullWidth
+                leftIcon={<StopIcon />}
+                shortcut="⌘."
+                onClick={onCancelListing}
+                disabled={!!cancelDisabledReason}
+                disabledReason={cancelDisabledReason}
+              >
+                {t('inspector.action.cancel', language)}
+              </Button>
+            </>
+          )
+        })()}
 
         {(step === 'aplus' || step === 'video' || step === 'qc') && (
           <Button
@@ -273,7 +284,7 @@ export default function RightInspector({
             disabled
             disabledReason={lockedReason || 'Step not wired in phase 1.'}
           >
-            Locked
+            {t('inspector.action.locked', language)}
           </Button>
         )}
       </div>
