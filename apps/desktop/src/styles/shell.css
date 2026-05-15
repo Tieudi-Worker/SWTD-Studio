@@ -1777,3 +1777,25 @@
 [data-density="compact"] .history { gap: 2px; }
 [data-density="compact"] .qc-checklist { gap: 2px; }
 [data-density="compact"] .qc-row { padding: var(--space-1) var(--space-2); }
+
+/* ── Theme: light overrides for hardcoded rgba() bits ────────────
+   The hardcoded rgba(255, 255, 255, 0.04…0.06) backgrounds on kbd
+   badges, QC chips, and modal backdrops are invisible (or overly
+   heavy in the backdrops' case) on a light surface. Recolour just
+   those few sites; everything else picks up the new colour tokens
+   via the [data-theme="light"] block in tokens.css.
+*/
+[data-theme="light"] .atom-btn__kbd,
+[data-theme="light"] .atom-input__kbd,
+[data-theme="light"] .slot__qc,
+[data-theme="light"] .slot-list__qc,
+[data-theme="light"] .statusbar__kbd,
+[data-theme="light"] .cmdk__item-shortcut,
+[data-theme="light"] .cmdk__footer-hint kbd {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .cmdk-backdrop,
+[data-theme="light"] .modal-backdrop {
+  background: rgba(0, 0, 0, 0.35);
+}

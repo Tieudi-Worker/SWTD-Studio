@@ -16,7 +16,8 @@ const DEFAULT_LAYOUT = {
   leftRailCollapsed: false,
   rightInspectorCollapsed: false,
   activityDrawerMode: 'collapsed',  /* 'collapsed' | 'summary' | 'expanded' */
-  density: 'comfortable'            /* 'comfortable' | 'compact' */
+  density: 'comfortable',           /* 'comfortable' | 'compact' */
+  theme: 'dark'                     /* 'dark' | 'light' */
 }
 
 function loadLayout() {
@@ -94,6 +95,20 @@ export default function Shell() {
     setLayout(prev => ({
       ...prev,
       density: prev.density === 'compact' ? 'comfortable' : 'compact'
+    }))
+  }, [])
+
+  // Sync theme to <html data-theme="..."> so [data-theme="light"]
+  // token overrides in tokens.css take effect.
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    document.documentElement.setAttribute('data-theme', layout.theme || 'dark')
+  }, [layout.theme])
+
+  const toggleTheme = useCallback(() => {
+    setLayout(prev => ({
+      ...prev,
+      theme: prev.theme === 'light' ? 'dark' : 'light'
     }))
   }, [])
 
@@ -427,6 +442,8 @@ export default function Shell() {
           onOpenCommandPalette={openPalette}
           density={layout.density}
           onToggleDensity={toggleDensity}
+          theme={layout.theme}
+          onToggleTheme={toggleTheme}
         />
       </header>
 
@@ -537,6 +554,8 @@ export default function Shell() {
           onToggleDrawer={toggleActivityDrawer}
           onToggleDensity={toggleDensity}
           density={layout.density}
+          onToggleTheme={toggleTheme}
+          theme={layout.theme}
           runDisabledReason={runDisabledReason}
           cancelDisabledReason={cancelDisabledReason}
           revalidateDisabledReason={revalidateDisabledReason}

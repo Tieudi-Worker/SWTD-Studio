@@ -23,6 +23,8 @@ const RUN_TO_CHIP = {
  * @property {() => void} [onOpenSettings]
  * @property {'comfortable'|'compact'} [density]
  * @property {() => void} [onToggleDensity]
+ * @property {'dark'|'light'} [theme]
+ * @property {() => void} [onToggleTheme]
  */
 
 /** @param {TopBarProps} props */
@@ -35,7 +37,9 @@ export default function TopBar({
   onOpenCommandPalette,
   onOpenSettings,
   density,
-  onToggleDensity
+  onToggleDensity,
+  theme,
+  onToggleTheme
 }) {
   const chip = RUN_TO_CHIP[runStatus] || RUN_TO_CHIP.idle
   const wsLabel = workspace ? shortenPath(workspace, 44) : 'No workspace'
@@ -82,6 +86,13 @@ export default function TopBar({
 
       <div className="topbar__right">
         <StatusChip status={chip.status} size="sm">{chip.label}</StatusChip>
+        <IconButton
+          size="md"
+          variant="ghost"
+          icon={theme === 'light' ? <SunIcon /> : <MoonIcon />}
+          label={theme === 'light' ? 'Theme: light (switch to dark)' : 'Theme: dark (switch to light)'}
+          onClick={onToggleTheme}
+        />
         <IconButton
           size="md"
           variant="ghost"
@@ -156,6 +167,23 @@ function DensityCompactIcon() {
       <line x1="3" y1="5" x2="13" y2="5" />
       <line x1="3" y1="8" x2="13" y2="8" />
       <line x1="3" y1="11" x2="13" y2="11" />
+    </svg>
+  )
+}
+
+function SunIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
+      <circle cx="8" cy="8" r="2.6" />
+      <path d="M8 1.8v1.6M8 12.6v1.6M1.8 8h1.6M12.6 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M3.4 12.6l1.1-1.1M11.5 4.5l1.1-1.1" />
+    </svg>
+  )
+}
+
+function MoonIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round">
+      <path d="M13.5 9.4A5.5 5.5 0 1 1 6.6 2.5a4.5 4.5 0 0 0 6.9 6.9z" />
     </svg>
   )
 }

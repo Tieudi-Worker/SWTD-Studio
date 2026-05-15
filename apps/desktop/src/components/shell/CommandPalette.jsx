@@ -52,6 +52,8 @@ export default function CommandPalette({
   onToggleDrawer,
   onToggleDensity,
   density,
+  onToggleTheme,
+  theme,
   runDisabledReason,
   cancelDisabledReason,
   revalidateDisabledReason,
@@ -151,6 +153,14 @@ export default function CommandPalette({
         run: () => { onToggleDensity() }
       })
     }
+    if (onToggleTheme) {
+      base.push({
+        id: 'set:theme',
+        group: 'Settings',
+        label: theme === 'light' ? 'Theme: switch to Dark' : 'Theme: switch to Light',
+        run: () => { onToggleTheme() }
+      })
+    }
 
     return base
   }, [
@@ -159,7 +169,8 @@ export default function CommandPalette({
     onNavigateStep, onChooseSku, onPickWorkspace,
     onRunListing, onCancelListing, onRevalidate,
     onToggleLeftRail, onToggleInspector, onToggleDrawer,
-    onToggleDensity, density
+    onToggleDensity, density,
+    onToggleTheme, theme
   ])
 
   const filtered = useMemo(() => {
