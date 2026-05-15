@@ -1,0 +1,8 @@
+{
+  "name": "@swtd-studio/provider-core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.js",
+  "description": "SWTD-Studio Provider Core — Electron-main-safe provider registry, image_generate contract, key vault, media store, fallback router, web-research / insight brief pipeline. Cloud-portable: zero Electron / React imports."
+}

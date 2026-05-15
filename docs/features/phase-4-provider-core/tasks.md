@@ -25,41 +25,41 @@
 
 ## Phase 4.0 — Setup
 
-- [ ] T001 Cut new branch `phase-4-provider-core` from `phase-3-model-adapter` HEAD; record the HEAD sha in `docs/dev/TASK_RUNBOOK_PHASE_4_PROVIDER_CORE.md`
-- [ ] T002 [P] Update implementation runbook `docs/dev/TASK_RUNBOOK_PHASE_4_PROVIDER_CORE.md` with: skills-read list (speckit-specify, speckit-plan, speckit-tasks, tinbeta-coding-guardrail, matt-git-guardrails-claude-code), branch sha, checklist mirroring this `tasks.md`, sub-phase commit cadence (P4.1 → P4.2 → P4.3 → P4.4)
-- [ ] T003 [P] Snapshot current renderer bundle sizes (`apps/desktop/dist/assets/`) and Electron main bundle size before any changes; record in runbook for regression comparison (budget: ≤ +50 KB renderer JS over Phase 3 baseline; main-process LOC budget tracked separately)
+- [x] T001 Cut new branch `phase-4-provider-core` from `phase-3-model-adapter` HEAD; record the HEAD sha in `docs/dev/TASK_RUNBOOK_PHASE_4_PROVIDER_CORE.md` — branch already cut during Phase 4.0 planning run; base sha `588b859`, current HEAD `035b5fe` recorded in runbook
+- [x] T002 [P] Update implementation runbook `docs/dev/TASK_RUNBOOK_PHASE_4_PROVIDER_CORE.md` with: skills-read list (speckit-specify, speckit-plan, speckit-tasks, tinbeta-coding-guardrail, matt-git-guardrails-claude-code), branch sha, checklist mirroring this `tasks.md`, sub-phase commit cadence (P4.1 → P4.2 → P4.3 → P4.4)
+- [x] T003 [P] Snapshot current renderer bundle sizes (`apps/desktop/dist/assets/`) and Electron main bundle size before any changes; record in runbook for regression comparison — `apps/desktop/dist/` does not exist on this worktree; baseline deferred to P4.5 T101
 - [x] T004 Boss decisions D1–D8 LOCKED in `spec.md` §7: D1 Custom Provider 3 fields ; D2 Architecture covers image + research from day one, implementation order image-first then research ; D3 Default route `gpt-image-2/edit` on reference else `gpt-image-2` ; D4 KeyVault v1 = Electron safeStorage with AES-on-disk fallback ; D5 Renderer never calls provider APIs directly in final architecture ; D6 Research feeds Creative Brief + Prompt Composer ; D7 Media store contract unchanged from Phase 3 (7-day TTL) ; D8 Web content untrusted, sanitized before LLM/extractor use
-- [ ] T005 Verify Electron version on `apps/desktop` supports `safeStorage` (Electron ≥ 15). Record version in runbook. If older, surface to Boss before P4.1
-- [ ] T006 Read-only audit of existing renderer-side provider call sites in `apps/desktop/src/`: list every file that imports from `apps/desktop/src/lib/providers/` or `apps/desktop/src/lib/key-store.js`. Record list in runbook (used by P4.2 cutover to know what to repoint)
+- [x] T005 Verify Electron version on `apps/desktop` supports `safeStorage` (Electron ≥ 15). Record version in runbook. If older, surface to Boss before P4.1 — `apps/desktop/package.json` pins `electron ^31.3.1` ≫ 15
+- [x] T006 Read-only audit of existing renderer-side provider call sites in `apps/desktop/src/`: list every file that imports from `apps/desktop/src/lib/providers/` or `apps/desktop/src/lib/key-store.js`. Record list in runbook (used by P4.2 cutover to know what to repoint) — `apps/desktop/src/components/shell/ProviderPicker.jsx`, `apps/desktop/src/shell/Shell.jsx`
 
 ## Phase 4.1 — Foundational: Extract Provider Core Package (no behavior change)
 
 **Goal:** stand up `packages/provider-core` with the public surface and all five provider adapters, but do not wire IPC yet. App keeps working off Phase 3 paths.
 
-- [ ] T010 Create `packages/provider-core/package.json` (`type: "module"`, no dependencies, entry `src/index.js`)
-- [ ] T011 [P] Author `packages/provider-core/src/types.js` — JSDoc typedefs for `ImageGenerateInput`, `ImageGenerateResult`, `ImageProvider`, `ProviderError`, `WebResearchInput`, `InsightBrief`, `CreativeBrief`, `KeyVault`, `MediaStore` (per plan §4.3 / §4.5 / §4.7 / §4.9)
-- [ ] T012 [P] Author `packages/provider-core/src/error.js` — `ProviderError` factory + normalization helpers
-- [ ] T013 [P] Author `packages/provider-core/src/logger.js` — tiny wrapper that scrubs any field named `apiKey`/`key`/`token`/`bearer`/`authorization` before emitting (plan §4.9)
-- [ ] T014 [P] Author `packages/provider-core/src/model-catalog.js` — per-provider model lists + capability flags (`supportsGenerate`, `supportsEdit`, `defaultGenerateModel`, `defaultEditModel`, `supportedAspectRatios`, `supportedQualities`, `supportedOutputFormats`, `maxPixels`, `defaultTimeoutMs`) per plan §4.4
-- [ ] T015 Author `packages/provider-core/src/provider-registry.js` — `registerProvider`, `getProvider(id)`, `listProviders()`, `getDefaultRoute({ hasReferenceImage })`, `setRouteConfig(cfg)`, `getRouteConfig()` per plan §4.4
-- [ ] T016 [P] Author `packages/provider-core/src/key-vault.js` — `KeyVault` interface + `createSafeStorageVault({ safeStorage, vaultFilePath, logger })` v1 implementation with AES-on-disk fallback (plan §4.7)
-- [ ] T017 [P] Author `packages/provider-core/src/media-store.js` — `saveTmpImage`, `listTmpImages`, `cleanupExpired`, `promoteToApproved`, single `assertInsideSku` path guard (plan §4.6). Reuses Phase 3 TTL semantics
-- [ ] T018 [P] Author `packages/provider-core/src/sanitize.js` — HTML→text extraction (hand-rolled minimal walker first; plan §5 Q7), prompt-injection line-quoting, `<UNTRUSTED_WEB_CONTENT>` sentinel wrapping (plan §4.5 D8)
-- [ ] T019 Author `packages/provider-core/src/fallback-router.js` — `route(input, providers, routeConfig, ctx)` per plan §4.8; hard-failure reasons that do NOT auto-fallback: `invalid-response`, `aborted`
-- [ ] T020 Author `packages/provider-core/src/image-generate.js` — unified `image_generate(input)` entry point; mode dispatch by `image`/`images` presence; calls fallback-router; writes through media-store (plan §4.3)
-- [ ] T021 [P] Author `packages/provider-core/src/image-edit.js` — internal helper sharing call path with `image-generate.js`
-- [ ] T022 [P] Author `packages/provider-core/src/providers/openai.js` — generate + edit + testConnection per plan §4.4; uses native fetch + AbortController; multipart for `/v1/images/edits`
-- [ ] T023 [P] Author `packages/provider-core/src/providers/gemini.js` — generate + testConnection; `supportsEdit: false` in v1
-- [ ] T024 [P] Author `packages/provider-core/src/providers/kie.js` — per-model dispatch (`nano-banana-pro`/`seedream`/`kling`); generate + edit if capable; testConnection
-- [ ] T025 [P] Author `packages/provider-core/src/providers/fal.js` — generate via `https://fal.run/...`; `supportsEdit: false` in v1 (file-upload step deferred); testConnection
-- [ ] T026 [P] Author `packages/provider-core/src/providers/custom-openai-compatible.js` — parameterized by `{ providerName, baseUrl, apiKey, modelPrefix? }`; OpenAI-shape routes; testConnection
-- [ ] T027 [P] Author `packages/provider-core/src/providers/mock.js` — synthetic placeholder (canvas-generated PNG with `MOCK · slot N · {{aspect}}` overlay); respects `AbortSignal`; never auto-substituted unless route config allows
-- [ ] T028 Author `packages/provider-core/src/web-research.js` — `webSearch(query, opts)` + `webFetch(url, opts)`; main-process Node fetch; defers to `sanitize.js`; v1 search backend per plan §5 Q8 (implementer chooses Google Programmable Search or Bing or Custom-as-search; document choice in runbook)
-- [ ] T029 Author `packages/provider-core/src/insight-brief.js` — `buildInsightBrief(...)` orchestrator per plan §4.5; writes `<sku>/research/sources.json` + `<sku>/research/insight-brief.json`
-- [ ] T030 Author `packages/provider-core/src/creative-brief.js` — `buildCreativeBrief(insightBrief, sku)` per plan §4.5; writes `<sku>/research/creative-brief.json`
-- [ ] T031 Author `packages/provider-core/src/index.js` — `createProviderCore({ keyVault, mediaStore, logger })` factory; re-exports public surface (`generateImage`, `editImage`, `researchInsight`, `listProviders`, `setRouteConfig`, etc.)
-- [ ] T032 Cloud-portability lint: `grep -rE "require\\(['\"]electron['\"]\\)|from ['\"]electron['\"]" packages/provider-core/` MUST return zero hits. Record evidence in runbook
-- [ ] T033 Sub-phase commit P4.1: package extracted, no IPC change, app still uses Phase 3 paths. Commit message references plan §3 and §4.1. **No `git push`.**
+- [x] T010 Create `packages/provider-core/package.json` (`type: "module"`, no dependencies, entry `src/index.js`)
+- [x] T011 [P] Author `packages/provider-core/src/types.js` — JSDoc typedefs for `ImageGenerateInput`, `ImageGenerateResult`, `ImageProvider`, `ProviderError`, `WebResearchInput`, `InsightBrief`, `CreativeBrief`, `KeyVault`, `MediaStore` (per plan §4.3 / §4.5 / §4.7 / §4.9)
+- [x] T012 [P] Author `packages/provider-core/src/error.js` — `ProviderError` factory + normalization helpers
+- [x] T013 [P] Author `packages/provider-core/src/logger.js` — tiny wrapper that scrubs any field named `apiKey`/`key`/`token`/`bearer`/`authorization` before emitting (plan §4.9)
+- [x] T014 [P] Author `packages/provider-core/src/model-catalog.js` — per-provider model lists + capability flags (`supportsGenerate`, `supportsEdit`, `defaultGenerateModel`, `defaultEditModel`, `supportedAspectRatios`, `supportedQualities`, `supportedOutputFormats`, `maxPixels`, `defaultTimeoutMs`) per plan §4.4
+- [x] T015 Author `packages/provider-core/src/provider-registry.js` — `registerProvider`, `getProvider(id)`, `listProviders()`, `getDefaultRoute({ hasReferenceImage })`, `setRouteConfig(cfg)`, `getRouteConfig()` per plan §4.4
+- [x] T016 [P] Author `packages/provider-core/src/key-vault.js` — `KeyVault` interface + `createSafeStorageVault({ safeStorage, vaultFilePath, logger })` v1 implementation with AES-on-disk fallback (plan §4.7)
+- [x] T017 [P] Author `packages/provider-core/src/media-store.js` — `saveTmpImage`, `listTmpImages`, `cleanupExpired`, `promoteToApproved`, single `assertInsideSku` path guard (plan §4.6). Reuses Phase 3 TTL semantics
+- [x] T018 [P] Author `packages/provider-core/src/sanitize.js` — HTML→text extraction (hand-rolled minimal walker first; plan §5 Q7), prompt-injection line-quoting, `<UNTRUSTED_WEB_CONTENT>` sentinel wrapping (plan §4.5 D8)
+- [x] T019 Author `packages/provider-core/src/fallback-router.js` — `route(input, providers, routeConfig, ctx)` per plan §4.8; hard-failure reasons that do NOT auto-fallback: `invalid-response`, `aborted`
+- [x] T020 Author `packages/provider-core/src/image-generate.js` — unified `image_generate(input)` entry point; mode dispatch by `image`/`images` presence; calls fallback-router; writes through media-store (plan §4.3)
+- [x] T021 [P] Author `packages/provider-core/src/image-edit.js` — internal helper sharing call path with `image-generate.js`
+- [x] T022 [P] Author `packages/provider-core/src/providers/openai.js` — generate + edit + testConnection per plan §4.4; uses native fetch + AbortController; multipart for `/v1/images/edits`
+- [x] T023 [P] Author `packages/provider-core/src/providers/gemini.js` — generate + testConnection; `supportsEdit: false` in v1
+- [x] T024 [P] Author `packages/provider-core/src/providers/kie.js` — per-model dispatch (`nano-banana-pro`/`seedream`/`kling`); generate + edit if capable; testConnection
+- [x] T025 [P] Author `packages/provider-core/src/providers/fal.js` — generate via `https://fal.run/...`; `supportsEdit: false` in v1 (file-upload step deferred); testConnection
+- [x] T026 [P] Author `packages/provider-core/src/providers/custom-openai-compatible.js` — parameterized by `{ providerName, baseUrl, apiKey, modelPrefix? }`; OpenAI-shape routes; testConnection
+- [x] T027 [P] Author `packages/provider-core/src/providers/mock.js` — synthetic placeholder PNG (1×1 deterministic PNG; main-process safe — no canvas); respects `AbortSignal`; never auto-substituted unless route config allows. Note: visual overlay text deferred (canvas not available in Node main); SlotCard badge surfaces "Mock" via served-provider label
+- [x] T028 Author `packages/provider-core/src/web-research.js` — `webSearch(query, opts)` + `webFetch(url, opts)`; main-process Node fetch; defers to `sanitize.js`; v1 default search backend = `mock` (offline-safe; Google Programmable Search backend factory included as `createGoogleCseBackend` for operators to wire later — documented in runbook §Search-backend)
+- [x] T029 Author `packages/provider-core/src/insight-brief.js` — `buildInsightBrief(...)` orchestrator per plan §4.5; writes `<sku>/research/sources.json` + `<sku>/research/insight-brief.json`
+- [x] T030 Author `packages/provider-core/src/creative-brief.js` — `buildCreativeBrief(insightBrief, sku)` per plan §4.5; writes `<sku>/research/creative-brief.json`
+- [x] T031 Author `packages/provider-core/src/index.js` — `createProviderCore({ keyVault, mediaStore, logger })` factory; re-exports public surface (`generateImage`, `editImage`, `researchInsight`, `listProviders`, `setRouteConfig`, etc.)
+- [x] T032 Cloud-portability lint: `grep -rE "require\\(['\"]electron['\"]\\)|from ['\"]electron['\"]" packages/provider-core/` MUST return zero hits. Record evidence in runbook — confirmed: zero hits for `electron` + zero hits for `react`
+- [x] T033 Sub-phase commit P4.1: package extracted, no IPC change, app still uses Phase 3 paths. Commit message references plan §3 and §4.1. **No `git push`.**
 
 ## Phase 4.2 — IPC cutover + key vault wiring + Phase 3 migration
 
