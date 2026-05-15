@@ -3,6 +3,7 @@ import EmptyState from '../atoms/EmptyState.jsx'
 import StatusChip from '../atoms/StatusChip.jsx'
 import Button from '../atoms/Button.jsx'
 import { LISTING_SLOT_META } from '../../lib/slot-progress.js'
+import { APLUS_MODULE_META } from '../../lib/aplus-progress.js'
 import { t } from '../../lib/i18n.js'
 
 const STEP_KICKER = {
@@ -21,10 +22,6 @@ const STEP_TITLE_KEY = {
 }
 
 const STEP_PLACEHOLDER = {
-  aplus: {
-    body: 'A+ wires into runtime/bin/aplus.mjs in a later phase. Five modules at 1464×600, single + multi-ASIN plans.',
-    items: ['M1 · hero', 'M2-M4 · feature deck', 'M5 · comparison / CTA', 'Multi-ASIN child fan-out']
-  },
   video: {
     body: 'Storyboard generator + Kling 3.0 producer call. Output 1920×1080 MP4. Not wired in phase 1.',
     items: ['storyboard.json', 'Shot prompt synthesis', 'KIE video call', 'Mux + delivery']
@@ -69,6 +66,19 @@ export default function MainCanvas({
   validatingOutput,
   onRefreshValidator,
   onRevealCohesionRequest,
+  /* A+ pipeline (Phase 3) */
+  aplusState,
+  aplusModuleStates,
+  selectedModules,
+  onToggleModule,
+  onClearModuleSelection,
+  onSelectAllModules,
+  onRunAplus,
+  onRunAplusRegen,
+  runAplusDisabledReason,
+  aplusValidatorReport,
+  aplusValidating,
+  onRefreshAplusValidator,
   language = 'en'
 }) {
   const kicker = STEP_KICKER[step] || STEP_KICKER.intake
@@ -144,7 +154,25 @@ export default function MainCanvas({
           />
         )}
 
-        {workspace && skuPath && (step === 'aplus' || step === 'video' || step === 'qc') && (
+        {workspace && skuPath && step === 'aplus' && (
+          <AplusView
+            aplusState={aplusState || { status: 'idle', lines: [] }}
+            moduleStates={aplusModuleStates || {}}
+            selectedModules={selectedModules || new Set()}
+            onToggleModule={onToggleModule}
+            onClearModuleSelection={onClearModuleSelection}
+            onSelectAllModules={onSelectAllModules}
+            onRunAplus={onRunAplus}
+            onRunAplusRegen={onRunAplusRegen}
+            runAplusDisabledReason={runAplusDisabledReason}
+            validatorReport={aplusValidatorReport}
+            validating={aplusValidating}
+            onRefreshValidator={onRefreshAplusValidator}
+            language={language}
+          />
+        )}
+
+        {workspace && skuPath && (step === 'video' || step === 'qc') && (
           <StepPlaceholder step={step} />
         )}
       </div>
@@ -342,6 +370,190 @@ function ListingView({
         validating={!!validatingOutput}
         onRefresh={onRefreshValidator}
       />
+    </div>
+  )
+}
+
+function AplusView({
+  aplusState,
+  moduleStates,
+  selectedModules,
+  onToggleModule,
+  onClearModuleSelection,
+  onSelectAllModules,
+  onRunAplus,
+  onRunAplusRegen,
+  runAplusDisabledReason,
+  validatorReport,
+  validating,
+  onRefreshValidator,
+  language
+}) {
+  const selectionCount = selectedModules.size
+  const running = aplusState.status === 'running'
+  const regenDisabledReason = runAplusDisabledReason
+    || (selectionCount === 0 ? t('aplus.reason.select_modules', language) : undefined)
+
+  const validatorByModule = React.useMemo(() => {
+    const map = {}
+    for (const m of validatorReport?.modules || []) map[m.module] = m
+    return map
+  }, [validatorReport])
+
+  const selectionFn = t('aplus.toolbar.selection', language)
+  const selectionLabel = selectionCount === 0
+    ? t('aplus.toolbar.no_selection', language)
+    : (typeof selectionFn === 'function' ? selectionFn(selectionCount) : '')
+
+  const regenFn = t('aplus.action.regen_n', language)
+  const regenLabel = selectionCount > 0 && typeof regenFn === 'function'
+    ? regenFn(selectionCount)
+    : t('aplus.action.regen_selected', language)
+
+  return (
+    <div className="panel-stack">
+      <div className="panel">
+        <div className="panel__head">
+          <span className="panel__title">{t('aplus.panel.title', language)}</span>
+          <span className="panel__meta">{t('aplus.panel.subtitle', language)}</span>
+        </div>
+        <div className="panel__body">
+          <div className="slot-toolbar">
+            <div className="slot-toolbar__info">
+              <span className="slot-toolbar__count">{selectionLabel}</span>
+              <button
+                type="button"
+                className="slot-toolbar__link"
+                onClick={onSelectAllModules}
+                disabled={running}
+              >{t('aplus.toolbar.select_all', language)}</button>
+              <button
+                type="button"
+                className="slot-toolbar__link"
+                onClick={onClearModuleSelection}
+                disabled={running || selectionCount === 0}
+              >{t('aplus.toolbar.clear', language)}</button>
+            </div>
+            <div className="slot-toolbar__actions">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={onRunAplus}
+                disabled={!!runAplusDisabledReason}
+                disabledReason={runAplusDisabledReason}
+              >{t('aplus.action.run_all_5', language)}</Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={onRunAplusRegen}
+                disabled={!!regenDisabledReason}
+                disabledReason={regenDisabledReason}
+              >{regenLabel}</Button>
+            </div>
+          </div>
+
+          <div className="slot-grid">
+            {APLUS_MODULE_META.map(mod => {
+              const st = moduleStates[mod.id] || 'idle'
+              const selected = selectedModules.has(mod.id)
+              const v = validatorByModule[mod.id]
+              return (
+                <SlotCard
+                  key={mod.id}
+                  slot={mod}
+                  state={st}
+                  selected={selected}
+                  validator={v}
+                  disabled={running}
+                  onToggle={() => onToggleModule && onToggleModule(mod.id)}
+                />
+              )
+            })}
+          </div>
+        </div>
+      </div>
+
+      <AplusValidatorPanel
+        report={validatorReport}
+        validating={!!validating}
+        onRefresh={onRefreshValidator}
+        language={language}
+      />
+    </div>
+  )
+}
+
+function AplusValidatorPanel({ report, validating, onRefresh, language }) {
+  const noReport = !report
+  const error = report && !report.summary && !Array.isArray(report.modules)
+  const summary = report?.summary
+  return (
+    <div className="panel">
+      <div className="panel__head">
+        <span className="panel__title">{t('aplus.validator.title', language)}</span>
+        <div className="panel__head-right">
+          {summary && (
+            <StatusChip
+              status={report.ok ? 'complete' : 'needs-fix'}
+              size="sm"
+            >
+              {report.ok ? t('aplus.qc.status_pass', language) : t('aplus.qc.status_issues', language)}
+            </StatusChip>
+          )}
+          <button
+            type="button"
+            className="panel__head-action"
+            onClick={onRefresh}
+            disabled={validating}
+          >
+            {validating ? t('aplus.validator.checking', language) : t('aplus.validator.recheck', language)}
+          </button>
+        </div>
+      </div>
+      <div className="panel__body">
+        {noReport && (
+          <p className="inspector__locked-copy">
+            {t('aplus.validator.no_report', language)}
+          </p>
+        )}
+        {error && (
+          <p className="inspector__locked-copy">
+            Validator error: <span className="muted">{report.error || 'unknown'}</span>
+          </p>
+        )}
+        {summary && (() => {
+          const presentFn = t('aplus.validator.files_present', language)
+          const missingFn = t('aplus.validator.files_missing', language)
+          const presentLabel = summary.missing === 0
+            ? (typeof presentFn === 'function' ? presentFn(summary.found) : `All 5 found`)
+            : (typeof missingFn === 'function' ? missingFn(summary.found, summary.missing) : `${summary.found}/5`)
+          return (
+            <ul className="qc-checklist">
+              <QcRow
+                ok={summary.missing === 0}
+                label={presentLabel.split(' (')[0]}
+                detail={`${summary.found}/5${summary.missing ? ` · missing ${summary.missing}` : ''}`}
+              />
+              <QcRow
+                ok={summary.dimsBad === 0 && (summary.dimsOk > 0 || summary.dimsUnchecked > 0)}
+                label={t('aplus.validator.dimensions', language)}
+                tone={summary.dimsBad > 0 ? 'bad' : (summary.dimsUnchecked > 0 ? 'unknown' : 'ok')}
+                detail={
+                  summary.sharpAvailable
+                    ? `${summary.dimsOk} ok · ${summary.dimsBad} bad`
+                    : t('aplus.validator.dims_unchecked', language)
+                }
+              />
+              <QcRow
+                ok
+                tone="info"
+                label={t('aplus.validator.output_dir', language)}
+                detail={report.aplusDirExists ? report.aplusDir : t('aplus.validator.dir_missing', language)}
+              />
+            </ul>
+          )
+        })()}
+      </div>
     </div>
   )
 }

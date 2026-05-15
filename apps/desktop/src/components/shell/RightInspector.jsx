@@ -3,6 +3,7 @@ import Button from '../atoms/Button.jsx'
 import StatusChip from '../atoms/StatusChip.jsx'
 import StatusDot from '../atoms/StatusDot.jsx'
 import { LISTING_SLOT_META } from '../../lib/slot-progress.js'
+import { APLUS_MODULE_META } from '../../lib/aplus-progress.js'
 import { t } from '../../lib/i18n.js'
 
 const TABS_BY_STEP = {
@@ -12,7 +13,9 @@ const TABS_BY_STEP = {
   listing: [{ id: 'Run',   key: 'tab.run' },
             { id: 'Slots', key: 'tab.slots' },
             { id: 'QC',    key: 'tab.qc' }],
-  aplus:   [{ id: 'Plan',  key: 'tab.plan' }],
+  aplus:   [{ id: 'Run',     key: 'aplus.tab.run' },
+            { id: 'Modules', key: 'aplus.tab.modules' },
+            { id: 'QC',      key: 'aplus.tab.qc' }],
   video:   [{ id: 'Plan',  key: 'tab.plan' }],
   qc:      [{ id: 'Plan',  key: 'tab.plan' }]
 }
@@ -57,6 +60,21 @@ export default function RightInspector({
   validatingOutput,
   onRefreshValidator,
   onRevealCohesionRequest,
+  /* A+ (Phase 3) */
+  aplusState,
+  aplusModuleStates,
+  selectedModules,
+  onToggleModule,
+  onClearModuleSelection,
+  onSelectAllModules,
+  onRunAplus,
+  onRunAplusRegen,
+  onCancelAplus,
+  runAplusDisabledReason,
+  cancelAplusDisabledReason,
+  aplusValidatorReport,
+  aplusValidating,
+  onRefreshAplusValidator,
   language = 'en'
 }) {
   const tabs = TABS_BY_STEP[step] || [{ id: 'Detail', key: 'tab.plan' }]
@@ -183,7 +201,57 @@ export default function RightInspector({
           </section>
         )}
 
-        {(step === 'aplus' || step === 'video' || step === 'qc') && (
+        {step === 'aplus' && active === 'Run' && (
+          <section className="inspector__section">
+            <div className="inspector__section-head">{t('aplus.inspector.run_section', language)}</div>
+            <DefList items={[
+              { k: 'status', v: aplusState?.status || 'idle' },
+              { k: 'runId',  v: aplusState?.runId ? shortPath(aplusState.runId, 24) : '—' },
+              { k: 'lines',  v: String((aplusState?.lines || []).length) }
+            ]} />
+          </section>
+        )}
+
+        {step === 'aplus' && active === 'Modules' && (
+          <section className="inspector__section">
+            <div className="inspector__section-head">{t('aplus.inspector.modules_section', language)}</div>
+            <ModuleList
+              moduleStates={aplusModuleStates || {}}
+              selectedModules={selectedModules || new Set()}
+              validatorReport={aplusValidatorReport}
+              onToggleModule={onToggleModule}
+              disabled={aplusState?.status === 'running'}
+              language={language}
+            />
+            <div className="slot-list__actions">
+              <button type="button" className="slot-toolbar__link" onClick={onSelectAllModules}>
+                {t('aplus.toolbar.select_all', language)}
+              </button>
+              <button
+                type="button"
+                className="slot-toolbar__link"
+                onClick={onClearModuleSelection}
+                disabled={(selectedModules?.size || 0) === 0}
+              >
+                {t('aplus.toolbar.clear', language)} ({selectedModules?.size || 0})
+              </button>
+            </div>
+          </section>
+        )}
+
+        {step === 'aplus' && active === 'QC' && (
+          <section className="inspector__section">
+            <div className="inspector__section-head">{t('aplus.inspector.qc_section', language)}</div>
+            <AplusValidatorSummary
+              report={aplusValidatorReport}
+              validating={!!aplusValidating}
+              onRefresh={onRefreshAplusValidator}
+              language={language}
+            />
+          </section>
+        )}
+
+        {(step === 'video' || step === 'qc') && (
           <section className="inspector__section">
             <div className="inspector__section-head">{t('inspector.section.step_locked', language)}</div>
             <p className="inspector__locked-copy">
@@ -276,7 +344,59 @@ export default function RightInspector({
           )
         })()}
 
-        {(step === 'aplus' || step === 'video' || step === 'qc') && (
+        {step === 'aplus' && (() => {
+          const aplusRegenFn = t('aplus.action.regen_n', language)
+          const aplusSelCount = selectedModules ? selectedModules.size : 0
+          const aplusRegenLabel = aplusSelCount > 0 && typeof aplusRegenFn === 'function'
+            ? aplusRegenFn(aplusSelCount)
+            : t('aplus.action.regen_selected', language)
+          return (
+            <>
+              <Button
+                variant="primary"
+                size="md"
+                fullWidth
+                leftIcon={<PlayIcon />}
+                onClick={onRunAplus}
+                disabled={!!runAplusDisabledReason}
+                disabledReason={runAplusDisabledReason}
+              >
+                {t('aplus.action.run_all_5', language)}
+              </Button>
+              <Button
+                variant="secondary"
+                size="md"
+                fullWidth
+                leftIcon={<RefreshIcon />}
+                onClick={onRunAplusRegen}
+                disabled={
+                  !!runAplusDisabledReason || !selectedModules || selectedModules.size === 0
+                }
+                disabledReason={
+                  runAplusDisabledReason
+                    || (!selectedModules || selectedModules.size === 0
+                        ? t('aplus.reason.select_modules', language)
+                        : undefined)
+                }
+              >
+                {aplusRegenLabel}
+              </Button>
+              <Button
+                variant="danger"
+                size="md"
+                fullWidth
+                leftIcon={<StopIcon />}
+                onClick={onCancelAplus}
+                disabled={!!cancelAplusDisabledReason}
+                disabledReason={cancelAplusDisabledReason}
+              >
+                {t('inspector.action.cancel', language)}
+              </Button>
+            </>
+          )
+        })()}
+
+        {(step === 'video' || step === 'qc') && (
           <Button
             variant="secondary"
             size="md"
@@ -519,6 +639,111 @@ function slotWord(state) {
     case 'skipped': return 'skipped'
     default:        return 'pending'
   }
+}
+
+function ModuleList({ moduleStates, selectedModules, validatorReport, onToggleModule, disabled, language }) {
+  const validatorByModule = React.useMemo(() => {
+    const map = {}
+    for (const m of validatorReport?.modules || []) map[m.module] = m
+    return map
+  }, [validatorReport])
+
+  return (
+    <ul className="slot-list">
+      {APLUS_MODULE_META.map(mod => {
+        const state = moduleStates[mod.id] || 'idle'
+        const selected = selectedModules.has(mod.id)
+        const v = validatorByModule[mod.id]
+        return (
+          <li key={mod.id} className={'slot-list__row slot-list__row--' + state}>
+            <label className="slot-list__check">
+              <input
+                type="checkbox"
+                checked={selected}
+                disabled={disabled}
+                onChange={() => onToggleModule && onToggleModule(mod.id)}
+              />
+              <span className="slot-list__check-box" aria-hidden="true" />
+            </label>
+            <span className="slot-list__no">{String(mod.id).padStart(2, '0')}</span>
+            <span className="slot-list__role">{mod.role}</span>
+            <span className="slot-list__state">{t('aplus.module.state.' + state, language)}</span>
+            <span className={'slot-list__qc slot-list__qc--' + (v ? validatorTone(v) : 'none')}>
+              {v ? validatorChip(v) : '—'}
+            </span>
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
+
+function AplusValidatorSummary({ report, validating, onRefresh, language }) {
+  const summary = report?.summary
+  return (
+    <>
+      <div className="qc-summary-head">
+        <StatusChip
+          status={summary ? (report.ok ? 'complete' : 'needs-fix') : 'idle'}
+          size="sm"
+        >
+          {summary
+            ? (report.ok ? t('aplus.qc.status_pass', language) : t('aplus.qc.status_issues', language))
+            : t('aplus.qc.status_nodata', language)}
+        </StatusChip>
+        <button
+          type="button"
+          className="slot-toolbar__link"
+          onClick={onRefresh}
+          disabled={validating}
+        >
+          {validating ? t('aplus.validator.checking', language) : t('aplus.validator.recheck', language)}
+        </button>
+      </div>
+
+      {!summary && !report?.error && (
+        <p className="inspector__locked-copy">
+          {t('aplus.validator.no_report', language)}
+        </p>
+      )}
+
+      {report?.error && (
+        <p className="inspector__locked-copy">Validator error: {report.error}</p>
+      )}
+
+      {summary && (
+        <ul className="qc-checklist">
+          <li className={'qc-row qc-row--' + (summary.missing === 0 ? 'ok' : 'bad')}>
+            <span className="qc-row__icon" aria-hidden="true">{summary.missing === 0 ? '✓' : '✕'}</span>
+            <span className="qc-row__label">5 files present</span>
+            <span className="qc-row__detail">{summary.found}/5</span>
+          </li>
+          <li className={'qc-row qc-row--' + (summary.dimsBad === 0
+              ? (summary.dimsUnchecked > 0 ? 'unknown' : 'ok')
+              : 'bad')}>
+            <span className="qc-row__icon" aria-hidden="true">
+              {summary.dimsBad === 0
+                ? (summary.dimsUnchecked > 0 ? '?' : '✓')
+                : '✕'}
+            </span>
+            <span className="qc-row__label">{summary.expectedWidth}×{summary.expectedHeight}</span>
+            <span className="qc-row__detail">
+              {summary.sharpAvailable
+                ? `${summary.dimsOk}/${summary.dimsOk + summary.dimsBad + summary.dimsUnchecked}`
+                : 'unchecked'}
+            </span>
+          </li>
+          {!summary.sharpAvailable && (
+            <li className="qc-row qc-row--info">
+              <span className="qc-row__icon" aria-hidden="true">·</span>
+              <span className="qc-row__label">sharp unavailable</span>
+              <span className="qc-row__detail">dimensions skipped</span>
+            </li>
+          )}
+        </ul>
+      )}
+    </>
+  )
 }
 
 function validatorTone(v) {

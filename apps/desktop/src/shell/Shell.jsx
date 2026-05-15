@@ -672,6 +672,18 @@ export default function Shell() {
             validatingOutput={validatingOutput}
             onRefreshValidator={refreshValidator}
             onRevealCohesionRequest={revealCohesionRequest}
+            aplusState={aplusState}
+            aplusModuleStates={aplusModuleStates}
+            selectedModules={selectedModules}
+            onToggleModule={toggleModuleSelection}
+            onClearModuleSelection={clearModuleSelection}
+            onSelectAllModules={selectAllModules}
+            onRunAplus={runAplusFull}
+            onRunAplusRegen={runAplusRegen}
+            runAplusDisabledReason={runAplusDisabledReason}
+            aplusValidatorReport={aplusValidatorReport}
+            aplusValidating={aplusValidating}
+            onRefreshAplusValidator={refreshAplusValidator}
             language={lang}
           />
         </div>
@@ -711,6 +723,20 @@ export default function Shell() {
           validatingOutput={validatingOutput}
           onRefreshValidator={refreshValidator}
           onRevealCohesionRequest={revealCohesionRequest}
+          aplusState={aplusState}
+          aplusModuleStates={aplusModuleStates}
+          selectedModules={selectedModules}
+          onToggleModule={toggleModuleSelection}
+          onClearModuleSelection={clearModuleSelection}
+          onSelectAllModules={selectAllModules}
+          onRunAplus={runAplusFull}
+          onRunAplusRegen={runAplusRegen}
+          onCancelAplus={cancelAplus}
+          runAplusDisabledReason={runAplusDisabledReason}
+          cancelAplusDisabledReason={cancelAplusDisabledReason}
+          aplusValidatorReport={aplusValidatorReport}
+          aplusValidating={aplusValidating}
+          onRefreshAplusValidator={refreshAplusValidator}
           language={lang}
         />
       </aside>
