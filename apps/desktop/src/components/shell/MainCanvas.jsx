@@ -5,6 +5,7 @@ import Button from '../atoms/Button.jsx'
 import { LISTING_SLOT_META } from '../../lib/slot-progress.js'
 import { APLUS_MODULE_META } from '../../lib/aplus-progress.js'
 import { t } from '../../lib/i18n.js'
+import { SlotCard, SlotCardReview } from './SlotCard.jsx'
 
 const STEP_KICKER = {
   intake:  '01 · INTAKE',
@@ -172,6 +173,7 @@ export default function MainCanvas({
             onRevealSlotFile={onRevealSlotFile}
             onRevealListingFolder={onRevealListingFolder}
             onExportApprovedSlots={onExportApprovedSlots}
+            language={language}
           />
         )}
 
@@ -304,7 +306,8 @@ function ListingView({
   onApproveAllFoundSlots,
   onRevealSlotFile,
   onRevealListingFolder,
-  onExportApprovedSlots
+  onExportApprovedSlots,
+  language = 'en'
 }) {
   const selectionCount = selectedSlots.size
   const running = listingState.status === 'running'
@@ -444,6 +447,7 @@ function ListingView({
                   onSetOverride={onSetSlotOverride}
                   onToggleExpanded={onToggleSlotExpanded}
                   onReveal={onRevealSlotFile}
+                  language={language}
                 />
               )
             })}
@@ -552,6 +556,7 @@ function AplusView({
                   validator={v}
                   disabled={running}
                   onToggle={() => onToggleModule && onToggleModule(mod.id)}
+                  language={language}
                 />
               )
             })}
@@ -690,208 +695,6 @@ function shortenPath(p, max) {
   if (!p) return ''
   if (p.length <= max) return p
   return '…' + p.slice(-(max - 1))
-}
-
-// SlotCardReview wraps SlotCard with a per-slot actions row (Approve /
-// Flag for regen / Reveal in folder) and a collapsible prompt-override
-// textarea. Selection on the card itself is preserved — the action row
-// stops propagation so action clicks don't toggle the selection state.
-//
-// Prompt override saves locally and is NOT yet wired to the runtime;
-// see the listing-slot-preview-review final summary for the runtime
-// change required to consume overrides on regen.
-function SlotCardReview({
-  slot, state, selected, validator, disabled, onToggle,
-  approval, override, expanded,
-  onSetApproval, onSetOverride, onToggleExpanded, onReveal
-}) {
-  const hasFile = !!validator?.exists
-  const wrapClass = [
-    'slot-card',
-    approval === 'approved'   && 'slot-card--approved',
-    approval === 'needs-regen' && 'slot-card--needs-regen'
-  ].filter(Boolean).join(' ')
-
-  function stop(e) { e.stopPropagation() }
-  function handleApprove(e) {
-    stop(e)
-    onSetApproval && onSetApproval(slot.id, approval === 'approved' ? null : 'approved')
-  }
-  function handleNeedsRegen(e) {
-    stop(e)
-    onSetApproval && onSetApproval(slot.id, approval === 'needs-regen' ? null : 'needs-regen')
-  }
-  function handleReveal(e) {
-    stop(e)
-    onReveal && onReveal(slot.id)
-  }
-  function handleExpand(e) {
-    stop(e)
-    onToggleExpanded && onToggleExpanded(slot.id)
-  }
-
-  return (
-    <div className={wrapClass}>
-      <SlotCard
-        slot={slot}
-        state={state}
-        selected={selected}
-        validator={validator}
-        disabled={disabled}
-        onToggle={onToggle}
-      />
-      <div className="slot-card__actions">
-        <button
-          type="button"
-          className={'slot-card__act' + (approval === 'approved' ? ' slot-card__act--on' : '')}
-          onClick={handleApprove}
-          title="Mark slot OK"
-        >✓ OK</button>
-        <button
-          type="button"
-          className={'slot-card__act' + (approval === 'needs-regen' ? ' slot-card__act--warn' : '')}
-          onClick={handleNeedsRegen}
-          title="Flag slot for regenerate"
-        >⚠ Regen</button>
-        <button
-          type="button"
-          className="slot-card__act"
-          onClick={handleReveal}
-          disabled={!hasFile}
-          title={hasFile ? validator.file : 'No file on disk yet'}
-        >⌖ Open</button>
-        <button
-          type="button"
-          className={'slot-card__act slot-card__act--toggle' + (expanded ? ' slot-card__act--on' : '')}
-          onClick={handleExpand}
-          title="Edit prompt override"
-          aria-expanded={expanded}
-        >{expanded ? '▾' : '▸'} prompt</button>
-      </div>
-      {expanded && (
-        <div className="slot-card__override" onClick={stop}>
-          <textarea
-            className="slot-card__override-input"
-            placeholder="Optional prompt override for next regen…"
-            value={override}
-            onChange={(e) => onSetOverride && onSetOverride(slot.id, e.target.value)}
-            rows={3}
-          />
-          <div className="slot-card__override-hint">
-            Saved locally · runtime support pending
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-function SlotCard({ slot, state, selected, validator, disabled, onToggle }) {
-  const stateClass = 'slot slot--' + state + (selected ? ' slot--selected' : '')
-  const validatorBadge = validatorBadgeFor(state, validator)
-  // Cache-bust on file change. Validator gives us width/height/dimensionsReason
-  // which change when the underlying file is replaced by regen — using the
-  // (width × height) tuple as a key forces the <img> to re-fetch when a slot
-  // is regenerated. Same path, new pixels.
-  const previewSrc = validator?.exists && validator.file && typeof window !== 'undefined' && window.swtd?.assetUrl
-    ? window.swtd.assetUrl(validator.file)
-    : null
-  const previewKey = previewSrc && validator
-    ? `${validator.width}x${validator.height}`
-    : ''
-  return (
-    <button
-      type="button"
-      className={stateClass}
-      onClick={onToggle}
-      disabled={disabled}
-      aria-pressed={selected}
-      title={validator?.file ? validator.file : undefined}
-    >
-      <div className="slot__head">
-        <span className="slot__no">{String(slot.id).padStart(2, '0')}</span>
-        <span className={'slot__check' + (selected ? ' slot__check--on' : '')} aria-hidden="true">
-          {selected ? '✓' : ''}
-        </span>
-      </div>
-      <SlotPreview
-        previewSrc={previewSrc}
-        previewKey={previewKey}
-        state={state}
-        validator={validator}
-      />
-      <div className="slot__label">{slot.label}</div>
-      <div className="slot__role">{slot.role}</div>
-      <div className="slot__footer">
-        <span className="slot__state">{slotWord(state)}</span>
-        {validatorBadge && (
-          <span className={'slot__qc slot__qc--' + validatorBadge.tone} title={validatorBadge.title}>
-            {validatorBadge.label}
-          </span>
-        )}
-      </div>
-    </button>
-  )
-}
-
-function SlotPreview({ previewSrc, previewKey, state, validator }) {
-  // running → skeleton shimmer (no image even if a stale file exists,
-  // because regen will replace the bytes any moment)
-  // has file → <img>
-  // has file ref but missing → placeholder
-  // idle/no validator → empty placeholder
-  if (state === 'running') {
-    return (
-      <div className="slot__preview slot__preview--running" aria-hidden="true">
-        <div className="slot__preview-shimmer" />
-      </div>
-    )
-  }
-  if (previewSrc) {
-    return (
-      <div className="slot__preview">
-        <img
-          src={`${previewSrc}?k=${encodeURIComponent(previewKey)}`}
-          alt=""
-          className="slot__preview-img"
-          loading="lazy"
-          decoding="async"
-        />
-      </div>
-    )
-  }
-  const isError = state === 'error' || (validator && !validator.exists)
-  return (
-    <div className={'slot__preview slot__preview--empty' + (isError ? ' slot__preview--missing' : '')} aria-hidden="true">
-      <span className="slot__preview-hint">{isError ? 'missing' : 'no preview'}</span>
-    </div>
-  )
-}
-
-function validatorBadgeFor(state, validator) {
-  if (!validator) return null
-  if (!validator.exists) return { tone: 'missing', label: 'missing', title: 'File not found on disk' }
-  if (validator.dimensionsOk === true) {
-    return { tone: 'ok', label: `${validator.width}×${validator.height}`, title: 'Dimensions OK' }
-  }
-  if (validator.dimensionsOk === false) {
-    return {
-      tone: 'bad',
-      label: `${validator.width ?? '?'}×${validator.height ?? '?'}`,
-      title: 'Expected 2000×2000'
-    }
-  }
-  return { tone: 'unknown', label: 'unchecked', title: validator.dimensionsReason || 'sharp not available' }
-}
-
-function slotWord(st) {
-  switch (st) {
-    case 'done':    return 'done'
-    case 'running': return 'live'
-    case 'error':   return 'failed'
-    case 'skipped': return 'skipped'
-    default:        return 'pending'
-  }
 }
 
 function ValidatorPanel({ report, validating, onRefresh }) {

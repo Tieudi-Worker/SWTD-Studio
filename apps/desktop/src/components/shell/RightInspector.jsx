@@ -5,14 +5,16 @@ import StatusDot from '../atoms/StatusDot.jsx'
 import { LISTING_SLOT_META } from '../../lib/slot-progress.js'
 import { APLUS_MODULE_META } from '../../lib/aplus-progress.js'
 import { t } from '../../lib/i18n.js'
+import RunTimeline from './RunTimeline.jsx'
 
 const TABS_BY_STEP = {
   intake:  [{ id: 'Brief',      key: 'tab.brief' },
             { id: 'Validation', key: 'tab.validation' },
             { id: 'History',    key: 'tab.history' }],
-  listing: [{ id: 'Run',   key: 'tab.run' },
-            { id: 'Slots', key: 'tab.slots' },
-            { id: 'QC',    key: 'tab.qc' }],
+  listing: [{ id: 'Run',      key: 'tab.run' },
+            { id: 'Slots',    key: 'tab.slots' },
+            { id: 'Timeline', key: 'tab.timeline' },
+            { id: 'QC',       key: 'tab.qc' }],
   aplus:   [{ id: 'Run',     key: 'aplus.tab.run' },
             { id: 'Modules', key: 'aplus.tab.modules' },
             { id: 'QC',      key: 'aplus.tab.qc' }],
@@ -75,7 +77,10 @@ export default function RightInspector({
   aplusValidatorReport,
   aplusValidating,
   onRefreshAplusValidator,
-  language = 'en'
+  language = 'en',
+  runTimeline = [],
+  /* eslint-disable-next-line no-unused-vars -- forces re-render when events append */
+  runTimelineVersion = 0
 }) {
   const tabs = TABS_BY_STEP[step] || [{ id: 'Detail', key: 'tab.plan' }]
   const [active, setActive] = React.useState(tabs[0].id)
@@ -187,6 +192,13 @@ export default function RightInspector({
               onSelectAllSlots={onSelectAllSlots}
               onClearSlotSelection={onClearSlotSelection}
             />
+          </section>
+        )}
+
+        {step === 'listing' && active === 'Timeline' && (
+          <section className="inspector__section">
+            <div className="inspector__section-head">{t('timeline.heading', language)}</div>
+            <RunTimeline events={runTimeline} language={language} />
           </section>
         )}
 

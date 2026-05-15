@@ -243,7 +243,63 @@ const UI_TEXT = {
   'cmdk.reason.step_locked':    { en: 'Step is locked — complete earlier steps first.',
                                   vi: 'Bước này đang khoá — hoàn thành các bước trước trước.' },
   'cmdk.reason.no_brief':       { en: 'No brief.json in this SKU folder.',
-                                  vi: 'Thư mục SKU này chưa có brief.json.' }
+                                  vi: 'Thư mục SKU này chưa có brief.json.' },
+
+  /* Slot canonical state words (Phase 1) ───────────────── */
+  'slot.state.idle':       { en: 'pending',    vi: 'chờ' },
+  'slot.state.queued':     { en: 'queued',     vi: 'đang xếp hàng' },
+  'slot.state.generating': { en: 'live',       vi: 'đang chạy' },
+  'slot.state.success':    { en: 'done',       vi: 'xong' },
+  'slot.state.failed':     { en: 'failed',     vi: 'lỗi' },
+  'slot.state.approved':   { en: 'approved',   vi: 'đã duyệt' },
+
+  /* Slot review action labels (Phase 1) ─────────────────── */
+  'slot.action.approve':       { en: '✓ OK',     vi: '✓ OK' },
+  'slot.action.regen':         { en: '⚠ Regen',  vi: '⚠ Regen' },
+  'slot.action.open':          { en: '⌖ Open',   vi: '⌖ Mở' },
+  'slot.action.prompt':        { en: 'prompt',   vi: 'prompt' },
+  'slot.prompt.placeholder':   { en: 'Optional prompt override for next regen…',
+                                 vi: 'Prompt thay thế cho lần regen tiếp theo (tuỳ chọn)…' },
+  'slot.prompt.saved_pending': { en: 'Saved locally · runtime support pending',
+                                 vi: 'Đã lưu local · chờ runtime hỗ trợ' },
+
+  /* Mock pipeline badge (dev-only) */
+  'topbar.mock_badge':         { en: 'MOCK', vi: 'MOCK' },
+  'topbar.mock_tip':           { en: 'Mock pipeline active — synthetic events, no real API calls.',
+                                 vi: 'Mock pipeline đang chạy — sự kiện giả lập, không gọi API thật.' },
+
+  /* Run timeline (Phase 1) */
+  'timeline.heading':   { en: 'Run timeline',           vi: 'Tiến trình lượt chạy' },
+  'timeline.empty':     { en: 'No events yet — start a run to populate.',
+                          vi: 'Chưa có sự kiện — chạy Pipeline để xem.' },
+  'timeline.start':     { en: 'pipeline start',         vi: 'bắt đầu pipeline' },
+  'timeline.end_ok':    { en: 'finished',               vi: 'kết thúc' },
+  'timeline.end_err':   { en: 'errored',                vi: 'gặp lỗi' },
+  'timeline.end_paused':{ en: 'paused for review',      vi: 'tạm dừng để duyệt' },
+  'timeline.end_aborted': { en: 'cancelled',            vi: 'đã huỷ' },
+
+  /* Run timeline (tab + transition format) */
+  'tab.timeline':    { en: 'Timeline', vi: 'Timeline' },
+  'timeline.transition': {
+    en: (slotId, fromState, toState) => `Slot ${slotId}: ${fromState} → ${toState}`,
+    vi: (slotId, fromState, toState) => `Slot ${slotId}: ${fromState} → ${toState}`
+  },
+
+  /* Slot toolbar (extra Phase 1 keys) */
+  'slot.toolbar.approved_count': {
+    en: (approved, found) => `${approved}/${found} approved`,
+    vi: (approved, found) => `${approved}/${found} đã duyệt`
+  },
+  'slot.toolbar.export_button': {
+    en: (n) => `Export approved (${n})`,
+    vi: (n) => `Export đã duyệt (${n})`
+  },
+  'slot.toolbar.export_flash': {
+    en: (n) => `Copied ${n} path${n === 1 ? '' : 's'} ✓`,
+    vi: (n) => `Đã copy ${n} đường dẫn ✓`
+  },
+  'slot.toolbar.reveal_folder': { en: 'Reveal output folder',
+                                  vi: 'Mở thư mục output' }
 }
 
 /**
