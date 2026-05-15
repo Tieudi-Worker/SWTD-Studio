@@ -18,6 +18,15 @@ contextBridge.exposeInMainWorld('swtd', {
   cancelPipeline: (runId) => ipcRenderer.invoke('swtd:cancel-pipeline', runId),
   validateListingOutput: (skuPath) => ipcRenderer.invoke('swtd:validate-listing-output', skuPath),
   validateAplusOutput: (skuPath) => ipcRenderer.invoke('swtd:validate-aplus-output', skuPath),
+  // Build a `swtd-asset://` URL for an absolute preview file path. No IPC
+  // round-trip; this is a pure string transform exposed for ergonomics so
+  // renderer code doesn't need to know the protocol name. Returns null for
+  // empty / non-string input.
+  assetUrl: (absPath) => {
+    if (!absPath || typeof absPath !== 'string') return null
+    const normalized = absPath.replace(/\\/g, '/')
+    return `swtd-asset://abs${normalized.startsWith('/') ? '' : '/'}${encodeURI(normalized)}`
+  },
   revealPath: (targetPath) => ipcRenderer.invoke('swtd:reveal-path', targetPath),
   onPipelineEvent: (handler) => {
     listeners.add(handler)
