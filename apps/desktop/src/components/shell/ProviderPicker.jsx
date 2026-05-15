@@ -1,39 +1,54 @@
 import React from 'react'
 import { t } from '../../lib/i18n.js'
-import { PROVIDERS } from '../../lib/providers/registry.js'
 import {
-  getKey, setKey, clearKey, maskKey,
-  getActiveProviderId, setActiveProviderId
-} from '../../lib/key-store.js'
+  loadProviders,
+  getActiveProviderId,
+  setActiveProviderId
+} from '../../lib/providers/registry.js'
+
+const swtdProvider = typeof window !== 'undefined' ? window.swtdProvider : null
 
 /**
  * Provider picker UI mounted inside SettingsModal.
  *
- * Spec: docs/features/phase-3-model-adapter/spec.md §2.US1
- * Plan: docs/features/phase-3-model-adapter/plan.md §3 + §4.7
+ * Phase 4.2 rewrite (US1 minimal cut + US2 secure-key surface):
+ *  - Provider list comes from `window.swtdProvider.listProviders()` (main
+ *    process is now the single source of truth for the provider set).
+ *  - Key fields write through `saveKey` / `clearKey` IPC; the renderer
+ *    NEVER reads the plaintext key back. Saved state is rendered as a
+ *    `••••` mask + Replace button. (SC2.)
+ *  - The Phase 3 "Reveal (30 s)" feature is removed — the renderer
+ *    architecturally cannot retrieve the key after save in Phase 4.
+ *  - Test connection delegates to `testProvider` IPC.
+ *  - 5-tab Settings layout + new-provider (Gemini/Kie/Custom) panels are
+ *    P4.3 work; this picker still renders one row per provider in the
+ *    existing single-list layout to preserve Phase 3 UI behavior.
  *
- * Boss Q3 lock: lives in Settings modal; TopBar chip opens the modal.
- * Boss Q1 lock: keys persist in localStorage; warning chip is explicit.
+ * Spec: docs/features/phase-4-provider-core/spec.md US1 / US2 / US4
+ * Plan: docs/features/phase-4-provider-core/plan.md §4.2 + §4.7
  */
 export default function ProviderPicker({ language = 'en', onChange }) {
+  const [providers, setProviders] = React.useState([])
+  const [vaultInfo, setVaultInfo] = React.useState(null)
   const [activeId, setActiveId] = React.useState(() => getActiveProviderId())
-  // Track which providers have a saved key (boolean only — never the key text).
-  const [keyStatus, setKeyStatus] = React.useState(() => {
-    const out = {}
-    for (const p of PROVIDERS) out[p.id] = !!getKey(p.id)
-    return out
-  })
   // Test-connection state per provider id.
   const [testResults, setTestResults] = React.useState({})
-  const [revealId, setRevealId] = React.useState(null)         // which provider's key is shown right now
-  const [keyDrafts, setKeyDrafts] = React.useState({})         // unsaved key input per provider
+  // Unsaved key drafts per provider id. Never persisted beyond this component.
+  const [keyDrafts, setKeyDrafts] = React.useState({})
+  const [pendingSave, setPendingSave] = React.useState({})
 
-  // Auto-hide a revealed key after 30s so screenshots don't leak it.
-  React.useEffect(() => {
-    if (!revealId) return
-    const t = setTimeout(() => setRevealId(null), 30_000)
-    return () => clearTimeout(t)
-  }, [revealId])
+  const refresh = React.useCallback(async () => {
+    if (!swtdProvider?.listProviders) {
+      setProviders([])
+      return
+    }
+    const res = await swtdProvider.listProviders().catch(() => null)
+    if (!res?.ok) { setProviders([]); return }
+    setProviders(res.providers || [])
+    setVaultInfo(res.vault || null)
+  }, [])
+
+  React.useEffect(() => { refresh() }, [refresh])
 
   function selectProvider(id) {
     setActiveProviderId(id)
@@ -41,46 +56,57 @@ export default function ProviderPicker({ language = 'en', onChange }) {
     onChange?.(id)
   }
 
-  function saveKey(providerId) {
+  async function saveKey(providerId) {
     const draft = (keyDrafts[providerId] || '').trim()
     if (!draft) return
-    setKey(providerId, draft)
-    setKeyStatus(prev => ({ ...prev, [providerId]: true }))
-    setKeyDrafts(prev => ({ ...prev, [providerId]: '' }))
-    setTestResults(prev => ({ ...prev, [providerId]: null }))
+    setPendingSave((p) => ({ ...p, [providerId]: true }))
+    try {
+      const r = await swtdProvider.saveKey(providerId, draft)
+      if (!r?.ok) throw new Error(r?.error || 'save failed')
+      // Clear local draft so plaintext is gone from renderer memory.
+      setKeyDrafts((p) => ({ ...p, [providerId]: '' }))
+      setTestResults((p) => ({ ...p, [providerId]: null }))
+      await refresh()
+    } catch (err) {
+      setTestResults((p) => ({ ...p, [providerId]: { ok: false, reason: 'invalid-response' } }))
+    } finally {
+      setPendingSave((p) => ({ ...p, [providerId]: false }))
+    }
   }
 
-  function removeKey(providerId) {
-    clearKey(providerId)
-    setKeyStatus(prev => ({ ...prev, [providerId]: false }))
-    setTestResults(prev => ({ ...prev, [providerId]: null }))
+  async function removeKey(providerId) {
+    const r = await swtdProvider.clearKey(providerId).catch(() => null)
+    if (r?.ok) {
+      setTestResults((p) => ({ ...p, [providerId]: null }))
+      await refresh()
+    }
   }
 
   async function testConnection(provider) {
-    const key = getKey(provider.id)
-    if (provider.requiresApiKey && !key) {
-      setTestResults(prev => ({ ...prev, [provider.id]: { ok: false, reason: 'invalid-key' } }))
-      return
-    }
-    setTestResults(prev => ({ ...prev, [provider.id]: { pending: true } }))
-    try {
-      const r = await provider.testConnection(key)
-      setTestResults(prev => ({ ...prev, [provider.id]: r }))
-    } catch (err) {
-      setTestResults(prev => ({ ...prev, [provider.id]: { ok: false, reason: 'network' } }))
-    }
+    setTestResults((p) => ({ ...p, [provider.id]: { pending: true } }))
+    const r = await swtdProvider.testProvider(provider.id).catch(() => ({ ok: false, reason: 'network' }))
+    setTestResults((p) => ({ ...p, [provider.id]: r }))
   }
+
+  const warningText = vaultInfo?.encryptionAvailable
+    ? t('provider.key.warning_v2', language) || 'API keys are stored via the OS keychain wrapper. Plaintext keys never leave main.'
+    : t('provider.key.warning_aes', language) || 'OS encryption unavailable on this host — keys are AES-encrypted on disk with a derived key. Configure a system keyring for stronger protection.'
 
   return (
     <div className="provider-picker">
       <div className="provider-picker__warning" role="note">
-        ⚠ {t('provider.key.warning', language)}
+        ⚠ {warningText}
       </div>
-      {PROVIDERS.map((p) => {
+      {providers.length === 0 && (
+        <div className="provider-picker__hint" role="note">
+          {t('provider.loading', language) || 'Loading providers…'}
+        </div>
+      )}
+      {providers.map((p) => {
         const isActive = p.id === activeId
-        const saved = keyStatus[p.id]
+        const saved = !!p.hasKey
+        const requiresApiKey = (p.authFields || []).some((f) => f.id === 'apiKey' && f.required)
         const test = testResults[p.id]
-        const saved_key_value = saved ? getKey(p.id) : ''
         return (
           <div
             key={p.id}
@@ -94,46 +120,33 @@ export default function ProviderPicker({ language = 'en', onChange }) {
                 onChange={() => selectProvider(p.id)}
               />
               <span className="provider-picker__label">{p.label}</span>
-              {!p.requiresApiKey && (
+              {!requiresApiKey && (
                 <span className="provider-picker__tag provider-picker__tag--mock">
                   {t('provider.tag.no_key', language)}
                 </span>
               )}
-              {p.requiresApiKey && saved && (
+              {requiresApiKey && saved && (
                 <span className="provider-picker__tag provider-picker__tag--saved">
                   {t('provider.tag.saved', language)}
                 </span>
               )}
-              {p.requiresApiKey && !saved && (
+              {requiresApiKey && !saved && (
                 <span className="provider-picker__tag provider-picker__tag--missing">
                   {t('provider.tag.missing', language)}
                 </span>
               )}
             </label>
 
-            {p.requiresApiKey && (
+            {requiresApiKey && (
               <div className="provider-picker__key-row">
                 {saved ? (
                   <>
-                    <code className="provider-picker__masked-key">
-                      {revealId === p.id ? saved_key_value : maskKey(saved_key_value)}
-                    </code>
-                    <button
-                      type="button"
-                      className="provider-picker__link"
-                      onClick={() => setRevealId(revealId === p.id ? null : p.id)}
-                    >
-                      {revealId === p.id
-                        ? t('provider.key.hide', language)
-                        : t('provider.key.reveal', language)}
-                    </button>
+                    <code className="provider-picker__masked-key">••••••••</code>
                     <button
                       type="button"
                       className="provider-picker__link provider-picker__link--danger"
                       onClick={() => removeKey(p.id)}
-                    >
-                      {t('provider.key.clear', language)}
-                    </button>
+                    >{t('provider.key.clear', language)}</button>
                   </>
                 ) : (
                   <>
@@ -142,24 +155,14 @@ export default function ProviderPicker({ language = 'en', onChange }) {
                       className="provider-picker__input"
                       placeholder={t('provider.key.placeholder', language)}
                       value={keyDrafts[p.id] || ''}
-                      onChange={(e) => setKeyDrafts(prev => ({ ...prev, [p.id]: e.target.value }))}
+                      onChange={(e) => setKeyDrafts((prev) => ({ ...prev, [p.id]: e.target.value }))}
                     />
                     <button
                       type="button"
                       className="provider-picker__link"
                       onClick={() => saveKey(p.id)}
-                      disabled={!(keyDrafts[p.id] || '').trim()}
-                    >
-                      {t('provider.key.save', language)}
-                    </button>
-                    {p.docsUrl && (
-                      <a
-                        href={p.docsUrl}
-                        target="_blank"
-                        rel="noreferrer noopener"
-                        className="provider-picker__docs"
-                      >{t('provider.key.get_one', language)} ↗</a>
-                    )}
+                      disabled={!(keyDrafts[p.id] || '').trim() || !!pendingSave[p.id]}
+                    >{t('provider.key.save', language)}</button>
                   </>
                 )}
               </div>

@@ -1,52 +1,50 @@
 /**
- * Provider registry.
+ * Renderer-side provider registry — Phase 4 thin proxy.
  *
- * Single home for the provider list. Concrete adapters never import each
- * other — the registry is the only module that knows about all three.
+ * Phase 3's renderer-side adapter set (`mock-provider.js`, `fal-provider.js`,
+ * `openai-provider.js`, `types.js`) is deleted in Phase 4.2. The renderer
+ * no longer holds any HTTP-call code; everything goes through
+ * `window.swtdProvider.*` (Plan §4.1, D5).
  *
- * Spec: docs/features/phase-3-model-adapter/spec.md §2
- * Plan: docs/features/phase-3-model-adapter/plan.md §3 + §4.2
+ * This module survives as a tiny convenience wrapper so existing call sites
+ * (`ProviderPicker.jsx`, `Shell.jsx`) keep importing from a stable path
+ * while we migrate UI in P4.3. It exposes:
+ *
+ *   - `loadProviders()`         async; fetches the current provider list +
+ *                               per-id key-presence from main
+ *   - `getActiveProviderId()`   localStorage-mirrored picker preference
+ *   - `setActiveProviderId()`   write that preference
+ *
+ * Plaintext keys NEVER live in the renderer in Phase 4. The legacy
+ * `resolveActiveProvider({ provider, fellBackToMock, reason })` semantic is
+ * moved into main via the route config + fallback router; the renderer just
+ * surfaces `servedProvider` from each generation result.
  */
 
-import { mockProvider } from './mock-provider.js'
-import { falProvider } from './fal-provider.js'
-import { openaiProvider } from './openai-provider.js'
-import { getActiveProviderId, setActiveProviderId, hasKey } from '../key-store.js'
+const ACTIVE_PROVIDER_KEY = 'swtd_active_provider'
 
-export const PROVIDERS = Object.freeze([mockProvider, falProvider, openaiProvider])
-
-/** Look up a provider by id. Returns null if unknown. */
-export function getProvider(id) {
-  return PROVIDERS.find(p => p.id === id) || null
-}
-
-/** Default (mock) — the always-available fallback. */
-export function getMockProvider() {
-  return mockProvider
-}
+const swtdProvider = typeof window !== 'undefined' ? window.swtdProvider : null
 
 /**
- * Resolve the provider that should actually execute the next generation,
- * applying the Q1-locked graceful-degradation rule: if the operator-selected
- * provider requires an API key but has none saved, fall back to mock and
- * surface the substitution.
- *
- * @returns {{
- *   provider: import('./types.js').ImageProvider,
- *   fellBackToMock: boolean,
- *   reason?: 'missing-key'|'unknown-provider'
- * }}
+ * Fetch the provider list from main. Returns
+ * `[{ id, label, authFields, capabilities, models, hasKey }, …]`.
+ * Resolves to an empty array when the preload bridge is unavailable
+ * (e.g. unit tests or storybook).
  */
-export function resolveActiveProvider() {
-  const id = getActiveProviderId()
-  const requested = getProvider(id)
-  if (!requested) {
-    return { provider: mockProvider, fellBackToMock: true, reason: 'unknown-provider' }
-  }
-  if (requested.requiresApiKey && !hasKey(requested.id)) {
-    return { provider: mockProvider, fellBackToMock: true, reason: 'missing-key' }
-  }
-  return { provider: requested, fellBackToMock: false }
+export async function loadProviders() {
+  if (!swtdProvider?.listProviders) return []
+  const res = await swtdProvider.listProviders().catch(() => null)
+  if (!res?.ok || !Array.isArray(res.providers)) return []
+  return res.providers
 }
 
-export { getActiveProviderId, setActiveProviderId }
+/** Read the operator's picked active provider id. Defaults to `mock`. */
+export function getActiveProviderId() {
+  if (typeof localStorage === 'undefined') return 'mock'
+  try { return localStorage.getItem(ACTIVE_PROVIDER_KEY) || 'mock' } catch { return 'mock' }
+}
+
+export function setActiveProviderId(providerId) {
+  if (typeof localStorage === 'undefined') return
+  try { localStorage.setItem(ACTIVE_PROVIDER_KEY, String(providerId || 'mock')) } catch { /* ignore */ }
+}

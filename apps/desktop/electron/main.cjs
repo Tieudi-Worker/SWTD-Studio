@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, ipcMain, dialog, shell, protocol } = require('electron')
+const { app, BrowserWindow, Menu, ipcMain, dialog, shell, protocol, safeStorage } = require('electron')
 const path = require('node:path')
 const fs = require('node:fs')
 const { pathToFileURL } = require('node:url')
@@ -24,12 +24,78 @@ const isDev = !app.isPackaged
 const REPO_ROOT = path.resolve(__dirname, '..', '..', '..')
 const RUNTIME_ROOT = path.join(REPO_ROOT, 'runtime')
 const CORE_ENTRY = path.join(REPO_ROOT, 'packages', 'core', 'src', 'index.js')
+const PROVIDER_CORE_ENTRY = path.join(REPO_ROOT, 'packages', 'provider-core', 'src', 'index.js')
 
 let mainWindow = null
 const activeRuns = new Map() // runId -> AbortController
 
+// Phase 4 — Provider Core wiring. The package is ESM, so it must be loaded
+// via dynamic import. We materialise the singleton at boot (see
+// `initializeProviderCore`) and stash it here for the IPC handlers.
+let providerCore = null
+const activeProviderGenerations = new Map() // genId -> AbortController
+
 async function loadCore() {
   return import(pathToFileURL(CORE_ENTRY).href)
+}
+
+async function loadProviderCore() {
+  return import(pathToFileURL(PROVIDER_CORE_ENTRY).href)
+}
+
+/**
+ * Build the ProviderCore singleton, backed by Electron's `safeStorage` for
+ * the KeyVault and the filesystem for the MediaStore. Idempotent — repeat
+ * calls return the cached instance.
+ *
+ * Plan §4.7 + §4.1: safeStorage is the v1 backend; if encryption is not
+ * available on this host the package falls back to AES-on-disk + logs once.
+ */
+async function initializeProviderCore() {
+  if (providerCore) return providerCore
+  const mod = await loadProviderCore()
+  const userData = app.getPath('userData')
+  const keyVault = mod.createSafeStorageVault({
+    safeStorage,
+    vaultFilePath: path.join(userData, 'provider-core', 'keys.vault'),
+    machineSaltSeed: userData,
+    logger: mod.createLogger(console)
+  })
+  const mediaStore = mod.createMediaStore({ logger: mod.createLogger(console) })
+  providerCore = mod.createProviderCore({
+    keyVault,
+    mediaStore,
+    logger: mod.createLogger(console)
+  })
+  return providerCore
+}
+
+/**
+ * Resolve a reference-image path to a Buffer that the OpenAI / Kie /Custom
+ * adapter can stream into multipart form-data. Phase 4.2 ships local path
+ * resolution only; remote `swtd-asset://` URIs are decoded back to absolute
+ * paths. Anything else (http/https/data:) is rejected so the renderer
+ * cannot trick main into reading arbitrary URLs.
+ */
+async function resolveReferenceImage(ref) {
+  if (!ref || typeof ref !== 'string') return null
+  let abs = ref
+  if (/^swtd-asset:\/\//i.test(abs)) {
+    try {
+      const u = new URL(abs)
+      // swtd-asset://abs/<encoded-absolute-path>
+      abs = decodeURIComponent(u.pathname || '')
+    } catch { return null }
+  }
+  // Reject anything that still looks like a URL after decoding.
+  if (/^[a-z]+:\/\//i.test(abs)) return null
+  const resolved = path.resolve(abs)
+  if (!fs.existsSync(resolved)) return null
+  return fs.promises.readFile(resolved)
+}
+
+function newGenerationId() {
+  return `gen_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`
 }
 
 function createWindow() {
@@ -109,7 +175,7 @@ async function readBriefSafe(briefPath) {
   }
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   Menu.setApplicationMenu(null)
 
   // --- Preview asset protocol -----------------------------------------------
@@ -442,157 +508,222 @@ app.whenReady().then(() => {
   })
 
   // ──────────────────────────────────────────────────────────────────────────
-  // Phase 3 — Temp generated-image cache (Boss-locked Q2)
+  // Phase 4 — Provider Core IPC namespace (`swtd:provider:*`)
   //
-  // Path: <sku>/output/tmp-generated/slot${id}-${timestamp}.png
-  // Sidecar: <sku>/output/tmp-generated/slot${id}-${timestamp}.json
+  // Replaces the three Phase 3 handlers (`swtd:save-generated-image`,
+  // `swtd:list-tmp-generated`, `swtd:cleanup-tmp-generated`) with a single
+  // namespace that flows through `packages/provider-core`. The renderer
+  // never makes a provider HTTP call directly — it goes through these IPCs.
   //
-  // Operator-reviewable preview output from provider adapters. 7-day TTL.
-  // Auto-cleaned on app startup, SKU open, and before each new generation.
-  // Approved/export remains a separate manual step (NOT auto-promoted).
+  // Boss D5 + D7: provider HTTP lives in main; media-store contract is
+  // unchanged from Phase 3 (7-day TTL on tmp-generated/).
+  // Plan §4.1, §4.2.
   // ──────────────────────────────────────────────────────────────────────────
 
-  const TMP_TTL_MS = 7 * 24 * 60 * 60 * 1000   // 7 days
-  const TMP_DIR_NAME = path.join('output', 'tmp-generated')
-
-  function tmpDirFor(skuPath) {
-    if (!skuPath || typeof skuPath !== 'string') return null
-    const sku = path.resolve(skuPath)
-    return path.join(sku, TMP_DIR_NAME)
+  // Bootstrap the singleton. If construction fails (e.g. unable to write the
+  // vault file), every subsequent IPC returns a clear error rather than
+  // crashing the renderer.
+  let providerCoreInitError = null
+  try {
+    await initializeProviderCore()
+  } catch (err) {
+    providerCoreInitError = err && err.message ? err.message : String(err)
+    console.error('[provider-core] initialization failed:', providerCoreInitError)
   }
 
-  // Path-safety: the resolved candidate MUST live under tmpDir; reject
-  // anything that escapes (.. traversal, symlink chicanery).
-  function isUnderTmpDir(candidate, tmpDir) {
-    const c = path.resolve(candidate)
-    const d = path.resolve(tmpDir)
-    return c === d || c.startsWith(d + path.sep)
+  function requireProviderCore() {
+    if (!providerCore) {
+      return { ok: false, error: providerCoreInitError || 'provider-core not initialized' }
+    }
+    return null
   }
 
-  ipcMain.handle('swtd:save-generated-image', async (_evt, args = {}) => {
-    const { skuPath, slotId, providerId, templateId, angleId, aspectRatio, mime, bytes } = args
-    if (!skuPath || typeof skuPath !== 'string') return { ok: false, error: 'skuPath required' }
-    if (!Number.isInteger(slotId) || slotId < 1 || slotId > 8) return { ok: false, error: 'slotId 1..8 required' }
-    if (mime !== 'image/png') return { ok: false, error: 'only image/png is supported in v1' }
-    if (!bytes || !(bytes instanceof Uint8Array || bytes instanceof ArrayBuffer || Array.isArray(bytes))) {
-      return { ok: false, error: 'bytes must be Uint8Array / ArrayBuffer / number[]' }
+  // List providers + key presence. Plaintext keys NEVER leave main.
+  ipcMain.handle('swtd:provider:list', async () => {
+    const err = requireProviderCore(); if (err) return err
+    const list = providerCore.listProviders()
+    const out = []
+    for (const meta of list) {
+      const has = await providerCore.hasKeyFor(meta.id).catch(() => false)
+      out.push({ ...meta, hasKey: Boolean(has) })
     }
-    const tmpDir = tmpDirFor(skuPath)
-    if (!tmpDir) return { ok: false, error: 'invalid skuPath' }
+    return { ok: true, providers: out, vault: providerCore.keyVaultInfo() }
+  })
+
+  // Save a key. The plaintext value is consumed inside main and immediately
+  // encrypted; no IPC ever reads it back.
+  ipcMain.handle('swtd:provider:save-key', async (_evt, args = {}) => {
+    const err = requireProviderCore(); if (err) return err
+    const { providerId, value } = args
+    if (typeof providerId !== 'string' || !providerId) return { ok: false, error: 'providerId required' }
+    if (typeof value !== 'string') return { ok: false, error: 'value (string) required' }
     try {
-      await fs.promises.mkdir(tmpDir, { recursive: true })
-      const generatedAt = Date.now()
-      const expiresAt = generatedAt + TMP_TTL_MS
-      const base = `slot${slotId}-${generatedAt}`
-      const pngPath = path.join(tmpDir, base + '.png')
-      const jsonPath = path.join(tmpDir, base + '.json')
-      if (!isUnderTmpDir(pngPath, tmpDir) || !isUnderTmpDir(jsonPath, tmpDir)) {
-        return { ok: false, error: 'path safety check failed' }
-      }
-      const buf = Buffer.from(bytes instanceof ArrayBuffer ? new Uint8Array(bytes) : bytes)
-      await fs.promises.writeFile(pngPath, buf)
-      const sidecar = {
-        generatedAt,
-        expiresAt,
-        providerId: providerId || null,
-        slotId,
-        templateId: templateId || null,
-        angleId: angleId || null,
-        aspectRatio: aspectRatio || null
-      }
-      await fs.promises.writeFile(jsonPath, JSON.stringify(sidecar, null, 2))
-      return { ok: true, file: pngPath, generatedAt, expiresAt, providerId: sidecar.providerId }
-    } catch (err) {
-      return { ok: false, error: err && err.message ? err.message : String(err) }
+      await providerCore.saveKey(providerId, value)
+      return { ok: true }
+    } catch (e) {
+      return { ok: false, error: e && e.message ? e.message : String(e) }
     }
   })
 
-  ipcMain.handle('swtd:list-tmp-generated', async (_evt, args = {}) => {
-    const { skuPath } = args
-    if (!skuPath || typeof skuPath !== 'string') return { ok: false, error: 'skuPath required' }
-    const tmpDir = tmpDirFor(skuPath)
-    if (!tmpDir || !fs.existsSync(tmpDir)) return { ok: true, entries: [] }
+  // Boolean probe — renderer uses this to render `••••` chips / warning dots.
+  ipcMain.handle('swtd:provider:has-key', async (_evt, args = {}) => {
+    const err = requireProviderCore(); if (err) return err
+    const { providerId } = args
+    if (typeof providerId !== 'string' || !providerId) return { ok: false, has: false }
+    const has = await providerCore.hasKeyFor(providerId).catch(() => false)
+    return { ok: true, has: Boolean(has) }
+  })
+
+  ipcMain.handle('swtd:provider:clear-key', async (_evt, args = {}) => {
+    const err = requireProviderCore(); if (err) return err
+    const { providerId } = args
+    if (typeof providerId !== 'string' || !providerId) return { ok: false, error: 'providerId required' }
     try {
-      const names = await fs.promises.readdir(tmpDir)
-      const now = Date.now()
-      const entries = []
-      for (const name of names) {
-        if (!name.endsWith('.json')) continue
-        const jsonPath = path.join(tmpDir, name)
-        if (!isUnderTmpDir(jsonPath, tmpDir)) continue
-        let meta
-        try {
-          meta = JSON.parse(await fs.promises.readFile(jsonPath, 'utf8'))
-        } catch { continue }
-        if (!meta || typeof meta.expiresAt !== 'number') continue
-        if (meta.expiresAt <= now) continue                   // skip expired; cleanup will sweep
-        const pngPath = jsonPath.replace(/\.json$/, '.png')
-        if (!fs.existsSync(pngPath)) continue
-        entries.push({
-          slotId: meta.slotId,
-          file: pngPath,
-          generatedAt: meta.generatedAt,
-          expiresAt: meta.expiresAt,
-          providerId: meta.providerId || null,
-          templateId: meta.templateId || null,
-          angleId: meta.angleId || null,
-          aspectRatio: meta.aspectRatio || null
-        })
-      }
-      // Newest first per slot so the renderer can take entries[0] per slot
-      // without extra sorting.
-      entries.sort((a, b) => b.generatedAt - a.generatedAt)
-      return { ok: true, entries }
-    } catch (err) {
-      return { ok: false, error: err && err.message ? err.message : String(err) }
+      await providerCore.clearKey(providerId)
+      return { ok: true }
+    } catch (e) {
+      return { ok: false, error: e && e.message ? e.message : String(e) }
     }
   })
 
-  ipcMain.handle('swtd:cleanup-tmp-generated', async (_evt, args = {}) => {
-    const { skuPath } = args
-    if (!skuPath || typeof skuPath !== 'string') return { ok: false, error: 'skuPath required' }
-    const tmpDir = tmpDirFor(skuPath)
-    if (!tmpDir || !fs.existsSync(tmpDir)) return { ok: true, deleted: 0, kept: 0 }
+  ipcMain.handle('swtd:provider:test', async (_evt, args = {}) => {
+    const err = requireProviderCore(); if (err) return err
+    const { providerId } = args
+    if (typeof providerId !== 'string' || !providerId) return { ok: false, reason: 'invalid-input' }
     try {
-      const names = await fs.promises.readdir(tmpDir)
-      const now = Date.now()
-      let deleted = 0
-      let kept = 0
-      // Pass 1: find expired / orphan-png sidecars; collect both members of
-      // the pair so we delete png + json together.
-      for (const name of names) {
-        if (!name.endsWith('.json')) continue
-        const jsonPath = path.join(tmpDir, name)
-        if (!isUnderTmpDir(jsonPath, tmpDir)) continue
-        let meta = null
-        try {
-          meta = JSON.parse(await fs.promises.readFile(jsonPath, 'utf8'))
-        } catch { /* malformed sidecar — treat as expired */ }
-        const isExpired = !meta || typeof meta.expiresAt !== 'number' || meta.expiresAt <= now
-        const pngPath = jsonPath.replace(/\.json$/, '.png')
-        if (isExpired) {
-          try { await fs.promises.unlink(jsonPath) } catch {}
-          try { if (fs.existsSync(pngPath)) await fs.promises.unlink(pngPath) } catch {}
-          deleted++
-        } else {
-          kept++
-        }
-      }
-      // Pass 2: orphan PNGs (no matching json) — delete; they're inaccessible
-      // anyway because we never serve them without metadata.
-      for (const name of names) {
-        if (!name.endsWith('.png')) continue
-        const pngPath = path.join(tmpDir, name)
-        const jsonPath = pngPath.replace(/\.png$/, '.json')
-        if (!fs.existsSync(jsonPath)) {
-          try { await fs.promises.unlink(pngPath); deleted++ } catch {}
-        }
-      }
-      return { ok: true, deleted, kept }
-    } catch (err) {
-      return { ok: false, error: err && err.message ? err.message : String(err) }
+      const r = await providerCore.testProvider(providerId)
+      return { ok: !!r?.ok, reason: r?.reason }
+    } catch (e) {
+      return { ok: false, reason: e?.reason || 'network' }
     }
   })
+
+  ipcMain.handle('swtd:provider:get-route-config', async () => {
+    const err = requireProviderCore(); if (err) return err
+    return { ok: true, route: providerCore.getRouteConfig() }
+  })
+
+  ipcMain.handle('swtd:provider:set-route-config', async (_evt, args = {}) => {
+    const err = requireProviderCore(); if (err) return err
+    try {
+      const route = providerCore.setRouteConfig(args || {})
+      return { ok: true, route }
+    } catch (e) {
+      return { ok: false, error: e && e.message ? e.message : String(e) }
+    }
+  })
+
+  // Unified image_generate / image_edit entry point. The renderer hands us
+  // the operator's intent (prompt, optional reference image path[s], slot
+  // metadata) and we return a `swtd-asset://` ready file path plus the
+  // sidecar provenance.
+  async function dispatchImage(handler, args = {}) {
+    const err = requireProviderCore(); if (err) return err
+    const genId = newGenerationId()
+    const controller = new AbortController()
+    activeProviderGenerations.set(genId, controller)
+    try {
+      // Resolve reference images (paths/swtd-asset URIs → Buffers) here in
+      // main so the adapter never touches the filesystem.
+      const refs = []
+      const candidates = Array.isArray(args.images) ? args.images : (args.image ? [args.image] : [])
+      for (const c of candidates) {
+        const buf = await resolveReferenceImage(c)
+        if (!buf) {
+          return { ok: false, error: 'reference image not found', reason: 'invalid-input' }
+        }
+        refs.push(buf)
+      }
+      const input = { ...args }
+      if (refs.length > 0) {
+        input.images = refs
+        delete input.image
+      }
+      const result = await handler(input, { signal: controller.signal })
+      return { ok: true, genId, ...result }
+    } catch (e) {
+      const reason = e?.reason || (e?.name === 'AbortError' ? 'aborted' : 'unknown')
+      return {
+        ok: false,
+        genId,
+        reason,
+        attempted: Array.isArray(e?.attempted) ? e.attempted : undefined,
+        error: e && e.message ? e.message : String(e)
+      }
+    } finally {
+      activeProviderGenerations.delete(genId)
+    }
+  }
+
+  ipcMain.handle('swtd:provider:generate-image', async (_evt, args = {}) =>
+    dispatchImage((input, ctx) => providerCore.generateImage(input, ctx), args)
+  )
+  ipcMain.handle('swtd:provider:edit-image', async (_evt, args = {}) =>
+    dispatchImage((input, ctx) => providerCore.editImage(input, ctx), args)
+  )
+
+  ipcMain.handle('swtd:provider:cancel-generation', async (_evt, genId) => {
+    const controller = activeProviderGenerations.get(genId)
+    if (!controller) return { ok: false, error: 'no active generation with that id' }
+    try { controller.abort() } catch {}
+    return { ok: true }
+  })
+
+  // Research / Insight Brief — wired in P4.2 so the IPC surface is complete;
+  // operator-facing Brief Step UI lands in P4.4. The default v1 search
+  // backend is the offline-safe mock (plan §5 Q8).
+  ipcMain.handle('swtd:provider:research-insight', async (_evt, args = {}) => {
+    const err = requireProviderCore(); if (err) return err
+    try {
+      const r = await providerCore.researchInsight(args || {})
+      return { ok: true, ...r }
+    } catch (e) {
+      return { ok: false, reason: e?.reason || 'unknown', error: e && e.message ? e.message : String(e) }
+    }
+  })
+
+  ipcMain.handle('swtd:provider:get-insight-brief', async (_evt, args = {}) => {
+    const err = requireProviderCore(); if (err) return err
+    const skuPath = typeof args === 'string' ? args : args?.skuPath
+    const brief = await providerCore.getInsightBrief(skuPath)
+    return { ok: true, brief }
+  })
+
+  // Media store — replaces Phase 3's three handlers. Same on-disk layout +
+  // sidecar shape, owned by `packages/provider-core/src/media-store.js`.
+  ipcMain.handle('swtd:provider:list-tmp-images', async (_evt, args = {}) => {
+    const err = requireProviderCore(); if (err) return err
+    try {
+      const { entries, corrupt } = await providerCore.listTmpImages(args || {})
+      return { ok: true, entries, corrupt }
+    } catch (e) {
+      return { ok: false, error: e && e.message ? e.message : String(e), entries: [] }
+    }
+  })
+
+  ipcMain.handle('swtd:provider:cleanup-tmp', async (_evt, args = {}) => {
+    const err = requireProviderCore(); if (err) return err
+    try {
+      const r = await providerCore.cleanupTmp(args || {})
+      return { ok: true, ...r }
+    } catch (e) {
+      return { ok: false, error: e && e.message ? e.message : String(e), deleted: 0, kept: 0 }
+    }
+  })
+
+  ipcMain.handle('swtd:provider:promote-to-approved', async (_evt, args = {}) => {
+    const err = requireProviderCore(); if (err) return err
+    try {
+      const r = await providerCore.promoteToApproved(args || {})
+      return { ok: true, ...r }
+    } catch (e) {
+      return { ok: false, error: e && e.message ? e.message : String(e) }
+    }
+  })
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // End provider-core IPC namespace
+  // ──────────────────────────────────────────────────────────────────────────
 
   // --- Reveal a file or folder in the OS file manager -----------------------
   // Used by the cohesion-pause UI to surface _cohesion_request.json so the
@@ -661,5 +792,9 @@ app.on('window-all-closed', () => {
     try { controller.abort() } catch {}
   }
   activeRuns.clear()
+  for (const controller of activeProviderGenerations.values()) {
+    try { controller.abort() } catch {}
+  }
+  activeProviderGenerations.clear()
   if (process.platform !== 'darwin') app.quit()
 })

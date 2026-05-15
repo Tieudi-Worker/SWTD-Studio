@@ -7,6 +7,15 @@ ipcRenderer.on('swtd:pipeline-event', (_evt, payload) => {
   }
 })
 
+// Build a `swtd-asset://` URL for an absolute preview file path. Used by both
+// the legacy `window.swtd` namespace (Phases 1–3) and the new `window.swtdProvider`
+// namespace (Phase 4). Pure string transform; no IPC round-trip.
+function assetUrl(absPath) {
+  if (!absPath || typeof absPath !== 'string') return null
+  const normalized = absPath.replace(/\\/g, '/')
+  return `swtd-asset://abs${normalized.startsWith('/') ? '' : '/'}${encodeURI(normalized)}`
+}
+
 contextBridge.exposeInMainWorld('swtd', {
   ping: () => ipcRenderer.invoke('swtd:ping'),
   pickFolder: (opts) => ipcRenderer.invoke('swtd:pick-folder', opts),
@@ -18,38 +27,60 @@ contextBridge.exposeInMainWorld('swtd', {
   cancelPipeline: (runId) => ipcRenderer.invoke('swtd:cancel-pipeline', runId),
   validateListingOutput: (skuPath) => ipcRenderer.invoke('swtd:validate-listing-output', skuPath),
   validateAplusOutput: (skuPath) => ipcRenderer.invoke('swtd:validate-aplus-output', skuPath),
-  // Build a `swtd-asset://` URL for an absolute preview file path. No IPC
-  // round-trip; this is a pure string transform exposed for ergonomics so
-  // renderer code doesn't need to know the protocol name. Returns null for
-  // empty / non-string input.
-  assetUrl: (absPath) => {
-    if (!absPath || typeof absPath !== 'string') return null
-    const normalized = absPath.replace(/\\/g, '/')
-    return `swtd-asset://abs${normalized.startsWith('/') ? '' : '/'}${encodeURI(normalized)}`
-  },
+  assetUrl,
   revealPath: (targetPath) => ipcRenderer.invoke('swtd:reveal-path', targetPath),
   // Phase 2 — read a brand-context markdown file from disk applying the
   // workspace-default + SKU-override resolution rule. Read-only. Filename
   // must end in `.md`; main process path-checks the resolved file sits
-  // under the workspace root. Returns:
-  //   { ok: true, content: string, source: 'sku'|'workspace' }
-  //   { ok: false, source: 'none' }                                 // file absent
-  //   { ok: false, error: '<reason>' }                              // path rejected
+  // under the workspace root.
   readBrandFile: (args) => ipcRenderer.invoke('swtd:read-brand-file', args),
-  // Phase 3 — temp generated-image cache under <sku>/output/tmp-generated/
-  // with 7-day TTL. Write-then-list-then-cleanup is the v1 lifecycle.
-  //   saveGeneratedImage({ skuPath, slotId, providerId, templateId, angleId,
-  //                        aspectRatio, mime: 'image/png', bytes: Uint8Array })
-  //     → { ok, file, generatedAt, expiresAt, providerId }
-  //   listTmpGenerated({ skuPath })
-  //     → { ok, entries: [{ slotId, file, generatedAt, expiresAt, ... }] }
-  //   cleanupTmpGenerated({ skuPath })
-  //     → { ok, deleted, kept }
-  saveGeneratedImage:  (args) => ipcRenderer.invoke('swtd:save-generated-image',  args),
-  listTmpGenerated:    (args) => ipcRenderer.invoke('swtd:list-tmp-generated',    args),
-  cleanupTmpGenerated: (args) => ipcRenderer.invoke('swtd:cleanup-tmp-generated', args),
   onPipelineEvent: (handler) => {
     listeners.add(handler)
     return () => listeners.delete(handler)
   }
+})
+
+/*
+ * Phase 4 — `window.swtdProvider`
+ *
+ * Single namespace through which the renderer reaches Provider Core. The
+ * preload bridge exposes only the calls listed below; in particular there
+ * is NO `getKey`-shaped function. A renderer process that ever needed the
+ * plaintext key would have to add an IPC handler in main.cjs by hand, and
+ * the architecture exists specifically to make that an explicit, reviewable
+ * change rather than an accident. (Plan §4.2; SC2.)
+ *
+ * Every call is a one-shot `ipcRenderer.invoke` — no event-based
+ * subscriptions in this surface. Long-running generations expose a `genId`
+ * the renderer can pass to `cancelGeneration` to abort.
+ */
+contextBridge.exposeInMainWorld('swtdProvider', {
+  /* Registry / route config */
+  listProviders:   () => ipcRenderer.invoke('swtd:provider:list'),
+  getRouteConfig:  () => ipcRenderer.invoke('swtd:provider:get-route-config'),
+  setRouteConfig:  (cfg) => ipcRenderer.invoke('swtd:provider:set-route-config', cfg),
+
+  /* Key vault — note the deliberate absence of a getKey shape */
+  saveKey:    (providerId, value) => ipcRenderer.invoke('swtd:provider:save-key',  { providerId, value }),
+  hasKeyFor:  (providerId)        => ipcRenderer.invoke('swtd:provider:has-key',   { providerId }),
+  clearKey:   (providerId)        => ipcRenderer.invoke('swtd:provider:clear-key', { providerId }),
+  testProvider: (providerId)      => ipcRenderer.invoke('swtd:provider:test',      { providerId }),
+
+  /* image_generate unified contract — mode chosen by reference-image presence */
+  generateImage: (input) => ipcRenderer.invoke('swtd:provider:generate-image', input),
+  editImage:     (input) => ipcRenderer.invoke('swtd:provider:edit-image',     input),
+  cancelGeneration: (genId) => ipcRenderer.invoke('swtd:provider:cancel-generation', genId),
+
+  /* Research / Insight Brief (IPC shipped P4.2; operator UI lands P4.4) */
+  researchInsight:  (input) => ipcRenderer.invoke('swtd:provider:research-insight',  input),
+  getInsightBrief:  (skuPath) => ipcRenderer.invoke('swtd:provider:get-insight-brief', skuPath),
+
+  /* Media store — replaces Phase 3's swtd:save/list/cleanup-tmp-generated */
+  listTmpImages:     (args) => ipcRenderer.invoke('swtd:provider:list-tmp-images',     args),
+  cleanupTmp:        (args) => ipcRenderer.invoke('swtd:provider:cleanup-tmp',         args),
+  promoteToApproved: (args) => ipcRenderer.invoke('swtd:provider:promote-to-approved', args),
+
+  /* Helper that mirrors `window.swtd.assetUrl` so renderer code calling into
+   * swtdProvider doesn't need to reach back into the legacy namespace.    */
+  assetUrl
 })

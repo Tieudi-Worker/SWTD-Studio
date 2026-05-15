@@ -153,6 +153,103 @@ All P4.1 tasks ticked in `docs/features/phase-4-provider-core/tasks.md`.
 - New npm dependencies: NO
 - Destructive git ops: NO
 
+---
+
+## Phase 4.2 — IPC cutover + key vault wiring + Phase 3 migration
+
+Started 2026-05-15. Boss approval received for D1–D8 + P4.1 commit (`da8ee3f`).
+
+### Skills re-read at start of P4.2 run
+- `.claude/skills/speckit-implement/SKILL.md`
+- `.claude/skills/tinbeta-coding-guardrail/SKILL.md`
+- `.claude/skills/matt-git-guardrails-claude-code/SKILL.md`
+(Spec / plan / tasks already in context from P4.1; re-applied without re-read.)
+
+### Files modified / deleted (T040–T053)
+
+| Path | Change | Notes |
+|---|---|---|
+| `apps/desktop/electron/main.cjs` | modified | `+initializeProviderCore()` at boot; 15 `swtd:provider:*` IPC handlers; reference-image path → Buffer resolver; AbortController map for cancel-generation. Three legacy Phase-3 handlers removed |
+| `apps/desktop/electron/preload.cjs` | modified | adds `window.swtdProvider.*` surface; no `getKey`; legacy `window.swtd.saveGeneratedImage` / `listTmpGenerated` / `cleanupTmpGenerated` removed |
+| `apps/desktop/src/shell/Shell.jsx` | modified | `migratePhase3LocalStorageKeys()` on mount; `generateSlot` reroutes through `window.swtdProvider.generateImage`; `slotGenerationIds` ref replaces local AbortController map; TopBar `providerKeyMissing` now driven by `hasKeyFor` IPC state |
+| `apps/desktop/src/components/shell/ProviderPicker.jsx` | rewrite | IPC-only; saved key shows `••••••••` with Replace button (no reveal); Test connection calls `testProvider`; warning copy switches between safeStorage / AES-on-disk based on `vault.encryptionAvailable` |
+| `apps/desktop/src/lib/tmp-cache.js` | rewrite | repointed to `swtd:provider:list-tmp-images` / `cleanup-tmp`; `saveGeneratedImage` removed (Generate path now hands bytes to media-store inside main) |
+| `apps/desktop/src/lib/providers/registry.js` | rewrite | thin proxy: `loadProviders()` (IPC) + `getActiveProviderId / setActiveProviderId` (picker preference) |
+| `apps/desktop/src/lib/providers/{mock,fal,openai}-provider.js` | **deleted** | renderer no longer holds HTTP-call code |
+| `apps/desktop/src/lib/providers/types.js` | **deleted** | moved to `packages/provider-core/src/types.js` |
+| `apps/desktop/src/lib/key-store.js` | **deleted** | replaced by `window.swtdProvider.{hasKeyFor, saveKey, clearKey}` |
+
+Diff stat: 11 files changed, +598 / −999 LOC (net −401).
+
+### Verification evidence
+
+```
+$ grep -rE "fetch\\(['\"]https?://(api\\.openai\\.com|fal\\.run|generativelanguage\\.googleapis\\.com|kieai\\.)" apps/desktop/src/
+(zero hits — SC4 / US2 audit OK)
+
+$ grep -rE "from ['\"](\\.\\.?/)+lib/key-store" apps/desktop/src/
+$ grep -rE "from ['\"](\\.\\.?/)+lib/providers/(mock|fal|openai)-provider" apps/desktop/src/
+$ grep -rE "from ['\"](\\.\\.?/)+lib/providers/types" apps/desktop/src/
+(all zero hits — Phase 3 adapter set fully retired)
+
+$ ls apps/desktop/src/lib/providers/
+registry.js
+(only the thin renderer-side proxy remains)
+
+$ node --check apps/desktop/electron/main.cjs    # OK
+$ node --check apps/desktop/electron/preload.cjs # OK
+$ node --check apps/desktop/src/lib/tmp-cache.js # OK
+$ node --check apps/desktop/src/lib/providers/registry.js # OK
+```
+
+JSX-files (`Shell.jsx`, `ProviderPicker.jsx`) cannot be `node --check`'d
+without a transform. Informal brace/paren balance is zero on both. Full
+build:renderer verification deferred to P4.5 when a `dev:electron` boot is
+runnable here.
+
+### Provider-core smoke (re-run for P4.2)
+
+```
+$ node --input-type=module -e "<createProviderCore + key vault roundtrip>"
+hasKey after save: true
+hasKey after clear: false
+providers: openai,gemini,kie,fal,custom,mock
+route: {"primary":"openai","fallbackChain":[],"allowMockFallback":false}
+```
+
+The key vault accepts `setKey` / `hasKey` / `clearKey` through the same
+interface that `main.cjs` now drives at boot. Provider list + route config
+unchanged from P4.1.
+
+### Bundle key audit (deferred)
+
+`apps/desktop/dist/` does not exist on this worktree, so the
+`grep -rE "sk-[A-Za-z0-9]{20,}" apps/desktop/dist/` audit (tasks.md T050)
+is deferred to P4.5 T104 where it will run after a fresh `npm run
+build:renderer`. The renderer **source** is already proven leak-free by the
+T049 grep above.
+
+### Blocker / surfaced limitation
+
+`apps/desktop/node_modules` is missing on this worktree. No `npm install`
+performed (Boss policy + no new deps approved). Consequences:
+
+1. `npm run build:renderer` not runnable here — moved to P4.3 / P4.5.
+2. End-to-end `dev:electron` smoke (T051 migration toast, T052 DevTools
+   plaintext probe) cannot be performed in this run. Code-level smoke
+   (vault roundtrip + grep audits) confirms the architecture is in place.
+
+Surfaced per `tinbeta-coding-guardrail` Rule 7 / Rule 12.
+
+### Hard-constraint check (P4.2 boundary)
+
+- `git push` performed: NO
+- `runtime/**` edits: NO (`git diff --stat HEAD -- runtime/` shows nothing)
+- New npm dependencies: NO
+- Destructive git ops: NO (file deletions executed via `git rm`)
+- Renderer has zero direct provider `fetch()` calls — verified
+- No `getKey`-shaped IPC exposed to renderer — verified by audit
+
 
 ---
 
