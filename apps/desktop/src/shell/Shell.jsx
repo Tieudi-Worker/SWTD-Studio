@@ -39,6 +39,36 @@ function loadLayout() {
 
 const DRAWER_CYCLE = { collapsed: 'summary', summary: 'expanded', expanded: 'collapsed' }
 
+// Per-SKU review state lives under a stable per-SKU key. SKU paths are
+// absolute so they uniquely identify a workspace+SKU pair.
+const REVIEW_KEY_PREFIX = 'swtd_review:'
+const REVIEW_DEFAULT = { approvals: {}, overrides: {}, expanded: {} }
+
+function loadSlotReview(skuPath) {
+  if (!skuPath || typeof localStorage === 'undefined') return REVIEW_DEFAULT
+  try {
+    const raw = localStorage.getItem(REVIEW_KEY_PREFIX + skuPath)
+    if (!raw) return REVIEW_DEFAULT
+    const parsed = JSON.parse(raw)
+    return {
+      approvals: parsed?.approvals || {},
+      overrides: parsed?.overrides || {},
+      expanded:  parsed?.expanded  || {}
+    }
+  } catch {
+    return REVIEW_DEFAULT
+  }
+}
+
+function saveSlotReview(skuPath, state) {
+  if (!skuPath || typeof localStorage === 'undefined') return
+  try {
+    localStorage.setItem(REVIEW_KEY_PREFIX + skuPath, JSON.stringify(state))
+  } catch {
+    /* quota or serialization failure — ignore */
+  }
+}
+
 function saveLayout(layout) {
   try {
     if (typeof localStorage !== 'undefined') {
@@ -97,6 +127,18 @@ export default function Shell() {
   const [pendingAplusRegen, setPendingAplusRegen] = useState(() => new Set())
   const [aplusValidatorReport, setAplusValidatorReport] = useState(null)
   const [aplusValidating, setAplusValidating] = useState(false)
+
+  // Per-SKU review state. Persisted in localStorage so re-opening a SKU
+  // restores the last review decisions and any saved prompt overrides.
+  // Shape per SKU: { approvals: { [slotId]: 'approved'|'needs-regen' },
+  //                  overrides: { [slotId]: string },
+  //                  expanded:  { [slotId]: boolean } }
+  // NOTE: prompt overrides are currently UI-only. The legacy listing
+  // runtime does not yet accept per-slot prompt overrides; saving here
+  // preserves operator intent for the day runtime support lands.
+  const [slotReview, setSlotReview] = useState(
+    () => ({ approvals: {}, overrides: {}, expanded: {} })
+  )
 
   useEffect(() => { saveLayout(layout) }, [layout])
 
@@ -280,6 +322,8 @@ export default function Shell() {
     setSelectedModules(new Set())
     setPendingAplusRegen(new Set())
     setAplusValidatorReport(null)
+    // Restore the review state for this SKU from localStorage.
+    setSlotReview(loadSlotReview(target))
     if (!api) return
     setValidating(true)
     try {
@@ -354,6 +398,62 @@ export default function Shell() {
   const selectAllSlots = useCallback(() => {
     setSelectedSlots(new Set([1, 2, 3, 4, 5, 6, 7, 8]))
   }, [])
+
+  // Persist slot-review state on every change. Keyed by current SKU path;
+  // skips the write when no SKU is active to avoid clobbering with the
+  // default empty shape.
+  useEffect(() => {
+    if (!skuPath) return
+    saveSlotReview(skuPath, slotReview)
+  }, [skuPath, slotReview])
+
+  const setSlotApproval = useCallback((slotId, value) => {
+    setSlotReview(prev => {
+      const approvals = { ...prev.approvals }
+      if (value == null) delete approvals[slotId]
+      else approvals[slotId] = value
+      return { ...prev, approvals }
+    })
+  }, [])
+
+  const setSlotOverride = useCallback((slotId, value) => {
+    setSlotReview(prev => {
+      const overrides = { ...prev.overrides }
+      const trimmed = (value || '').trim()
+      if (!trimmed) delete overrides[slotId]
+      else overrides[slotId] = value
+      return { ...prev, overrides }
+    })
+  }, [])
+
+  const toggleSlotExpanded = useCallback((slotId) => {
+    setSlotReview(prev => {
+      const expanded = { ...prev.expanded }
+      expanded[slotId] = !expanded[slotId]
+      return { ...prev, expanded }
+    })
+  }, [])
+
+  const approveAllFoundSlots = useCallback(() => {
+    setSlotReview(prev => {
+      const approvals = { ...prev.approvals }
+      for (const entry of validatorReport?.slots || []) {
+        if (entry.exists) approvals[entry.slot] = 'approved'
+      }
+      return { ...prev, approvals }
+    })
+  }, [validatorReport])
+
+  const revealSlotFile = useCallback(async (slotId) => {
+    if (!api?.revealPath) return
+    const entry = (validatorReport?.slots || []).find(s => s.slot === slotId)
+    if (entry?.file) await api.revealPath(entry.file)
+  }, [validatorReport])
+
+  const revealListingFolder = useCallback(async () => {
+    if (!api?.revealPath || !validatorReport?.listingDir) return
+    await api.revealPath(validatorReport.listingDir)
+  }, [validatorReport])
 
   const refreshValidator = useCallback(async () => {
     if (!api || !skuPath) return
@@ -675,6 +775,15 @@ export default function Shell() {
             validatingOutput={validatingOutput}
             onRefreshValidator={refreshValidator}
             onRevealCohesionRequest={revealCohesionRequest}
+            slotApprovals={slotReview.approvals}
+            slotOverrides={slotReview.overrides}
+            slotExpanded={slotReview.expanded}
+            onSetSlotApproval={setSlotApproval}
+            onSetSlotOverride={setSlotOverride}
+            onToggleSlotExpanded={toggleSlotExpanded}
+            onApproveAllFoundSlots={approveAllFoundSlots}
+            onRevealSlotFile={revealSlotFile}
+            onRevealListingFolder={revealListingFolder}
             aplusState={aplusState}
             aplusModuleStates={aplusModuleStates}
             selectedModules={selectedModules}

@@ -66,6 +66,16 @@ export default function MainCanvas({
   validatingOutput,
   onRefreshValidator,
   onRevealCohesionRequest,
+  /* Phase 4 review state */
+  slotApprovals,
+  slotOverrides,
+  slotExpanded,
+  onSetSlotApproval,
+  onSetSlotOverride,
+  onToggleSlotExpanded,
+  onApproveAllFoundSlots,
+  onRevealSlotFile,
+  onRevealListingFolder,
   /* A+ pipeline (Phase 3) */
   aplusState,
   aplusModuleStates,
@@ -151,6 +161,15 @@ export default function MainCanvas({
             validatingOutput={validatingOutput}
             onRefreshValidator={onRefreshValidator}
             onRevealCohesionRequest={onRevealCohesionRequest}
+            slotApprovals={slotApprovals || {}}
+            slotOverrides={slotOverrides || {}}
+            slotExpanded={slotExpanded || {}}
+            onSetSlotApproval={onSetSlotApproval}
+            onSetSlotOverride={onSetSlotOverride}
+            onToggleSlotExpanded={onToggleSlotExpanded}
+            onApproveAllFoundSlots={onApproveAllFoundSlots}
+            onRevealSlotFile={onRevealSlotFile}
+            onRevealListingFolder={onRevealListingFolder}
           />
         )}
 
@@ -273,7 +292,16 @@ function ListingView({
   validatorReport,
   validatingOutput,
   onRefreshValidator,
-  onRevealCohesionRequest
+  onRevealCohesionRequest,
+  slotApprovals,
+  slotOverrides,
+  slotExpanded,
+  onSetSlotApproval,
+  onSetSlotOverride,
+  onToggleSlotExpanded,
+  onApproveAllFoundSlots,
+  onRevealSlotFile,
+  onRevealListingFolder
 }) {
   const selectionCount = selectedSlots.size
   const running = listingState.status === 'running'
@@ -286,6 +314,9 @@ function ListingView({
     for (const s of validatorReport?.slots || []) map[s.slot] = s
     return map
   }, [validatorReport])
+
+  const foundCount = (validatorReport?.slots || []).filter(s => s.exists).length
+  const approvedCount = Object.values(slotApprovals || {}).filter(v => v === 'approved').length
 
   return (
     <div className="panel-stack">
@@ -323,6 +354,13 @@ function ListingView({
               >Clear</button>
             </div>
             <div className="slot-toolbar__actions">
+              <button
+                type="button"
+                className="slot-toolbar__link"
+                onClick={onApproveAllFoundSlots}
+                disabled={running || foundCount === 0}
+                title={foundCount === 0 ? 'No slot files on disk yet' : undefined}
+              >Approve all found ({foundCount})</button>
               <Button
                 variant="secondary"
                 size="sm"
@@ -344,13 +382,25 @@ function ListingView({
             </div>
           </div>
 
+          <div className="slot-toolbar__review-info">
+            <span>{approvedCount}/{foundCount || 0} approved</span>
+            {validatorReport?.listingDir && (
+              <button
+                type="button"
+                className="slot-toolbar__link"
+                onClick={onRevealListingFolder}
+                title={validatorReport.listingDir}
+              >Reveal output folder</button>
+            )}
+          </div>
+
           <div className="slot-grid">
             {LISTING_SLOT_META.map(s => {
               const st = slotStates[s.id] || 'idle'
               const selected = selectedSlots.has(s.id)
               const v = validatorByslot[s.id]
               return (
-                <SlotCard
+                <SlotCardReview
                   key={s.id}
                   slot={s}
                   state={st}
@@ -358,6 +408,13 @@ function ListingView({
                   validator={v}
                   disabled={running}
                   onToggle={() => onToggleSlot && onToggleSlot(s.id)}
+                  approval={slotApprovals[s.id]}
+                  override={slotOverrides[s.id] || ''}
+                  expanded={!!slotExpanded[s.id]}
+                  onSetApproval={onSetSlotApproval}
+                  onSetOverride={onSetSlotOverride}
+                  onToggleExpanded={onToggleSlotExpanded}
+                  onReveal={onRevealSlotFile}
                 />
               )
             })}
@@ -604,6 +661,100 @@ function shortenPath(p, max) {
   if (!p) return ''
   if (p.length <= max) return p
   return '…' + p.slice(-(max - 1))
+}
+
+// SlotCardReview wraps SlotCard with a per-slot actions row (Approve /
+// Flag for regen / Reveal in folder) and a collapsible prompt-override
+// textarea. Selection on the card itself is preserved — the action row
+// stops propagation so action clicks don't toggle the selection state.
+//
+// Prompt override saves locally and is NOT yet wired to the runtime;
+// see the listing-slot-preview-review final summary for the runtime
+// change required to consume overrides on regen.
+function SlotCardReview({
+  slot, state, selected, validator, disabled, onToggle,
+  approval, override, expanded,
+  onSetApproval, onSetOverride, onToggleExpanded, onReveal
+}) {
+  const hasFile = !!validator?.exists
+  const wrapClass = [
+    'slot-card',
+    approval === 'approved'   && 'slot-card--approved',
+    approval === 'needs-regen' && 'slot-card--needs-regen'
+  ].filter(Boolean).join(' ')
+
+  function stop(e) { e.stopPropagation() }
+  function handleApprove(e) {
+    stop(e)
+    onSetApproval && onSetApproval(slot.id, approval === 'approved' ? null : 'approved')
+  }
+  function handleNeedsRegen(e) {
+    stop(e)
+    onSetApproval && onSetApproval(slot.id, approval === 'needs-regen' ? null : 'needs-regen')
+  }
+  function handleReveal(e) {
+    stop(e)
+    onReveal && onReveal(slot.id)
+  }
+  function handleExpand(e) {
+    stop(e)
+    onToggleExpanded && onToggleExpanded(slot.id)
+  }
+
+  return (
+    <div className={wrapClass}>
+      <SlotCard
+        slot={slot}
+        state={state}
+        selected={selected}
+        validator={validator}
+        disabled={disabled}
+        onToggle={onToggle}
+      />
+      <div className="slot-card__actions">
+        <button
+          type="button"
+          className={'slot-card__act' + (approval === 'approved' ? ' slot-card__act--on' : '')}
+          onClick={handleApprove}
+          title="Mark slot OK"
+        >✓ OK</button>
+        <button
+          type="button"
+          className={'slot-card__act' + (approval === 'needs-regen' ? ' slot-card__act--warn' : '')}
+          onClick={handleNeedsRegen}
+          title="Flag slot for regenerate"
+        >⚠ Regen</button>
+        <button
+          type="button"
+          className="slot-card__act"
+          onClick={handleReveal}
+          disabled={!hasFile}
+          title={hasFile ? validator.file : 'No file on disk yet'}
+        >⌖ Open</button>
+        <button
+          type="button"
+          className={'slot-card__act slot-card__act--toggle' + (expanded ? ' slot-card__act--on' : '')}
+          onClick={handleExpand}
+          title="Edit prompt override"
+          aria-expanded={expanded}
+        >{expanded ? '▾' : '▸'} prompt</button>
+      </div>
+      {expanded && (
+        <div className="slot-card__override" onClick={stop}>
+          <textarea
+            className="slot-card__override-input"
+            placeholder="Optional prompt override for next regen…"
+            value={override}
+            onChange={(e) => onSetOverride && onSetOverride(slot.id, e.target.value)}
+            rows={3}
+          />
+          <div className="slot-card__override-hint">
+            Saved locally · runtime support pending
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
 
 function SlotCard({ slot, state, selected, validator, disabled, onToggle }) {
