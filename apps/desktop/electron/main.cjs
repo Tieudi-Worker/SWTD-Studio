@@ -401,6 +401,44 @@ app.whenReady().then(() => {
     return readBriefSafe(briefPath)
   })
 
+  // --- Phase 2: read a brand-context markdown file ---------------------------
+  // Implements Boss-locked Q2 (spec.md §7): try SKU path first, fall back to
+  // workspace path. Read-only. Filename must end in `.md`. Resolved file must
+  // sit under either the workspace root or the SKU root — no path traversal.
+  ipcMain.handle('swtd:read-brand-file', async (_evt, args = {}) => {
+    const { workspacePath, skuPath, filename } = args
+    if (!filename || typeof filename !== 'string' || !filename.endsWith('.md')) {
+      return { ok: false, error: 'filename must end in .md' }
+    }
+    if (filename.includes('/') || filename.includes('\\') || filename.includes(' ')) {
+      return { ok: false, error: 'filename must be a bare name (no path separators)' }
+    }
+    function tryRead(rootDir, source) {
+      if (!rootDir || typeof rootDir !== 'string') return null
+      const root = path.resolve(rootDir)
+      const candidate = path.resolve(root, filename)
+      // Defence-in-depth: the resolved candidate MUST be inside root.
+      if (!candidate.startsWith(root + path.sep) && candidate !== path.join(root, filename)) {
+        return null
+      }
+      if (!fs.existsSync(candidate)) return null
+      try {
+        const content = fs.readFileSync(candidate, 'utf8')
+        return { ok: true, content, source }
+      } catch (err) {
+        return { ok: false, error: err && err.message ? err.message : String(err) }
+      }
+    }
+    // SKU first (override), workspace second (default).
+    const sku = tryRead(skuPath, 'sku')
+    if (sku?.ok) return sku
+    if (sku && !sku.ok) return sku                     // read error surfaced
+    const ws = tryRead(workspacePath, 'workspace')
+    if (ws?.ok) return ws
+    if (ws && !ws.ok) return ws
+    return { ok: false, source: 'none' }
+  })
+
   // --- Reveal a file or folder in the OS file manager -----------------------
   // Used by the cohesion-pause UI to surface _cohesion_request.json so the
   // operator can hand it to Claude Code Vision and write _cohesion_report.json

@@ -1,5 +1,6 @@
 import React from 'react'
 import { t } from '../../lib/i18n.js'
+import SlotTemplatePicker from './SlotTemplatePicker.jsx'
 
 /**
  * SlotCard — single listing-slot tile with preview, state badge, and a
@@ -130,14 +131,21 @@ export function SlotCardReview({
   slot, state, selected, validator, disabled, onToggle,
   approval, override, expanded,
   onSetApproval, onSetOverride, onToggleExpanded, onReveal,
-  language = 'en'
+  language = 'en',
+  /* Phase 2 — template engine */
+  templateSelection,         // { templateId, angleId } | undefined
+  composedPrompt,            // { text, missingVars: string[], … } | null
+  onSetTemplate              // (slotId, selection|null) => void
 }) {
   const hasFile = !!validator?.exists
+  const missingVars = composedPrompt?.missingVars || []
+  const hasMissing = missingVars.length > 0
   const wrapClass = [
     'slot-card',
     `slot-card--${state}`,
     approval === 'approved'   && 'slot-card--approved',
-    approval === 'needs-regen' && 'slot-card--needs-regen'
+    approval === 'needs-regen' && 'slot-card--needs-regen',
+    hasMissing                 && 'slot-card--has-missing'
   ].filter(Boolean).join(' ')
 
   function stop(e) { e.stopPropagation() }
@@ -197,6 +205,40 @@ export function SlotCardReview({
           aria-expanded={expanded}
         >{expanded ? '▾' : '▸'} {t('slot.action.prompt', language)}</button>
       </div>
+      {onSetTemplate && (
+        <SlotTemplatePicker
+          slotRole={slot.role}
+          slotId={slot.id}
+          selection={templateSelection}
+          onChange={onSetTemplate}
+          language={language}
+        />
+      )}
+      {composedPrompt && (
+        <div className="slot-card__composed" onClick={stop}>
+          <div className="slot-card__composed-head">
+            <span className="slot-card__composed-title">{t('template.preview.heading', language)}</span>
+            {hasMissing && (
+              <span
+                className="slot-card__composed-warn"
+                title={missingVars.map(v => `[missing: ${v}]`).join('\n')}
+              >
+                {(() => {
+                  const fn = t('template.warning.missing_var', language)
+                  return typeof fn === 'function' ? fn(missingVars.length) : 'missing vars'
+                })()}
+              </span>
+            )}
+          </div>
+          <div className="slot-card__composed-text">{composedPrompt.text}</div>
+          <div className="slot-card__composed-meta">
+            <span>{t('slot.prompt.saved_pending', language)}</span>
+            {composedPrompt.includesBrandModifier && (
+              <span className="slot-card__composed-tag">{t('template.modifier.included', language)}</span>
+            )}
+          </div>
+        </div>
+      )}
       {expanded && (
         <div className="slot-card__override" onClick={stop}>
           <textarea

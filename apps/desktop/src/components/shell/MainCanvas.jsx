@@ -78,6 +78,11 @@ export default function MainCanvas({
   onRevealSlotFile,
   onRevealListingFolder,
   onExportApprovedSlots,
+  /* Phase 2 — template engine */
+  templateSelections,
+  composedPrompts,
+  brandContextSource,
+  onSetSlotTemplate,
   /* A+ pipeline (Phase 3) */
   aplusState,
   aplusModuleStates,
@@ -173,6 +178,10 @@ export default function MainCanvas({
             onRevealSlotFile={onRevealSlotFile}
             onRevealListingFolder={onRevealListingFolder}
             onExportApprovedSlots={onExportApprovedSlots}
+            templateSelections={templateSelections || {}}
+            composedPrompts={composedPrompts || {}}
+            brandContextSource={brandContextSource}
+            onSetSlotTemplate={onSetSlotTemplate}
             language={language}
           />
         )}
@@ -307,6 +316,10 @@ function ListingView({
   onRevealSlotFile,
   onRevealListingFolder,
   onExportApprovedSlots,
+  templateSelections,
+  composedPrompts,
+  brandContextSource,
+  onSetSlotTemplate,
   language = 'en'
 }) {
   const selectionCount = selectedSlots.size
@@ -400,6 +413,26 @@ function ListingView({
             </div>
           </div>
 
+          {brandContextSource && (
+            <div className={'brand-context-banner brand-context-banner--' + brandContextSource.brandDna}>
+              <span className="brand-context-banner__label">{t('template.context.label', language)}</span>
+              <span className="brand-context-banner__source">
+                {brandContextSource.brandDna === 'sku'
+                  ? t('template.context.sku', language)
+                  : brandContextSource.brandDna === 'workspace'
+                    ? t('template.context.workspace', language)
+                    : t('template.context.none', language)}
+              </span>
+              <span className="brand-context-banner__icp">
+                {brandContextSource.icpCards === 'sku'
+                  ? 'ICP: SKU'
+                  : brandContextSource.icpCards === 'workspace'
+                    ? 'ICP: workspace'
+                    : 'ICP: —'}
+              </span>
+            </div>
+          )}
+
           <div className="slot-toolbar__review-info">
             <span>{approvedCount}/{foundCount || 0} approved</span>
             <div className="slot-toolbar__review-actions">
@@ -448,6 +481,9 @@ function ListingView({
                   onToggleExpanded={onToggleSlotExpanded}
                   onReveal={onRevealSlotFile}
                   language={language}
+                  templateSelection={(templateSelections || {})[s.id]}
+                  composedPrompt={(composedPrompts || {})[s.id]}
+                  onSetTemplate={onSetSlotTemplate}
                 />
               )
             })}

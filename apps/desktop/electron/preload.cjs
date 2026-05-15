@@ -28,6 +28,14 @@ contextBridge.exposeInMainWorld('swtd', {
     return `swtd-asset://abs${normalized.startsWith('/') ? '' : '/'}${encodeURI(normalized)}`
   },
   revealPath: (targetPath) => ipcRenderer.invoke('swtd:reveal-path', targetPath),
+  // Phase 2 — read a brand-context markdown file from disk applying the
+  // workspace-default + SKU-override resolution rule. Read-only. Filename
+  // must end in `.md`; main process path-checks the resolved file sits
+  // under the workspace root. Returns:
+  //   { ok: true, content: string, source: 'sku'|'workspace' }
+  //   { ok: false, source: 'none' }                                 // file absent
+  //   { ok: false, error: '<reason>' }                              // path rejected
+  readBrandFile: (args) => ipcRenderer.invoke('swtd:read-brand-file', args),
   onPipelineEvent: (handler) => {
     listeners.add(handler)
     return () => listeners.delete(handler)

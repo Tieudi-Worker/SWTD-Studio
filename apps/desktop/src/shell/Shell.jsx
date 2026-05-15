@@ -12,6 +12,9 @@ import { deriveSlotStates, regenSlotsToArg, mergeStatesWithValidator } from '../
 import { deriveAplusStates, regenModulesToArg } from '../lib/aplus-progress.js'
 import { deriveCanonicalSlotStates } from '../lib/slot-state-machine.js'
 import { isMockActive, startMockRun } from '../lib/mock-pipeline.js'
+import { ALL_TEMPLATES, findTemplate } from '../lib/template-library.js'
+import { loadBrandContext, buildContext } from '../lib/brand-context.js'
+import { composePrompt } from '../lib/prompt-composer.js'
 
 const LAYOUT_KEY = 'swtd_ui_layout'
 
@@ -44,7 +47,7 @@ const DRAWER_CYCLE = { collapsed: 'summary', summary: 'expanded', expanded: 'col
 // Per-SKU review state lives under a stable per-SKU key. SKU paths are
 // absolute so they uniquely identify a workspace+SKU pair.
 const REVIEW_KEY_PREFIX = 'swtd_review:'
-const REVIEW_DEFAULT = { approvals: {}, overrides: {}, expanded: {} }
+const REVIEW_DEFAULT = { approvals: {}, overrides: {}, expanded: {}, templateSelections: {} }
 
 function loadSlotReview(skuPath) {
   if (!skuPath || typeof localStorage === 'undefined') return REVIEW_DEFAULT
@@ -55,7 +58,10 @@ function loadSlotReview(skuPath) {
     return {
       approvals: parsed?.approvals || {},
       overrides: parsed?.overrides || {},
-      expanded:  parsed?.expanded  || {}
+      expanded:  parsed?.expanded  || {},
+      // Phase 2 — template + angle selection per slot. Safe-default empty
+      // map for old entries written before Phase 2 shipped.
+      templateSelections: parsed?.templateSelections || {}
     }
   } catch {
     return REVIEW_DEFAULT
@@ -139,8 +145,17 @@ export default function Shell() {
   // runtime does not yet accept per-slot prompt overrides; saving here
   // preserves operator intent for the day runtime support lands.
   const [slotReview, setSlotReview] = useState(
-    () => ({ approvals: {}, overrides: {}, expanded: {} })
+    () => ({ approvals: {}, overrides: {}, expanded: {}, templateSelections: {} })
   )
+
+  // Phase 2 — brand context (brand-dna + icp-cards). Refreshes when the
+  // workspace or SKU changes. Workspace-default + SKU-override resolution
+  // is implemented in main.cjs (swtd:read-brand-file) per Boss Q2.
+  const [brandContext, setBrandContext] = useState({
+    brand: { values: {}, brandDnaModifier: null },
+    icp:   { values: {} },
+    source:{ brandDna: 'none', icpCards: 'none' }
+  })
 
   useEffect(() => { saveLayout(layout) }, [layout])
 
@@ -345,6 +360,19 @@ export default function Shell() {
     setAplusValidatorReport(null)
     // Restore the review state for this SKU from localStorage.
     setSlotReview(loadSlotReview(target))
+    // Phase 2 — load brand context for this (workspace, SKU) pair.
+    // Boss Q2: try SKU file first, fall back to workspace file. The IPC
+    // bakes that order in; we just spread the result into state.
+    loadBrandContext({ workspacePath: workspace, skuPath: target })
+      .then(ctx => setBrandContext(ctx))
+      .catch((err) => {
+        console.error('[brand-context] load failed', err)
+        setBrandContext({
+          brand: { values: {}, brandDnaModifier: null },
+          icp:   { values: {} },
+          source:{ brandDna: 'none', icpCards: 'none' }
+        })
+      })
     if (!api) return
     setValidating(true)
     try {
@@ -444,6 +472,23 @@ export default function Shell() {
     if (!skuPath) return
     saveSlotReview(skuPath, slotReview)
   }, [skuPath, slotReview])
+
+  // Phase 2 — set or clear a slot's template + angle selection. Passing
+  // `selection: null` removes the slot's selection entirely.
+  const setSlotTemplate = useCallback((slotId, selection) => {
+    setSlotReview(prev => {
+      const templateSelections = { ...(prev.templateSelections || {}) }
+      if (!selection || !selection.templateId) {
+        delete templateSelections[slotId]
+      } else {
+        templateSelections[slotId] = {
+          templateId: selection.templateId,
+          angleId:    selection.angleId || null
+        }
+      }
+      return { ...prev, templateSelections }
+    })
+  }, [])
 
   const setSlotApproval = useCallback((slotId, value) => {
     setSlotReview(prev => {
@@ -683,6 +728,27 @@ export default function Shell() {
     [aplusState.lines, aplusState.status, pendingAplusRegen]
   )
 
+  // Phase 2 — composed prompts. For each slot that has a templateSelection,
+  // run the deterministic composer against the resolved brand + ICP + brief
+  // context. Slots with no selection map to null (runtime falls back to the
+  // hardcoded default). Memoized so a single keystroke in the prompt-override
+  // box doesn't re-compose every slot.
+  const composedPrompts = useMemo(() => {
+    const brief = validation?.brief || null
+    const context = buildContext({
+      brand: brandContext.brand,
+      icp:   brandContext.icp,
+      brief
+    })
+    const out = {}
+    for (const [slotId, sel] of Object.entries(slotReview.templateSelections || {})) {
+      const template = findTemplate(sel?.templateId)
+      if (!template) { out[slotId] = null; continue }
+      out[slotId] = composePrompt({ template, angleId: sel.angleId, context })
+    }
+    return out
+  }, [slotReview.templateSelections, brandContext, validation?.brief])
+
   const lastLine = useMemo(() => {
     const lines = listingState.lines
     return lines.length ? lines[lines.length - 1] : null
@@ -874,6 +940,10 @@ export default function Shell() {
             onSetSlotOverride={setSlotOverride}
             onToggleSlotExpanded={toggleSlotExpanded}
             onApproveAllFoundSlots={approveAllFoundSlots}
+            templateSelections={slotReview.templateSelections || {}}
+            composedPrompts={composedPrompts}
+            brandContextSource={brandContext.source}
+            onSetSlotTemplate={setSlotTemplate}
             onRevealSlotFile={revealSlotFile}
             onRevealListingFolder={revealListingFolder}
             onExportApprovedSlots={exportApprovedSlots}

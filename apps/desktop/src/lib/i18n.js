@@ -299,7 +299,34 @@ const UI_TEXT = {
     vi: (n) => `Đã copy ${n} đường dẫn ✓`
   },
   'slot.toolbar.reveal_folder': { en: 'Reveal output folder',
-                                  vi: 'Mở thư mục output' }
+                                  vi: 'Mở thư mục output' },
+
+  /* Phase 2 — template engine ──────────────────────────── */
+  'template.picker.label':       { en: 'Template',           vi: 'Template' },
+  'template.picker.empty':       { en: 'No templates for this slot role',
+                                   vi: 'Chưa có Template cho vai trò slot này' },
+  'template.picker.no_template': { en: '— Use runtime default —',
+                                   vi: '— Dùng mặc định runtime —' },
+  'template.angle.label':        { en: 'Angle',              vi: 'Angle' },
+  'template.preview.heading':    { en: 'Composed prompt',    vi: 'Prompt đã ghép' },
+  'template.warning.missing_brand': {
+    en: 'Brand DNA missing — composed prompt will contain [missing] markers',
+    vi: 'Thiếu Brand DNA — Prompt sẽ chứa [missing] markers'
+  },
+  'template.warning.missing_var': {
+    en: (n) => `${n} unresolved variable${n === 1 ? '' : 's'}`,
+    vi: (n) => `${n} biến chưa giải được`
+  },
+  'template.modifier.included':  { en: 'with Brand DNA modifier',
+                                   vi: 'có Brand DNA modifier' },
+  'template.modifier.skipped':   { en: 'Brand DNA modifier skipped (template opt-out)',
+                                   vi: 'Bỏ qua Brand DNA modifier (template không yêu cầu)' },
+
+  /* Brand-context source banner */
+  'template.context.label':     { en: 'Brand context',  vi: 'Brand context' },
+  'template.context.sku':       { en: 'SKU override',   vi: 'SKU override' },
+  'template.context.workspace': { en: 'workspace default', vi: 'workspace default' },
+  'template.context.none':      { en: 'not loaded',     vi: 'chưa tải' }
 }
 
 /**

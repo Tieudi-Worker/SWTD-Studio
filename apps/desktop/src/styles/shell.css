@@ -2119,3 +2119,134 @@
 [data-theme="light"] .modal-backdrop {
   background: rgba(0, 0, 0, 0.35);
 }
+
+/* ── Phase 2: Template picker + composed prompt preview ──────────
+   Mounted inside SlotCard.jsx under the action row, above the
+   prompt-override editor. Native <select> for v1 (smallest LOC,
+   accessible). */
+.slot-template-picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  border-top: 1px dotted var(--border-subtle);
+  background: var(--bg-elevated);
+}
+.slot-template-picker__row {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-caps-md);
+  color: var(--text-secondary);
+}
+.slot-template-picker__label { letter-spacing: 0.04em; text-transform: uppercase; }
+.slot-template-picker__select {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: var(--text-meta-md);
+  padding: 4px 6px;
+  min-width: 0;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.slot-template-picker__select:hover  { border-color: var(--border-strong); }
+.slot-template-picker__select:focus-visible {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: var(--focus-ring);
+}
+.slot-template-picker--empty .slot-template-picker__label { color: var(--text-tertiary); }
+
+/* Composed prompt preview — sits between picker and override editor. */
+.slot-card__composed {
+  padding: var(--space-2) var(--space-3);
+  border-top: 1px dotted var(--border-subtle);
+  background: var(--bg-surface);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.slot-card__composed-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: var(--text-caps-md);
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+.slot-card__composed-warn {
+  color: var(--warning);
+  border: 1px dashed var(--warning);
+  border-radius: var(--radius-sm);
+  padding: 1px 6px;
+  font-size: var(--text-caps-md);
+  letter-spacing: 0.04em;
+  cursor: help;
+}
+.slot-card__composed-text {
+  font-family: var(--font-mono);
+  font-size: var(--text-meta-sm);
+  line-height: 1.55;
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 180px;
+  overflow-y: auto;
+}
+.slot-card__composed-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: var(--text-caps-md);
+  color: var(--text-tertiary);
+  letter-spacing: 0.04em;
+}
+.slot-card__composed-tag {
+  color: var(--success);
+  border: 1px solid rgba(74, 222, 128, 0.35);
+  border-radius: var(--radius-sm);
+  padding: 1px 6px;
+  text-transform: uppercase;
+}
+/* Slot with unresolved variables — amber dotted outline to draw
+   attention without clobbering the existing approval/regen rings. */
+.slot-card--has-missing {
+  outline: 1px dotted var(--warning);
+  outline-offset: -1px;
+  border-radius: var(--radius-md);
+}
+
+/* Brand-context source banner — single line above the slot grid. */
+.brand-context-banner {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  margin-bottom: var(--space-2);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: var(--text-caps-md);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-tertiary);
+}
+.brand-context-banner__label  { color: var(--text-secondary); }
+.brand-context-banner__source { color: var(--text-primary); }
+.brand-context-banner__icp    { color: var(--text-tertiary); }
+.brand-context-banner--sku       .brand-context-banner__source { color: var(--success); }
+.brand-context-banner--workspace .brand-context-banner__source { color: var(--accent); }
+.brand-context-banner--none      .brand-context-banner__source { color: var(--warning); }
