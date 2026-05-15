@@ -76,6 +76,7 @@ export default function MainCanvas({
   onApproveAllFoundSlots,
   onRevealSlotFile,
   onRevealListingFolder,
+  onExportApprovedSlots,
   /* A+ pipeline (Phase 3) */
   aplusState,
   aplusModuleStates,
@@ -170,6 +171,7 @@ export default function MainCanvas({
             onApproveAllFoundSlots={onApproveAllFoundSlots}
             onRevealSlotFile={onRevealSlotFile}
             onRevealListingFolder={onRevealListingFolder}
+            onExportApprovedSlots={onExportApprovedSlots}
           />
         )}
 
@@ -301,7 +303,8 @@ function ListingView({
   onToggleSlotExpanded,
   onApproveAllFoundSlots,
   onRevealSlotFile,
-  onRevealListingFolder
+  onRevealListingFolder,
+  onExportApprovedSlots
 }) {
   const selectionCount = selectedSlots.size
   const running = listingState.status === 'running'
@@ -317,6 +320,18 @@ function ListingView({
 
   const foundCount = (validatorReport?.slots || []).filter(s => s.exists).length
   const approvedCount = Object.values(slotApprovals || {}).filter(v => v === 'approved').length
+
+  // Transient "copied N paths" flash after an export action. Clears itself
+  // after 2.5s; no toast library, no portal — local state only.
+  const [exportFlash, setExportFlash] = React.useState(null)
+  const handleExport = React.useCallback(async () => {
+    if (!onExportApprovedSlots) return
+    const copied = await onExportApprovedSlots()
+    if (copied == null) return
+    setExportFlash(copied)
+    const id = setTimeout(() => setExportFlash(null), 2500)
+    return () => clearTimeout(id)
+  }, [onExportApprovedSlots])
 
   return (
     <div className="panel-stack">
@@ -384,14 +399,28 @@ function ListingView({
 
           <div className="slot-toolbar__review-info">
             <span>{approvedCount}/{foundCount || 0} approved</span>
-            {validatorReport?.listingDir && (
-              <button
-                type="button"
-                className="slot-toolbar__link"
-                onClick={onRevealListingFolder}
-                title={validatorReport.listingDir}
-              >Reveal output folder</button>
-            )}
+            <div className="slot-toolbar__review-actions">
+              {validatorReport?.listingDir && (
+                <button
+                  type="button"
+                  className="slot-toolbar__link"
+                  onClick={onRevealListingFolder}
+                  title={validatorReport.listingDir}
+                >Reveal output folder</button>
+              )}
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleExport}
+                disabled={approvedCount === 0}
+                disabledReason={approvedCount === 0 ? 'No slots approved yet' : undefined}
+                title="Copy approved slot file paths + reveal folder"
+              >
+                {exportFlash != null
+                  ? `Copied ${exportFlash} path${exportFlash === 1 ? '' : 's'} ✓`
+                  : `Export approved (${approvedCount})`}
+              </Button>
+            </div>
           </div>
 
           <div className="slot-grid">

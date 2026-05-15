@@ -455,6 +455,39 @@ export default function Shell() {
     await api.revealPath(validatorReport.listingDir)
   }, [validatorReport])
 
+  // Manual export. Real ZIP packaging requires a backend change (new IPC +
+  // archiver/zlib in main process), so this stage is intentionally light:
+  // copy the approved slots' file paths to the clipboard and reveal the
+  // listing folder in OS file manager. Operator can drag from there.
+  //
+  // Returns the number of approved paths copied, or null if no clipboard
+  // access. UI surfaces this as a transient "copied" flash.
+  const exportApprovedSlots = useCallback(async () => {
+    if (!validatorReport?.slots) return null
+    const approvedIds = Object.keys(slotReview.approvals)
+      .filter(id => slotReview.approvals[id] === 'approved')
+      .map(id => parseInt(id, 10))
+      .filter(n => Number.isInteger(n))
+    if (approvedIds.length === 0) return 0
+    const approvedSet = new Set(approvedIds)
+    const paths = (validatorReport.slots || [])
+      .filter(s => approvedSet.has(s.slot) && s.exists && s.file)
+      .map(s => s.file)
+    let copied = 0
+    if (paths.length > 0 && typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(paths.join('\n'))
+        copied = paths.length
+      } catch {
+        /* clipboard blocked — fall through to reveal */
+      }
+    }
+    if (validatorReport.listingDir && api?.revealPath) {
+      await api.revealPath(validatorReport.listingDir)
+    }
+    return copied
+  }, [validatorReport, slotReview])
+
   const refreshValidator = useCallback(async () => {
     if (!api || !skuPath) return
     setValidatingOutput(true)
@@ -784,6 +817,7 @@ export default function Shell() {
             onApproveAllFoundSlots={approveAllFoundSlots}
             onRevealSlotFile={revealSlotFile}
             onRevealListingFolder={revealListingFolder}
+            onExportApprovedSlots={exportApprovedSlots}
             aplusState={aplusState}
             aplusModuleStates={aplusModuleStates}
             selectedModules={selectedModules}

@@ -866,6 +866,12 @@
   font-size: var(--text-meta-sm);
   color: var(--text-tertiary);
   padding: 0 var(--space-1) var(--space-2);
+  flex-wrap: wrap;
+}
+.slot-toolbar__review-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
 }
 .slot:hover:not(:disabled) {
   background: var(--bg-hover);
