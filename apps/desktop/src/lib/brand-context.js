@@ -198,14 +198,21 @@ export async function loadBrandContext({ workspacePath, skuPath } = {}) {
 }
 
 /**
- * Merge brand + ICP + brief into the flat context the composer consumes.
- * Order of spread: brand (least specific) → icp → brief (most specific).
- * Falsy values are dropped so a real value never gets clobbered by null.
+ * Merge brand + ICP + brief.json + Insight Brief + Creative Brief into the
+ * flat context the Prompt Composer consumes. Spread order
+ * (least → most specific): brand → icp → brief.json → InsightBrief →
+ * CreativeBrief. Falsy values are dropped so a real value never gets
+ * clobbered by null.
  *
- * @param {{ brand:object, icp:object, brief?:object }} args
+ * Boss D6 (Phase 4): Insight Brief output feeds the composer directly via
+ * the variable bag — templates that reference `{{PRODUCT_MATERIALS}}`,
+ * `{{CUSTOMER_PAIN_POINTS}}`, `{{CREATIVE_MUST_SHOW}}`, etc. gain content
+ * automatically when the operator has built a brief for the SKU. Plan §4.5.
+ *
+ * @param {{ brand?:object, icp?:object, brief?:object, insightBrief?:object, creativeBrief?:object }} args
  * @returns {{ values: Record<string,string>, brandDnaModifier?: string }}
  */
-export function buildContext({ brand, icp, brief } = {}) {
+export function buildContext({ brand, icp, brief, insightBrief, creativeBrief } = {}) {
   const values = {}
   function spread(src) {
     if (!src?.values) return
@@ -227,6 +234,44 @@ export function buildContext({ brand, icp, brief } = {}) {
       // brief.features may be just a count from validateSku — keep it useful
       values.FEATURE_LIST = `${brief.features} features`
     }
+  }
+  // Insight Brief fields → product/customer/market variables. Lists join
+  // with ` · ` so they read naturally inside a prompt sentence.
+  if (insightBrief) {
+    const p = insightBrief.product || {}
+    const c = insightBrief.customer || {}
+    const m = insightBrief.market || {}
+    if (p.name && !values.PRODUCT_NAME)         values.PRODUCT_NAME       = p.name
+    if (p.category && !values.PRODUCT_CATEGORY) values.PRODUCT_CATEGORY   = p.category
+    if (p.dimensions && !values.PRODUCT_DIMENSIONS) values.PRODUCT_DIMENSIONS = String(p.dimensions)
+    if (p.useCase)                              values.PRODUCT_USE_CASE   = p.useCase
+    if (Array.isArray(p.materials) && p.materials.length)             values.PRODUCT_MATERIALS = p.materials.join(' · ')
+    if (Array.isArray(p.features) && p.features.length)               values.PRODUCT_FEATURES  = p.features.join(' · ')
+    if (Array.isArray(p.differentiators) && p.differentiators.length) values.PRODUCT_DIFFERENTIATORS = p.differentiators.join(' · ')
+
+    if (c.audience)                                                    values.CUSTOMER_AUDIENCE = c.audience
+    if (Array.isArray(c.painPoints) && c.painPoints.length)            values.CUSTOMER_PAIN_POINTS = c.painPoints.join(' · ')
+    if (Array.isArray(c.desires) && c.desires.length)                  values.CUSTOMER_DESIRES = c.desires.join(' · ')
+    if (Array.isArray(c.buyingTriggers) && c.buyingTriggers.length)    values.CUSTOMER_BUYING_TRIGGERS = c.buyingTriggers.join(' · ')
+    if (Array.isArray(c.language) && c.language.length)                values.CUSTOMER_LANGUAGE = c.language.join(' · ')
+
+    if (m.marketplace)                                                 values.MARKET_MARKETPLACE = m.marketplace
+    if (Array.isArray(m.competitors) && m.competitors.length)          values.MARKET_COMPETITORS = m.competitors.join(' · ')
+    if (Array.isArray(m.visualPatterns) && m.visualPatterns.length)    values.MARKET_VISUAL_PATTERNS = m.visualPatterns.join(' · ')
+    if (Array.isArray(m.claims) && m.claims.length)                    values.MARKET_CLAIMS = m.claims.join(' · ')
+    if (Array.isArray(m.risks) && m.risks.length)                      values.MARKET_RISKS = m.risks.join(' · ')
+  }
+  // Creative Brief fields → creative-direction variables (most specific).
+  // Fall back to the InsightBrief's embedded creativeDirection block if
+  // the separate file has not been built yet.
+  const direction = (creativeBrief && (creativeBrief.mustShow || creativeBrief.mustAvoid))
+    ? creativeBrief
+    : (insightBrief?.creativeDirection || null)
+  if (direction) {
+    if (direction.style)                                            values.CREATIVE_STYLE = direction.style
+    if (direction.mood)                                             values.CREATIVE_MOOD  = direction.mood
+    if (Array.isArray(direction.mustShow)  && direction.mustShow.length)  values.CREATIVE_MUST_SHOW  = direction.mustShow.join(' · ')
+    if (Array.isArray(direction.mustAvoid) && direction.mustAvoid.length) values.CREATIVE_MUST_AVOID = direction.mustAvoid.join(' · ')
   }
   return {
     values,

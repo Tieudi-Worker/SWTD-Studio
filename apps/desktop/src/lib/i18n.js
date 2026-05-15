@@ -416,6 +416,48 @@ const UI_TEXT = {
   'provider.error.all_providers_failed': { en: 'all providers failed', vi: 'tất cả provider thất bại' },
   'provider.error.provider_unsupported_edit': { en: 'provider does not support edit', vi: 'provider không hỗ trợ edit' },
 
+  /* Phase 4.4 — Brief Step (research → InsightBrief → CreativeBrief) */
+  'research.heading':              { en: 'Insight Brief',           vi: 'Insight Brief' },
+  'research.saved_to_sku':         { en: 'saved',                   vi: 'đã lưu' },
+  'research.hint': {
+    en: 'Paste a product URL + keywords. The pipeline extracts product / customer / market facts and feeds them straight into every slot’s composed prompt.',
+    vi: 'Dán URL sản phẩm + keyword. Pipeline trích xuất product / customer / market và đưa thẳng vào prompt của từng slot.'
+  },
+  'research.input.urls':           { en: 'URLs (one per line)',     vi: 'URLs (mỗi dòng một URL)' },
+  'research.input.keywords':       { en: 'Keywords (comma-separated)', vi: 'Keywords (phân cách bằng dấu phẩy)' },
+  'research.input.productName':    { en: 'Product name',            vi: 'Tên sản phẩm' },
+  'research.input.productInsight': { en: 'Your product insight (optional)',  vi: 'Insight sản phẩm (tuỳ chọn)' },
+  'research.input.customerInsight':{ en: 'Your customer insight (optional)', vi: 'Insight khách hàng (tuỳ chọn)' },
+  'research.input.marketplace':    { en: 'Marketplace',             vi: 'Marketplace' },
+  'research.input.depth':          { en: 'Depth',                   vi: 'Độ sâu' },
+  'research.build_brief':          { en: 'Build Brief',             vi: 'Tạo Brief' },
+  'research.cancel_brief':         { en: 'Cancel research',         vi: 'Huỷ research' },
+  'research.pending':              { en: 'Running research pipeline…', vi: 'Đang chạy research…' },
+  'research.error.no_input':       { en: 'Provide at least one URL or keyword', vi: 'Cần ít nhất 1 URL hoặc keyword' },
+  'research.error.fetch_failed':   { en: 'Web fetch failed',        vi: 'Web fetch thất bại' },
+  'research.error.timeout':        { en: 'Research timed out',      vi: 'Research hết thời gian' },
+  'research.error.aborted':        { en: 'Research cancelled',      vi: 'Đã huỷ research' },
+  'research.error.network':        { en: 'Network error',           vi: 'Lỗi mạng' },
+  'research.error.invalid-input':  { en: 'Invalid research input',  vi: 'Input research không hợp lệ' },
+  'research.error.unknown':        { en: 'Research failed',         vi: 'Research thất bại' },
+
+  /* InsightBriefViewer section + field labels */
+  'research.brief.empty':          { en: 'No Insight Brief yet for this SKU.', vi: 'SKU này chưa có Insight Brief.' },
+  'research.brief.heading':        { en: 'Insight Brief',           vi: 'Insight Brief' },
+  'research.brief.generated_at':   {
+    en: (stamp) => `generated ${stamp}`,
+    vi: (stamp) => `tạo lúc ${stamp}`
+  },
+  'research.brief.product':            { en: 'Product',             vi: 'Sản phẩm' },
+  'research.brief.customer':           { en: 'Customer',            vi: 'Khách hàng' },
+  'research.brief.market':             { en: 'Market',              vi: 'Thị trường' },
+  'research.brief.creative_direction': { en: 'Creative direction',  vi: 'Định hướng creative' },
+  'research.brief.sources':            { en: 'Sources',             vi: 'Nguồn' },
+  'research.brief.flagged_label': {
+    en: 'flagged passages (quoted, not executed):',
+    vi: 'đoạn bị flag (đã quote, không thực thi):'
+  },
+
   /* SlotCard Generate / Cancel */
   'slot.action.generate':              { en: '⚡ Generate', vi: '⚡ Sinh' },
   'slot.action.cancel':                { en: '✕ Cancel',    vi: '✕ Huỷ' },

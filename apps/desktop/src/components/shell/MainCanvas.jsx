@@ -6,6 +6,7 @@ import { LISTING_SLOT_META } from '../../lib/slot-progress.js'
 import { APLUS_MODULE_META } from '../../lib/aplus-progress.js'
 import { t } from '../../lib/i18n.js'
 import { SlotCard, SlotCardReview } from './SlotCard.jsx'
+import InsightBriefViewer from './InsightBriefViewer.jsx'
 
 const STEP_KICKER = {
   intake:  '01 · INTAKE',
@@ -102,6 +103,13 @@ export default function MainCanvas({
   aplusValidatorReport,
   aplusValidating,
   onRefreshAplusValidator,
+  /* Phase 4.4 — research / insight brief */
+  insightBrief,
+  creativeBrief,
+  researchInFlight,
+  researchError,
+  onBuildBrief,
+  onCancelResearch,
   language = 'en'
 }) {
   const kicker = STEP_KICKER[step] || STEP_KICKER.intake
@@ -156,7 +164,19 @@ export default function MainCanvas({
         })()}
 
         {workspace && skuPath && step === 'intake' && (
-          <IntakeView validation={validation} validating={validating} workspace={workspace} skuPath={skuPath} />
+          <IntakeView
+            validation={validation}
+            validating={validating}
+            workspace={workspace}
+            skuPath={skuPath}
+            insightBrief={insightBrief}
+            creativeBrief={creativeBrief}
+            researchInFlight={researchInFlight}
+            researchError={researchError}
+            onBuildBrief={onBuildBrief}
+            onCancelResearch={onCancelResearch}
+            language={language}
+          />
         )}
 
         {workspace && skuPath && step === 'listing' && (
@@ -223,7 +243,11 @@ export default function MainCanvas({
   )
 }
 
-function IntakeView({ validation, validating, workspace, skuPath }) {
+function IntakeView({
+  validation, validating, workspace, skuPath,
+  insightBrief, creativeBrief, researchInFlight, researchError,
+  onBuildBrief, onCancelResearch, language = 'en'
+}) {
   if (validating) {
     return (
       <div className="panel">
@@ -278,6 +302,18 @@ function IntakeView({ validation, validating, workspace, skuPath }) {
         </div>
       </div>
 
+      <BriefStep
+        skuPath={skuPath}
+        productName={b.product_name || ''}
+        insightBrief={insightBrief}
+        creativeBrief={creativeBrief}
+        inFlight={researchInFlight}
+        error={researchError}
+        onBuild={onBuildBrief}
+        onCancel={onCancelResearch}
+        language={language}
+      />
+
       <div className="panel">
         <div className="panel__head">
           <span className="panel__title">Paths</span>
@@ -287,6 +323,199 @@ function IntakeView({ validation, validating, workspace, skuPath }) {
           <PathRow k="sku" v={skuPath} />
           <PathRow k="brief" v={skuPath + '/brief.json'} />
         </div>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * BriefStep — research input form + read-only InsightBriefViewer.
+ *
+ * Operator pastes URLs (multi-line), keywords (csv), optional product /
+ * customer insight free text, picks a marketplace + depth, and clicks
+ * Build Brief. The IPC handler runs the pipeline through Electron main
+ * (no renderer-side HTTP — Boss D5 / D8). After the brief is built, the
+ * Prompt Composer automatically merges the extracted product / customer /
+ * creative-direction tokens into the variable bag for every slot
+ * (T083 — `brand-context.js#buildContext`).
+ *
+ * Spec §2 US5, plan §4.5.
+ */
+function BriefStep({
+  skuPath, productName, insightBrief, creativeBrief, inFlight, error,
+  onBuild, onCancel, language
+}) {
+  const [urls, setUrls] = React.useState('')
+  const [keywords, setKeywords] = React.useState('')
+  const [name, setName] = React.useState(productName || '')
+  const [productInsight, setProductInsight] = React.useState('')
+  const [customerInsight, setCustomerInsight] = React.useState('')
+  const [marketplace, setMarketplace] = React.useState('amazon-us')
+  const [depth, setDepth] = React.useState('standard')
+
+  // Keep the product-name field in sync if the operator opens a new SKU
+  // without explicitly editing the field first.
+  React.useEffect(() => {
+    if (!productName) return
+    setName((cur) => cur ? cur : productName)
+  }, [productName])
+
+  function submit(e) {
+    e?.preventDefault?.()
+    if (!onBuild || inFlight) return
+    onBuild({
+      urls: urls.split('\n').map((s) => s.trim()).filter(Boolean),
+      keywords: keywords.split(',').map((s) => s.trim()).filter(Boolean),
+      productName: name.trim() || undefined,
+      productInsight: productInsight.trim() || undefined,
+      customerInsight: customerInsight.trim() || undefined,
+      marketplace,
+      depth,
+      skuPath
+    })
+  }
+
+  const buildLabel  = t('research.build_brief',  language) || 'Build Brief'
+  const cancelLabel = t('research.cancel_brief', language) || 'Cancel'
+
+  return (
+    <div className="panel">
+      <div className="panel__head">
+        <span className="panel__title">{t('research.heading', language) || 'Insight Brief'}</span>
+        {insightBrief && (
+          <StatusChip status="complete" size="sm">
+            {t('research.saved_to_sku', language) || 'saved'}
+          </StatusChip>
+        )}
+      </div>
+      <div className="panel__body">
+        <p className="brief-step__hint">
+          {t('research.hint', language)
+            || 'Paste a product URL + keywords. The pipeline extracts product / customer / market facts and feeds them straight into every slot’s composed prompt.'}
+        </p>
+
+        <form className="brief-step__form" onSubmit={submit}>
+          <label className="brief-step__row">
+            <span className="brief-step__label">{t('research.input.urls', language) || 'URLs (one per line)'}</span>
+            <textarea
+              className="brief-step__input brief-step__input--ta"
+              value={urls}
+              onChange={(e) => setUrls(e.target.value)}
+              rows={3}
+              placeholder="https://amazon.com/dp/XXXXXXXXXX&#10;https://competitor.example/product"
+              disabled={inFlight}
+            />
+          </label>
+
+          <label className="brief-step__row">
+            <span className="brief-step__label">{t('research.input.keywords', language) || 'Keywords (comma-separated)'}</span>
+            <input
+              className="brief-step__input"
+              type="text"
+              value={keywords}
+              onChange={(e) => setKeywords(e.target.value)}
+              placeholder="ultrasound photo frame, expecting parents, baby keepsake"
+              disabled={inFlight}
+            />
+          </label>
+
+          <label className="brief-step__row">
+            <span className="brief-step__label">{t('research.input.productName', language) || 'Product name'}</span>
+            <input
+              className="brief-step__input"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              disabled={inFlight}
+            />
+          </label>
+
+          <label className="brief-step__row">
+            <span className="brief-step__label">{t('research.input.productInsight', language) || 'Your product insight (optional)'}</span>
+            <textarea
+              className="brief-step__input brief-step__input--ta"
+              value={productInsight}
+              onChange={(e) => setProductInsight(e.target.value)}
+              rows={2}
+              placeholder="Solid oak frame, 4×6&quot; opening, handmade in VT…"
+              disabled={inFlight}
+            />
+          </label>
+
+          <label className="brief-step__row">
+            <span className="brief-step__label">{t('research.input.customerInsight', language) || 'Your customer insight (optional)'}</span>
+            <textarea
+              className="brief-step__input brief-step__input--ta"
+              value={customerInsight}
+              onChange={(e) => setCustomerInsight(e.target.value)}
+              rows={2}
+              placeholder="First-time parents, gift purchasers for baby showers"
+              disabled={inFlight}
+            />
+          </label>
+
+          <div className="brief-step__row brief-step__row--grid">
+            <label className="brief-step__field">
+              <span className="brief-step__label">{t('research.input.marketplace', language) || 'Marketplace'}</span>
+              <select
+                className="brief-step__input"
+                value={marketplace}
+                onChange={(e) => setMarketplace(e.target.value)}
+                disabled={inFlight}
+              >
+                <option value="amazon-us">Amazon US</option>
+                <option value="etsy">Etsy</option>
+                <option value="social">Social</option>
+              </select>
+            </label>
+            <label className="brief-step__field">
+              <span className="brief-step__label">{t('research.input.depth', language) || 'Depth'}</span>
+              <select
+                className="brief-step__input"
+                value={depth}
+                onChange={(e) => setDepth(e.target.value)}
+                disabled={inFlight}
+              >
+                <option value="quick">quick</option>
+                <option value="standard">standard</option>
+                <option value="deep">deep</option>
+              </select>
+            </label>
+          </div>
+
+          <div className="brief-step__actions">
+            {!inFlight ? (
+              <button
+                type="submit"
+                className="atom-btn atom-btn--primary atom-btn--sm"
+              >{buildLabel}</button>
+            ) : (
+              <button
+                type="button"
+                className="atom-btn atom-btn--secondary atom-btn--sm"
+                onClick={() => onCancel?.()}
+              >{cancelLabel}</button>
+            )}
+            {inFlight && (
+              <span className="brief-step__pending">
+                {t('research.pending', language) || 'Running research pipeline…'}
+              </span>
+            )}
+            {error && (
+              <span className="brief-step__error" role="alert">
+                {t('research.error.' + error, language) || t('research.error.unknown', language) || error}
+              </span>
+            )}
+          </div>
+        </form>
+
+        {(insightBrief || creativeBrief) && (
+          <InsightBriefViewer
+            brief={insightBrief}
+            creative={creativeBrief}
+            language={language}
+          />
+        )}
       </div>
     </div>
   )

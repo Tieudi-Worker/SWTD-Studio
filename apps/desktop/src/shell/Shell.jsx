@@ -211,6 +211,17 @@ export default function Shell() {
     source:{ brandDna: 'none', icpCards: 'none' }
   })
 
+  // Phase 4.4 — Insight Brief + Creative Brief for the open SKU. Loaded
+  // from `<sku>/research/{insight-brief,creative-brief}.json` on SKU open
+  // and refreshed after a successful researchInsight call. Threaded into
+  // the Prompt Composer via `buildContext(...)` so brief-derived tokens
+  // resolve in every composed prompt (Boss D6, plan §4.5).
+  const [insightBrief, setInsightBrief] = useState(null)
+  const [creativeBrief, setCreativeBrief] = useState(null)
+  const [researchInFlight, setResearchInFlight] = useState(false)
+  const [researchError, setResearchError] = useState(null)
+  const researchIdRef = useRef(null)
+
   // Phase 4 — provider adapter state.
   // activeProviderId is mirrored in localStorage by the renderer-side
   // registry shim; key presence comes from the safeStorage-backed vault via
@@ -464,6 +475,23 @@ export default function Shell() {
           source:{ brandDna: 'none', icpCards: 'none' }
         })
       })
+
+    // Phase 4.4 — load the persisted Insight + Creative Brief for this
+    // SKU, if any. The IPC bundles the matched Creative Brief alongside
+    // the Insight Brief so the Prompt Composer can resolve both blocks
+    // on the very first composition pass after open.
+    setInsightBrief(null)
+    setCreativeBrief(null)
+    setResearchError(null)
+    if (providerApi?.getInsightBrief) {
+      providerApi.getInsightBrief(target)
+        .then((r) => {
+          if (!r?.ok) return
+          setInsightBrief(r.brief || null)
+          setCreativeBrief(r.creative?.brief || r.creative || null)
+        })
+        .catch(() => {})
+    }
 
     // Phase 3 — sweep expired tmp images, then refresh the per-slot map.
     // Order matters: cleanup BEFORE list so the list never includes
@@ -836,12 +864,43 @@ export default function Shell() {
   // context. Slots with no selection map to null (runtime falls back to the
   // hardcoded default). Memoized so a single keystroke in the prompt-override
   // box doesn't re-compose every slot.
+  // Phase 4.4 — research dispatcher + cancel. The IPC handler tracks the
+  // AbortController so we only have to remember the returned researchId.
+  // On success we re-state both briefs and clear the in-flight flag; the
+  // Prompt Composer memo below picks up the new brief on its next pass.
+  const buildBrief = useCallback(async (input) => {
+    if (!providerApi?.researchInsight || !input?.skuPath) return
+    setResearchInFlight(true)
+    setResearchError(null)
+    const r = await providerApi.researchInsight(input).catch((err) => ({
+      ok: false, reason: err?.reason || 'unknown'
+    }))
+    if (r?.researchId) researchIdRef.current = r.researchId
+    if (r?.ok) {
+      setInsightBrief(r.brief || null)
+      setCreativeBrief(r.creative?.brief || r.creative || null)
+      setResearchError(null)
+    } else {
+      setResearchError(r?.reason || 'unknown')
+    }
+    researchIdRef.current = null
+    setResearchInFlight(false)
+  }, [])
+
+  const cancelResearch = useCallback(() => {
+    const id = researchIdRef.current
+    if (!id || !providerApi?.cancelResearch) return
+    providerApi.cancelResearch(id).catch(() => {})
+  }, [])
+
   const composedPrompts = useMemo(() => {
     const brief = validation?.brief || null
     const context = buildContext({
       brand: brandContext.brand,
       icp:   brandContext.icp,
-      brief
+      brief,
+      insightBrief,
+      creativeBrief
     })
     const out = {}
     for (const [slotId, sel] of Object.entries(slotReview.templateSelections || {})) {
@@ -850,7 +909,7 @@ export default function Shell() {
       out[slotId] = composePrompt({ template, angleId: sel.angleId, context })
     }
     return out
-  }, [slotReview.templateSelections, brandContext, validation?.brief])
+  }, [slotReview.templateSelections, brandContext, validation?.brief, insightBrief, creativeBrief])
 
   // ─── Phase 4: provider-driven per-slot generation through IPC ─────────
   // Flow (the renderer never makes a provider HTTP call — D5):
@@ -1190,6 +1249,12 @@ export default function Shell() {
             aplusValidatorReport={aplusValidatorReport}
             aplusValidating={aplusValidating}
             onRefreshAplusValidator={refreshAplusValidator}
+            insightBrief={insightBrief}
+            creativeBrief={creativeBrief}
+            researchInFlight={researchInFlight}
+            researchError={researchError}
+            onBuildBrief={buildBrief}
+            onCancelResearch={cancelResearch}
             language={lang}
           />
         </div>

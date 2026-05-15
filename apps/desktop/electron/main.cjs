@@ -34,6 +34,7 @@ const activeRuns = new Map() // runId -> AbortController
 // `initializeProviderCore`) and stash it here for the IPC handlers.
 let providerCore = null
 const activeProviderGenerations = new Map() // genId -> AbortController
+const activeResearchRuns = new Map()        // researchId -> AbortController
 
 async function loadCore() {
   return import(pathToFileURL(CORE_ENTRY).href)
@@ -168,6 +169,10 @@ async function resolveReferenceImage(ref) {
 
 function newGenerationId() {
   return `gen_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`
+}
+
+function newResearchId() {
+  return `rsch_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`
 }
 
 function createWindow() {
@@ -789,24 +794,58 @@ app.whenReady().then(async () => {
     return { ok: true }
   })
 
-  // Research / Insight Brief — wired in P4.2 so the IPC surface is complete;
-  // operator-facing Brief Step UI lands in P4.4. The default v1 search
-  // backend is the offline-safe mock (plan §5 Q8).
+  // Research / Insight Brief — wired in P4.2; abortable + auto-builds
+  // Creative Brief landed in P4.4. The default v1 search backend is the
+  // offline-safe mock (plan §5 Q8). Boss D6: research output flows into
+  // the Creative Brief writer so the Prompt Composer can consume it.
   ipcMain.handle('swtd:provider:research-insight', async (_evt, args = {}) => {
     const err = requireProviderCore(); if (err) return err
+    const researchId = newResearchId()
+    const controller = new AbortController()
+    activeResearchRuns.set(researchId, controller)
     try {
-      const r = await providerCore.researchInsight(args || {})
-      return { ok: true, ...r }
+      const r = await providerCore.researchInsight(args || {}, { signal: controller.signal })
+      // Auto-build the Creative Brief from the freshly-produced Insight
+      // Brief so the Prompt Composer sees both artifacts on its next
+      // composition pass without a second IPC round-trip (Boss D6).
+      let creative = null
+      if (r?.brief && args?.skuPath) {
+        try {
+          const cb = await providerCore.buildCreativeBrief(r.brief, args.skuPath)
+          creative = { brief: cb.brief, briefPath: cb.briefPath }
+        } catch (cbErr) {
+          // Insight Brief still landed; surface the warning but don't
+          // fail the whole call — the operator can re-trigger.
+          console.warn('[provider-core] creative-brief build failed:', cbErr.message)
+        }
+      }
+      return { ok: true, researchId, ...r, creative }
     } catch (e) {
-      return { ok: false, reason: e?.reason || 'unknown', error: e && e.message ? e.message : String(e) }
+      return {
+        ok: false, researchId,
+        reason: e?.reason || (e?.name === 'AbortError' ? 'aborted' : 'unknown'),
+        error: e && e.message ? e.message : String(e)
+      }
+    } finally {
+      activeResearchRuns.delete(researchId)
     }
+  })
+
+  ipcMain.handle('swtd:provider:cancel-research', async (_evt, researchId) => {
+    const controller = activeResearchRuns.get(researchId)
+    if (!controller) return { ok: false, error: 'no active research run with that id' }
+    try { controller.abort() } catch {}
+    return { ok: true }
   })
 
   ipcMain.handle('swtd:provider:get-insight-brief', async (_evt, args = {}) => {
     const err = requireProviderCore(); if (err) return err
     const skuPath = typeof args === 'string' ? args : args?.skuPath
     const brief = await providerCore.getInsightBrief(skuPath)
-    return { ok: true, brief }
+    // Surface the matching Creative Brief too so the renderer can render
+    // both `mustShow` / `mustAvoid` lists in the InsightBriefViewer.
+    const creative = brief ? await providerCore.getCreativeBrief(skuPath).catch(() => null) : null
+    return { ok: true, brief, creative }
   })
 
   // Media store — replaces Phase 3's three handlers. Same on-disk layout +
@@ -916,5 +955,9 @@ app.on('window-all-closed', () => {
     try { controller.abort() } catch {}
   }
   activeProviderGenerations.clear()
+  for (const controller of activeResearchRuns.values()) {
+    try { controller.abort() } catch {}
+  }
+  activeResearchRuns.clear()
   if (process.platform !== 'darwin') app.quit()
 })

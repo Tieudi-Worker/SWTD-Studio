@@ -77,8 +77,9 @@ contextBridge.exposeInMainWorld('swtdProvider', {
   saveCustomConfig:  (cfg)   => ipcRenderer.invoke('swtd:provider:save-custom-config',  cfg),
   clearCustomConfig: ()      => ipcRenderer.invoke('swtd:provider:clear-custom-config'),
 
-  /* Research / Insight Brief (IPC shipped P4.2; operator UI lands P4.4) */
+  /* Research / Insight Brief — auto-builds the Creative Brief on success */
   researchInsight:  (input) => ipcRenderer.invoke('swtd:provider:research-insight',  input),
+  cancelResearch:   (researchId) => ipcRenderer.invoke('swtd:provider:cancel-research', researchId),
   getInsightBrief:  (skuPath) => ipcRenderer.invoke('swtd:provider:get-insight-brief', skuPath),
 
   /* Media store — replaces Phase 3's swtd:save/list/cleanup-tmp-generated */

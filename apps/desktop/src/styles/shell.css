@@ -2709,6 +2709,184 @@
   cursor: pointer;
 }
 
+/* ─── Phase 4.4 — Brief Step + Insight Brief viewer ───────────────── */
+.brief-step__hint {
+  color: var(--text-secondary);
+  font-size: var(--text-body-sm);
+  margin: 0 0 var(--space-3) 0;
+}
+.brief-step__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.brief-step__row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.brief-step__row--grid {
+  flex-direction: row;
+  gap: var(--space-3);
+}
+.brief-step__row--grid .brief-step__field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.brief-step__label {
+  font-size: var(--text-body-sm);
+  color: var(--text-secondary);
+}
+.brief-step__input {
+  height: 30px;
+  padding: 0 var(--space-2);
+  background: var(--bg-base);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: var(--text-body-sm);
+}
+.brief-step__input--ta {
+  height: auto;
+  padding: var(--space-2);
+  resize: vertical;
+  font-family: var(--font-mono);
+}
+.brief-step__input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+  border-color: var(--accent);
+}
+.brief-step__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+.brief-step__pending { color: var(--text-secondary); font-size: var(--text-body-sm); }
+.brief-step__error   { color: var(--danger);          font-size: var(--text-body-sm); }
+
+.brief-viewer {
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.brief-viewer--empty {
+  color: var(--text-tertiary);
+  font-style: italic;
+}
+.brief-viewer__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.brief-viewer__title { font-weight: 700; color: var(--text-primary); }
+.brief-viewer__meta  { font-size: var(--text-body-sm); color: var(--text-tertiary); }
+.brief-viewer__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.brief-viewer__section-title {
+  margin: 0;
+  font-size: var(--text-body-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+}
+.brief-viewer__section-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.brief-viewer__field {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  align-items: baseline;
+}
+.brief-viewer__field-label {
+  min-width: 130px;
+  color: var(--text-secondary);
+  font-size: var(--text-body-sm);
+}
+.brief-viewer__field-value {
+  color: var(--text-primary);
+}
+.brief-viewer__chips {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+.brief-viewer__chip {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 var(--space-2);
+  background: var(--bg-base);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-primary);
+}
+.brief-viewer__sources {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.brief-viewer__source {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.brief-viewer__source-link {
+  color: var(--accent);
+  text-decoration: underline;
+  font-family: var(--font-mono);
+  font-size: var(--text-body-sm);
+  word-break: break-all;
+}
+.brief-viewer__flagged {
+  padding: var(--space-2);
+  background: var(--warning-muted);
+  border-left: 3px solid var(--warning);
+  border-radius: var(--radius-sm);
+}
+.brief-viewer__flagged-label {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--warning);
+  margin-bottom: var(--space-1);
+}
+.brief-viewer__flagged ul { list-style: none; padding: 0; margin: 0; }
+.brief-viewer__flagged code {
+  display: block;
+  background: var(--bg-base);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-2);
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+}
+
 /* SlotCard substituted-provider badge (US6) */
 .slot-card__gen-tag--fallback {
   background: var(--warning-muted);
