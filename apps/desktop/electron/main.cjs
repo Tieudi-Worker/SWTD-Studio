@@ -243,6 +243,95 @@ app.whenReady().then(() => {
     return { ok: true, runId }
   })
 
+  // --- A+ pipeline -----------------------------------------------------------
+  // Parallel to swtd:run-listing. Same legacy bridge, different `--only` target
+  // and a different `--skip-slots` argv prefix (aplus_m1,... vs slot1,...).
+  // The pipeline-event stream tags `bin: 'aplus'` so the renderer can route
+  // events into the A+ run state instead of the listing state.
+  ipcMain.handle('swtd:run-aplus', async (_evt, payload = {}) => {
+    const { skuPath, skipModules, dryRun } = payload
+    if (!skuPath) return { ok: false, error: 'skuPath required' }
+    if (!fs.existsSync(path.join(skuPath, 'brief.json'))) {
+      return { ok: false, error: 'brief.json not found — validate the SKU first.' }
+    }
+
+    const runId = newRunId()
+    const controller = new AbortController()
+    activeRuns.set(runId, controller)
+
+    const extraArgs = []
+    if (skipModules && skipModules.length) {
+      extraArgs.push('--skip-slots', skipModules.join(','))
+    }
+    if (dryRun) extraArgs.push('--dry-run')
+
+    const { runRuntimeBin } = await loadCore()
+
+    send('swtd:pipeline-event', {
+      runId,
+      kind: 'start',
+      bin: 'aplus',
+      skuPath,
+      extraArgs,
+      ts: Date.now()
+    })
+
+    // Defensive: A+ shares the legacy bridge with listing, so a future
+    // master.js change could surface the same exit-code-2 cohesion-pause
+    // behavior for A+. Track the same markers; if the A+ pipeline never
+    // emits them this stays a no-op.
+    let cohesionPaused = false
+    let cohesionRequestPath = null
+
+    runRuntimeBin({
+      runtimeRoot: RUNTIME_ROOT,
+      repoRoot: REPO_ROOT,
+      bin: 'aplus',
+      skuPath,
+      extraArgs,
+      signal: controller.signal,
+      env: { SWTD_DESKTOP: '1' },
+      onLine: ({ stream, line, ts }) => {
+        const sig = detectCohesionFromLine(line)
+        if (sig) {
+          if (sig.paused) cohesionPaused = true
+          if (sig.requestPath && !cohesionRequestPath) {
+            cohesionRequestPath = sig.requestPath
+          }
+        }
+        send('swtd:pipeline-event', { runId, kind: 'log', stream, line, ts })
+      }
+    })
+      .then((result) => {
+        activeRuns.delete(runId)
+        const paused = (result.code === 2 && (cohesionPaused || cohesionRequestPath))
+          || (cohesionPaused && !!cohesionRequestPath)
+        send('swtd:pipeline-event', {
+          runId,
+          kind: 'end',
+          ok: result.ok,
+          code: result.code,
+          aborted: result.aborted,
+          signal: result.signal,
+          paused,
+          pauseReason: paused ? 'cohesion-review' : null,
+          cohesionRequestPath: paused ? cohesionRequestPath : null,
+          ts: Date.now()
+        })
+      })
+      .catch((err) => {
+        activeRuns.delete(runId)
+        send('swtd:pipeline-event', {
+          runId,
+          kind: 'error',
+          message: err && err.message ? err.message : String(err),
+          ts: Date.now()
+        })
+      })
+
+    return { ok: true, runId }
+  })
+
   // --- Cancel ----------------------------------------------------------------
   ipcMain.handle('swtd:cancel-pipeline', async (_evt, runId) => {
     const controller = activeRuns.get(runId)
@@ -294,6 +383,23 @@ app.whenReady().then(() => {
     try {
       const { validateListingOutput } = await loadCore()
       const report = await validateListingOutput({ skuPath, runtimeRoot: RUNTIME_ROOT })
+      return { ok: true, report }
+    } catch (err) {
+      return { ok: false, error: err && err.message ? err.message : String(err) }
+    }
+  })
+
+  // --- A+ output validator --------------------------------------------------
+  ipcMain.handle('swtd:validate-aplus-output', async (_evt, skuPath) => {
+    if (!skuPath || typeof skuPath !== 'string') {
+      return { ok: false, error: 'skuPath required' }
+    }
+    if (!fs.existsSync(skuPath)) {
+      return { ok: false, error: 'SKU folder does not exist.' }
+    }
+    try {
+      const { validateAplusOutput } = await loadCore()
+      const report = await validateAplusOutput({ skuPath, runtimeRoot: RUNTIME_ROOT })
       return { ok: true, report }
     } catch (err) {
       return { ok: false, error: err && err.message ? err.message : String(err) }
