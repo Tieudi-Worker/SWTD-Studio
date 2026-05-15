@@ -122,9 +122,60 @@ const UI_TEXT = {
   },
   'canvas.title.intake':   { en: 'Project & brief',           vi: 'Dự án & Brief' },
   'canvas.title.listing':  { en: '8-slot listing pipeline',   vi: 'Pipeline 8 Slot Listing' },
-  'canvas.title.aplus':    { en: 'A+ premium modules',        vi: 'A+ premium modules' },
+  'canvas.title.aplus':    { en: '5-module A+ Premium pipeline', vi: 'Pipeline 5 Module A+ Premium' },
   'canvas.title.video':    { en: 'Product video',             vi: 'Product video' },
   'canvas.title.qc':       { en: 'QC & export bundle',        vi: 'QC & gói Export' },
+
+  /* A+ pipeline */
+  'aplus.panel.title':           { en: 'A+ modules',              vi: 'A+ modules' },
+  'aplus.panel.subtitle':        { en: 'runtime/bin/aplus.mjs',   vi: 'runtime/bin/aplus.mjs' },
+  'aplus.toolbar.no_selection':  { en: 'No modules selected',     vi: 'Chưa chọn module' },
+  'aplus.toolbar.selection': {
+    en: (n) => `${n} module${n === 1 ? '' : 's'} selected`,
+    vi: (n) => `Đã chọn ${n} module`
+  },
+  'aplus.toolbar.select_all':    { en: 'Select all',              vi: 'Chọn tất cả' },
+  'aplus.toolbar.clear':         { en: 'Clear',                   vi: 'Xoá' },
+  'aplus.action.run_all_5':      { en: 'Run all 5',               vi: 'Chạy cả 5' },
+  'aplus.action.regen_selected': { en: 'Regenerate selected',     vi: 'Regenerate đã chọn' },
+  'aplus.action.regen_n': {
+    en: (n) => `Regenerate ${n} module${n === 1 ? '' : 's'}`,
+    vi: (n) => `Regenerate ${n} module`
+  },
+  'aplus.reason.select_modules': { en: 'Select one or more modules to regenerate',
+                                   vi: 'Chọn ít nhất một module để Regenerate' },
+  'aplus.validator.title':       { en: 'A+ output validator',     vi: 'Validator A+ output' },
+  'aplus.validator.recheck':     { en: 'Re-check',                vi: 'Kiểm tra lại' },
+  'aplus.validator.checking':    { en: 'Checking…',               vi: 'Đang kiểm tra…' },
+  'aplus.validator.no_report':   { en: 'Run A+ or click Re-check to validate output/aplus/.',
+                                   vi: 'Chạy A+ hoặc bấm Kiểm tra lại để validate output/aplus/.' },
+  'aplus.validator.files_present': {
+    en: (f) => `All 5 module files present (${f}/5)`,
+    vi: (f) => `Đủ 5 file module (${f}/5)`
+  },
+  'aplus.validator.files_missing': {
+    en: (f, m) => `${f}/5 found · missing ${m}`,
+    vi: (f, m) => `Có ${f}/5 · thiếu ${m}`
+  },
+  'aplus.validator.dimensions':  { en: 'Module dimensions 1464×600', vi: 'Kích thước module 1464×600' },
+  'aplus.validator.dims_unchecked': { en: 'unchecked — sharp not available in runtime',
+                                       vi: 'chưa kiểm tra — sharp không khả dụng' },
+  'aplus.validator.output_dir':  { en: 'Output directory',         vi: 'Thư mục output' },
+  'aplus.validator.dir_missing': { en: '— folder not yet created', vi: '— chưa có thư mục' },
+  'aplus.tab.run':               { en: 'Run',          vi: 'Chạy' },
+  'aplus.tab.modules':           { en: 'Modules',      vi: 'Modules' },
+  'aplus.tab.qc':                { en: 'QC',           vi: 'QC' },
+  'aplus.inspector.run_section': { en: 'A+ run',       vi: 'Lượt chạy A+' },
+  'aplus.inspector.modules_section': { en: 'Module progress', vi: 'Tiến độ module' },
+  'aplus.inspector.qc_section':  { en: 'A+ output validator',  vi: 'Validator A+ output' },
+  'aplus.module.state.idle':     { en: 'pending',  vi: 'chờ' },
+  'aplus.module.state.running':  { en: 'live',     vi: 'đang chạy' },
+  'aplus.module.state.done':     { en: 'done',     vi: 'xong' },
+  'aplus.module.state.error':    { en: 'failed',   vi: 'lỗi' },
+  'aplus.module.state.skipped':  { en: 'skipped',  vi: 'đã bỏ qua' },
+  'aplus.qc.status_pass':        { en: 'Pass',     vi: 'Pass' },
+  'aplus.qc.status_issues':      { en: 'Issues',   vi: 'Lỗi' },
+  'aplus.qc.status_nodata':      { en: 'No data',  vi: 'Chưa có dữ liệu' },
 
   /* RightInspector tabs (kept short, ops terms in English where read better) */
   'tab.brief':       { en: 'Brief',      vi: 'Brief' },
