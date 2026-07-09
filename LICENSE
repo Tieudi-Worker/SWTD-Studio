@@ -1,0 +1,84 @@
+SWTD Studio License
+Proprietary, All Rights Reserved
+Copyright (c) 2026 SweetTD. All rights reserved.
+
+--------------------------------------------------------------------------------
+TÓM TẮT (không ràng buộc pháp lý — bản tiếng Anh bên dưới là bản chính thức)
+
+  ĐƯỢC PHÉP:
+   • Tải, cài đặt và sử dụng ứng dụng miễn phí cho mục đích cá nhân hoặc
+     nội bộ doanh nghiệp của bạn.
+
+  KHÔNG ĐƯỢC PHÉP (nếu chưa có văn bản cho phép của chủ sở hữu):
+   • Tái phân phối, đăng lại, bán, cho thuê, hoặc cung cấp phần mềm cho bên
+     thứ ba.
+   • Cung cấp phần mềm như một dịch vụ (hosting/SaaS) cho người khác.
+   • Phân tích ngược, dịch ngược, hoặc tháo rời phần mềm để tạo sản phẩm
+     khác/cạnh tranh.
+   • Gỡ bỏ các thông báo bản quyền.
+
+  Bạn tự chịu trách nhiệm về API key, chi phí gọi AI, và việc tuân thủ điều
+  khoản của các nhà cung cấp AI (KIE.ai, Google, OpenRouter, v.v.) cũng như
+  chính sách của sàn (Amazon). Phần mềm cung cấp "NGUYÊN TRẠNG", không bảo hành.
+--------------------------------------------------------------------------------
+
+OFFICIAL TERMS
+
+1. Definitions.
+   "Software" means the SWTD Studio application (in binary form) and its
+   accompanying assets and documentation distributed by the Owner. "Owner" means
+   the copyright holder above. "You" means the individual or entity exercising
+   rights under this License.
+
+2. Grant of License.
+   Subject to Your compliance with this License, the Owner grants You a
+   worldwide, royalty-free, non-exclusive, non-transferable, revocable license
+   to download, install, and run the Software solely for Your own personal use
+   or Your own internal business use.
+
+3. Restrictions.
+   Except as expressly permitted in Section 2, and unless You obtain prior
+   written permission from the Owner, You may NOT:
+   (a) redistribute, republish, sublicense, sell, rent, lease, or otherwise make
+       the Software available to any third party;
+   (b) host, operate, or offer the Software, or its functionality, as a service
+       to any third party (including any SaaS, API, or hosted offering);
+   (c) reverse engineer, decompile, or disassemble the Software, or otherwise
+       attempt to derive its source code, except to the extent this restriction
+       is prohibited by applicable law;
+   (d) use the Software, in whole or in substantial part, to create, train, or
+       develop another product, service, or work, including any product that
+       competes with the Software;
+   (e) remove, obscure, or alter any copyright, trademark, or other proprietary
+       notices; or
+   (f) use the names, logos, or trademarks of the Owner except to identify the
+       Software as required by this License.
+
+4. Third-Party Components and Services.
+   The Software may include third-party open-source components, each governed by
+   its own license; nothing here limits Your rights or obligations under those
+   licenses. The Software calls third-party AI providers (e.g. KIE.ai, Google,
+   OpenRouter). You are solely responsible for obtaining and paying for Your own
+   API keys and for complying with those providers' and any marketplace's
+   (e.g. Amazon's) terms.
+
+5. No Warranty.
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
+
+6. Limitation of Liability.
+   IN NO EVENT SHALL THE OWNER BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM,
+   OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+   SOFTWARE, INCLUDING ANY COSTS INCURRED WITH THIRD-PARTY AI PROVIDERS.
+
+7. Termination.
+   This License terminates automatically if You breach it. Upon termination You
+   must stop using and destroy Your copies of the Software. Sections 3–6 survive
+   termination.
+
+8. Reservation of Rights.
+   All rights not expressly granted are reserved by the Owner.
+
+For permissions beyond this License, contact the Owner.
